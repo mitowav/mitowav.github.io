@@ -25,21 +25,3 @@ function comprobarClave(){
         document.getElementById("error-msg").textContent = "Clave incorrecta";
     }
 }
-
-document.getElementById("subirBeat").addEventListener("change", e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const url = URL.createObjectURL(file);
-
-    const div = document.createElement("div");
-    div.className = "beat-item";
-
-    div.innerHTML = `
-        🎵 ${file.name}
-        <br>
-        <audio controls src="${url}"></audio>
-    `;
-
-    document.getElementById("listaBeat").appendChild(div);
-});
