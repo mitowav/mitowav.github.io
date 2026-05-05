@@ -1,73 +1,41 @@
-function go(id) {
-
-    // Bloquear acceso a music
-    if (id === 'music') {
-        document.getElementById('login-overlay').classList.add('visible');
-        return;
-    }
-
-    cambiarSeccion(id);
-}
-
-function cambiarSeccion(id){
-    document.querySelectorAll("section").forEach(sec => {
-        sec.classList.remove("active");
+function go(id){
+    document.querySelectorAll("section").forEach(s=>{
+        s.classList.remove("active");
     });
 
     document.getElementById(id).classList.add("active");
 }
 
-function comprobarClave() {
-    const clave = document.getElementById('clave-input').value;
+function openLogin(){
+    document.getElementById("login-overlay").classList.add("visible");
+}
 
-    if (clave === 'adri123') { // cámbiala por algo decente
-        document.getElementById('login-overlay').classList.remove('visible');
-        cambiarSeccion('music');
-        document.getElementById('error-msg').textContent = '';
+function comprobarClave(){
+    const clave = document.getElementById("clave-input").value;
+
+    if(clave === "adri123"){
+        document.getElementById("login-overlay").classList.remove("visible");
+        go("music");
+        document.getElementById("error-msg").textContent = "";
     } else {
-        document.getElementById('error-msg').textContent = 'Clave incorrecta';
-        document.getElementById('clave-input').value = '';
+        document.getElementById("error-msg").textContent = "Clave incorrecta";
     }
 }
 
-// 🎧 BEATS
-let beats = [];
+document.getElementById("subirBeat").addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
 
-document.getElementById('subirBeat').addEventListener('change', function(e){
-    const archivo = e.target.files[0];
-    if (!archivo) return;
+    const url = URL.createObjectURL(file);
 
-    const url = URL.createObjectURL(archivo);
+    const div = document.createElement("div");
+    div.className = "beat-item";
 
-    beats.push({
-        nombre: archivo.name,
-        url: url
-    });
+    div.innerHTML = `
+        🎵 ${file.name}
+        <br>
+        <audio controls src="${url}"></audio>
+    `;
 
-    mostrarBeats();
+    document.getElementById("listaBeat").appendChild(div);
 });
-
-function mostrarBeats() {
-    const lista = document.getElementById('listaBeat');
-    lista.innerHTML = '';
-
-    beats.forEach((beat, i) => {
-        const div = document.createElement('div');
-        div.className = 'beat-item';
-
-        div.innerHTML = `
-            <p>🎵 ${beat.nombre}</p>
-            <audio controls src="${beat.url}"></audio>
-            <button onclick="descargar(${i})">⬇️ Descargar</button>
-        `;
-
-        lista.appendChild(div);
-    });
-}
-
-function descargar(i) {
-    const a = document.createElement('a');
-    a.href = beats[i].url;
-    a.download = beats[i].nombre;
-    a.click();
-}
