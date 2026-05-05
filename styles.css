@@ -1,11 +1,15 @@
 body{
    background: url("adri.jpg") no-repeat center center fixed;
    background-size: cover;
-   transition: background-position 0.2s ease-out;
 }
 
-/* ================= ICONOS (INVISIBLES SERGIO) ================= */
+/* SEGUNDA PÁGINA CON OTRO FONDO */
+#secret{
+    background: url("fondo2.png") no-repeat center center fixed;
+    background-size: cover;
+}
 
+/* ICONOS SERGIO */
 .corner{
     position: fixed;
     width: 60px;
@@ -14,37 +18,30 @@ body{
     background: rgba(255,255,255,0.25);
     border: 1px solid gold;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display:flex;
+    justify-content:center;
+    align-items:center;
 
-    cursor: pointer;
-    transition: 0.3s;
-    z-index: 1000;
+    cursor:pointer;
+    transition:0.3s;
 
-    opacity: 0;
+    opacity:0;
+    z-index:1000;
 }
 
 .corner:hover{
-   opacity: 1;
-   transform: scale(1.2);
-   background: rgba(255,215,0,0.3);
+    opacity:1;
+    transform:scale(1.2);
+    background:rgba(255,215,0,0.3);
 }
 
 .corner i{
-    color: white;
-    font-size: 20px;
+    color:white;
+    font-size:20px;
 }
 
-/* posiciones */
-.tl{top:20px; left:20px;}
-.tr{top:20px; right:20px;}
-.bl{bottom:20px; left:20px;}
-.br{bottom:20px; right:20px;}
-
-/* ================= SECCIONES ================= */
-
-section{
+/* SECCIONES */
+.page{
     position:absolute;
     width:100%;
     height:100vh;
@@ -56,69 +53,19 @@ section{
 
     opacity:0;
     transform:translateY(40px);
-    transition:0.6s ease;
+    transition:0.6s;
 }
 
-section.active{
+.page.active{
     opacity:1;
     transform:translateY(0);
 }
 
-h1{
-    color:#cbd5e1;
-    letter-spacing: 2px;
-}
-
-/* ================= MUSIC ================= */
-
-.music-container{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:20px;
-    width:80%;
-}
-
-.music-container input{
-    display:none;
-}
-
-.music-container label{
-    background: rgba(255,255,255,0.2);
-    border:1px solid gold;
-    color:white;
-    padding:12px 24px;
-    border-radius:30px;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-.music-container label:hover{
-    background: rgba(255,215,0,0.3);
-    transform: scale(1.05);
-}
-
-.beat-item{
-    width:100%;
-    padding:15px;
-    background:rgba(0,0,0,0.45);
-    border:1px solid gold;
-    border-radius:12px;
-    margin-top:10px;
-
-    backdrop-filter: blur(8px);
-    transition:0.3s;
-}
-
-.beat-item:hover{
-    transform: scale(1.02);
-}
-
-/* ================= LOGIN (SERGIO ORIGINAL) ================= */
-
+/* LOGIN */
 #login-overlay{
     position:fixed;
     inset:0;
+
     display:flex;
     justify-content:center;
     align-items:center;
@@ -129,7 +76,6 @@ h1{
     opacity:0;
     pointer-events:none;
     transition:0.4s;
-    z-index:9999;
 }
 
 #login-overlay.visible{
@@ -142,7 +88,7 @@ h1{
     border:1px solid rgba(100,150,255,0.3);
     border-radius:20px;
 
-    padding:48px 44px 40px;
+    padding:40px;
     width:90%;
     max-width:420px;
 
@@ -151,54 +97,28 @@ h1{
     align-items:center;
 
     position:relative;
-    gap:16px;
 }
 
-#login-box h2{
-    color:rgba(240,220,250,0.95);
-    font-size:22px;
-    margin:0 0 20px;
-}
-
-#login-box input{
-    width:100%;
-    padding:14px 18px;
-    text-align:center;
-
-    border-radius:10px;
-    border:1px solid rgba(212,175,55,0.25);
-
-    background:rgba(255,255,255,0.9);
-    letter-spacing:4px;
-}
-
-#login-box button{
-    width:100%;
-    padding:14px;
-    border-radius:10px;
-
-    background:rgba(212,175,55,0.12);
-    border:1px solid rgba(212,175,55,0.5);
-
-    color:rgba(240,220,250,0.5);
-    letter-spacing:4px;
-    cursor:pointer;
-}
-
-#login-box button:hover{
-    background:rgba(212,175,55,0.22);
-}
-
-/* X */
 .close-x{
     position:absolute;
     top:10px;
-    right:14px;
-    color:white;
+    right:15px;
     cursor:pointer;
-    opacity:0.7;
+    color:white;
 }
 
-.close-x:hover{
-    opacity:1;
+/* BOTÓN VOLVER */
+.back-btn{
+    position:absolute;
+    top:20px;
+    left:20px;
+
+    padding:10px 16px;
+    border-radius:20px;
+
+    background:rgba(0,0,0,0.4);
+    border:1px solid gold;
+    color:white;
+
+    cursor:pointer;
 }
