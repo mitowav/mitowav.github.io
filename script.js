@@ -1,63 +1,46 @@
 function go(id){
-    document.querySelectorAll("section").forEach(sec=>{
-        sec.classList.remove("active");
+    document.querySelectorAll(".page").forEach(p=>{
+        p.classList.remove("active");
     });
 
     document.getElementById(id).classList.add("active");
 }
 
-/* 🔓 ABRIR LOGIN */
+/* LOGIN */
 function openLogin(){
-    const login = document.getElementById("login-overlay");
-    if(login){
-        login.classList.add("visible");
-    }
+    document.getElementById("login-overlay").classList.add("visible");
 }
 
-/* ❌ CERRAR LOGIN */
 function cerrarLogin(){
-    const login = document.getElementById("login-overlay");
-    if(login){
-        login.classList.remove("visible");
-    }
-
-    const err = document.getElementById("error-msg");
-    if(err) err.textContent = "";
+    document.getElementById("login-overlay").classList.remove("visible");
 }
 
-/* 🔑 LOGIN */
+/* 🔑 CLAVE SIMPLE */
 function comprobarClave(){
-    const input = document.getElementById("clave-input");
-    const error = document.getElementById("error-msg");
+    const clave = document.getElementById("clave-input").value;
 
-    if(input.value === "adri123"){
+    if(clave === "1234"){
         cerrarLogin();
-        go("music");
+        go("secret");
     } else {
-        if(error) error.textContent = "Clave incorrecta";
+        document.getElementById("error-msg").textContent = "Clave incorrecta";
     }
 }
 
-/* 🎧 BEATS */
-window.addEventListener("DOMContentLoaded", () => {
-    const input = document.getElementById("subirBeat");
+/* BEATS */
+document.getElementById("subirBeat")?.addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
 
-    if(input){
-        input.addEventListener("change", e=>{
-            const file = e.target.files[0];
-            if(!file) return;
+    const url = URL.createObjectURL(file);
 
-            const url = URL.createObjectURL(file);
+    const div = document.createElement("div");
+    div.className = "beat-item";
 
-            const div = document.createElement("div");
-            div.className = "beat-item";
+    div.innerHTML = `
+        <p>🎵 ${file.name}</p>
+        <audio controls src="${url}"></audio>
+    `;
 
-            div.innerHTML = `
-                <p>🎵 ${file.name}</p>
-                <audio controls src="${url}"></audio>
-            `;
-
-            document.getElementById("listaBeat").appendChild(div);
-        });
-    }
+    document.getElementById("listaBeat").appendChild(div);
 });
