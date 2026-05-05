@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Adri</title>
+
+  <!-- ICONOS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ESQUINAS -->
+<!-- ESQUINAS CON ICONOS -->
 <div class="corner tl" onclick="go('home')">
   <i class="fa-solid fa-house"></i>
 </div>
@@ -21,7 +24,7 @@
   <i class="fa-solid fa-user"></i>
 </div>
 
-<div class="corner br" onclick="openLogin()">
+<div class="corner br" onclick="go('home')">
   <i class="fa-solid fa-lock"></i>
 </div>
 
@@ -45,20 +48,17 @@
   <h1>Sobre mí</h1>
 </section>
 
-<!-- LOGIN ORIGINAL + X FUNCIONAL -->
+<!-- LOGIN -->
 <div id="login-overlay">
   <div id="login-box">
-    <span class="close-x" onclick="cerrarLogin()">✕</span>
-
     <h2>Acceso privado</h2>
-
     <input type="password" id="clave-input" placeholder="Clave">
     <button onclick="comprobarClave()">Entrar</button>
-
     <p id="error-msg"></p>
   </div>
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
