@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artista - portfolio</title>
+
+<link rel="stylesheet" href="adri.css">
+
+</head>
+
+
+<body>
+
+   <div id="login-overlay">
+   <div id="login-box">
+    <h2>Acceso privado</h2>
+    <p class="nombre-artista">BEATS </p>
+    <input type="password" id="clave-input" placeholder="contraseña">
+    <button onclick="comprobarClave()">Entrar</button>
+    <p id="error-msg"></p>
+</div>
+</div>
+    <!--NAV ESQUINAS -->
+    <div class="corner tl" onclick="go('home')">🏡</div>
+    <div class="corner tr" onclick="go('about')">👤</div>
+    <div class="corner bl" onclick="go('music')">🎵</div>
+    <div class="corner br" onclick="go('contact')">✉️</div>
+
+    <!-- SECCIONES -->
+     <section id="home" class="active">
+        ><h1>ARTISTA</h1>
+        <p>Música emocional y cinematografica</p>
+     </section>
+
+     <section id="about">
+        <h1>Sobre el</h1>
+     </section>
+
+     <section id="music">
+        <h1>Música</h1>
+        <div class="music-container">
+            <input type="file" id="subirBeat" accept="audio/*">
+            <label for="subirBeat">⬆️ Subir Beat</label>
+            <div id="listaBeat"></div>
+        </div>
+     </section>
+
+     <section id="contact">
+        <h1>Contacto</h1>
+     </section>
+
+     <script src="adri.js"></script>
+
+    
+</body>
+</html>
