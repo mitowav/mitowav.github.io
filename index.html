@@ -10,35 +10,34 @@
 
 <body>
 
-<!-- ICONOS (SERGIO STYLE) -->
+<!-- ICONOS -->
 <div class="corner tl" onclick="go('home')"><i class="fa-solid fa-house"></i></div>
 <div class="corner tr" onclick="go('music')"><i class="fa-solid fa-music"></i></div>
 <div class="corner bl" onclick="go('about')"><i class="fa-solid fa-user"></i></div>
 <div class="corner br" onclick="openLogin()"><i class="fa-solid fa-lock"></i></div>
 
-<!-- HOME -->
-<section id="home" class="active">
+<!-- PÁGINA 1 -->
+<section id="home" class="page active">
   <h1>ADRI</h1>
 </section>
 
-<!-- MUSIC (ZONA ARTISTA) -->
-<section id="music">
-  <h1>BEATS</h1>
+<!-- PÁGINA 2 (BEATS / PRIVADO REAL) -->
+<section id="music" class="page">
+  <h1>BEATS PRIVADOS</h1>
 
   <div class="music-container">
     <label for="subirBeat">Subir beat</label>
     <input type="file" id="subirBeat" accept="audio/*">
-
     <div id="listaBeat"></div>
   </div>
 </section>
 
-<!-- ABOUT -->
-<section id="about">
+<!-- PÁGINA 3 -->
+<section id="about" class="page">
   <h1>Sobre mí</h1>
 </section>
 
-<!-- LOGIN ORIGINAL SERGIO -->
+<!-- 🔐 LOGIN -->
 <div id="login-overlay">
   <div id="login-box">
 
@@ -53,6 +52,17 @@
 
   </div>
 </div>
+
+<!-- 🆕 PÁGINA PRIVADA EXTRA -->
+<section id="secret" class="page secret-page">
+
+  <div class="back-btn" onclick="go('home')">
+    ← Volver
+  </div>
+
+  <h1>ZONA ARTISTA</h1>
+
+</section>
 
 <script src="script.js"></script>
 </body>
