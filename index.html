@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Adri</title>
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -37,6 +36,7 @@
   <div class="music-container">
     <label for="subirBeat">Subir beat</label>
     <input type="file" id="subirBeat" accept="audio/*">
+
     <div id="listaBeat"></div>
   </div>
 </section>
@@ -45,25 +45,20 @@
   <h1>Sobre mí</h1>
 </section>
 
-<!-- LOGIN (ESTILO ORIGINAL SERGIO + FIX X) -->
+<!-- LOGIN ORIGINAL + X FUNCIONAL -->
 <div id="login-overlay">
   <div id="login-box">
-
-    <!-- X -->
     <span class="close-x" onclick="cerrarLogin()">✕</span>
 
     <h2>Acceso privado</h2>
 
     <input type="password" id="clave-input" placeholder="Clave">
-
     <button onclick="comprobarClave()">Entrar</button>
 
     <p id="error-msg"></p>
-
   </div>
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>
