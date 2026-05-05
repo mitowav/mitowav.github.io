@@ -3,15 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <title>Adri</title>
+
+  <!-- ICONOS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<!-- ESQUINAS -->
-<div class="corner tl" onclick="go('home')"></div>
-<div class="corner tr" onclick="go('music')"></div>
-<div class="corner bl" onclick="go('about')"></div>
-<div class="corner br" onclick="go('home')"></div>
+<!-- ESQUINAS CON ICONOS -->
+<div class="corner tl" onclick="go('home')">
+  <i class="fa-solid fa-house"></i>
+</div>
+
+<div class="corner tr" onclick="go('music')">
+  <i class="fa-solid fa-music"></i>
+</div>
+
+<div class="corner bl" onclick="go('about')">
+  <i class="fa-solid fa-user"></i>
+</div>
+
+<div class="corner br" onclick="go('home')">
+  <i class="fa-solid fa-lock"></i>
+</div>
 
 <!-- SECCIONES -->
 <section id="home" class="active">
