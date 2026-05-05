@@ -10,13 +10,26 @@
 <body>
 
 <!-- ESQUINAS -->
-<div class="corner tl" onclick="go('home')"><i class="fa-solid fa-house"></i></div>
-<div class="corner tr" onclick="go('music')"><i class="fa-solid fa-music"></i></div>
-<div class="corner bl" onclick="go('about')"><i class="fa-solid fa-user"></i></div>
-<div class="corner br" onclick="openLogin()"><i class="fa-solid fa-lock"></i></div>
+<div class="corner tl" onclick="go('home')">
+  <i class="fa-solid fa-house"></i>
+</div>
+
+<div class="corner tr" onclick="go('music')">
+  <i class="fa-solid fa-music"></i>
+</div>
+
+<div class="corner bl" onclick="go('about')">
+  <i class="fa-solid fa-user"></i>
+</div>
+
+<div class="corner br" onclick="openLogin()">
+  <i class="fa-solid fa-lock"></i>
+</div>
 
 <!-- SECCIONES -->
-<section id="home" class="active"><h1>ADRI</h1></section>
+<section id="home" class="active">
+  <h1>ADRI</h1>
+</section>
 
 <section id="music">
   <h1>BEATS PRIVADOS</h1>
@@ -28,11 +41,16 @@
   </div>
 </section>
 
-<section id="about"><h1>Sobre mí</h1></section>
+<section id="about">
+  <h1>Sobre mí</h1>
+</section>
 
-<!-- LOGIN (ESTILO ORIGINAL, SOLO FUNCIONALIDAD) -->
+<!-- LOGIN (ESTILO ORIGINAL SERGIO + FIX X) -->
 <div id="login-overlay">
   <div id="login-box">
+
+    <!-- X -->
+    <span class="close-x" onclick="cerrarLogin()">✕</span>
 
     <h2>Acceso privado</h2>
 
