@@ -1,10 +1,9 @@
 function go(id){
-    document.querySelectorAll(".page").forEach(sec=>{
-        sec.classList.remove("active");
+    document.querySelectorAll(".page").forEach(p=>{
+        p.classList.remove("active");
     });
 
-    const target = document.getElementById(id);
-    if(target) target.classList.add("active");
+    document.getElementById(id).classList.add("active");
 }
 
 /* LOGIN */
@@ -14,48 +13,34 @@ function openLogin(){
 
 function cerrarLogin(){
     document.getElementById("login-overlay").classList.remove("visible");
-    const err = document.getElementById("error-msg");
-    if(err) err.textContent = "";
 }
 
-/* 🔑 CLAVE FIJA */
+/* 🔑 CLAVE SIMPLE */
 function comprobarClave(){
-    const input = document.getElementById("clave-input");
-    const error = document.getElementById("error-msg");
-
-    if(!input) return;
-
-    const clave = input.value;
+    const clave = document.getElementById("clave-input").value;
 
     if(clave === "1234"){
         cerrarLogin();
-        go("secret");   // página nueva
+        go("secret");
     } else {
-        if(error) error.textContent = "Clave incorrecta";
+        document.getElementById("error-msg").textContent = "Clave incorrecta";
     }
 }
 
-/* BEATS (VERSIÓN SIMPLE Y SEGURA) */
-window.addEventListener("DOMContentLoaded", () => {
-    const subir = document.getElementById("subirBeat");
+/* BEATS */
+document.getElementById("subirBeat")?.addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
 
-    if(subir){
-        subir.addEventListener("change", (e)=>{
-            const file = e.target.files[0];
-            if(!file) return;
+    const url = URL.createObjectURL(file);
 
-            const url = URL.createObjectURL(file);
+    const div = document.createElement("div");
+    div.className = "beat-item";
 
-            const div = document.createElement("div");
-            div.className = "beat-item";
+    div.innerHTML = `
+        <p>🎵 ${file.name}</p>
+        <audio controls src="${url}"></audio>
+    `;
 
-            div.innerHTML = `
-                <p>🎵 ${file.name}</p>
-                <audio controls src="${url}"></audio>
-            `;
-
-            const lista = document.getElementById("listaBeat");
-            if(lista) lista.appendChild(div);
-        });
-    }
+    document.getElementById("listaBeat").appendChild(div);
 });
