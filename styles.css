@@ -1,9 +1,10 @@
 body{
    background: url("adri.jpg") no-repeat center center fixed;
    background-size: cover;
+   transition: background-position 0.2s ease-out;
 }
 
-/* ================= ICONOS (ESTILO SERGIO) ================= */
+/* ================= ICONOS (INVISIBLES SERGIO) ================= */
 
 .corner{
     position: fixed;
@@ -21,7 +22,6 @@ body{
     transition: 0.3s;
     z-index: 1000;
 
-    /* 🔥 INVISIBILIDAD ORIGINAL RESTAURADA */
     opacity: 0;
 }
 
@@ -45,161 +45,160 @@ body{
 /* ================= SECCIONES ================= */
 
 section{
-    position: absolute;
-    width: 100%;
-    height: 100vh;
+    position:absolute;
+    width:100%;
+    height:100vh;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
 
-    opacity: 0;
-    transform: translateY(40px);
-    transition: 0.6s;
+    opacity:0;
+    transform:translateY(40px);
+    transition:0.6s ease;
 }
 
 section.active{
-    opacity: 1;
-    transform: translateY(0);
+    opacity:1;
+    transform:translateY(0);
 }
 
 h1{
     color:#cbd5e1;
-}
-
-/* ================= LOGIN (SERGIO ORIGINAL RESTAURADO) ================= */
-
-#login-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 100%;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    background: rgba(0, 0, 20, 0.88);
-    backdrop-filter: blur(6px);
-
-    opacity: 0;
-    pointer-events: none;
-
-    transition: opacity 0.4s ease;
-    z-index: 9999;
-}
-
-/* 🔥 ESTE ES EL SWITCH REAL */
-#login-overlay.visible {
-    opacity: 1;
-    pointer-events: all;
-}
-
-#login-box {
-    background: rgba(5, 10, 35, 0.95);
-    border: 1px solid rgba(100, 150, 255, 0.3);
-
-    border-radius: 20px;
-    padding: 48px 44px 40px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    width: 90%;
-    max-width: 420px;
-
-    gap: 16px;
-
-    transform: scale(0.9) translateY(30px);
-    transition: all 0.4s ease;
-
-    position: relative;
-}
-
-/* animación original */
-#login-overlay.visible #login-box {
-    transform: scale(1) translateY(0);
-}
-
-/* título Sergio */
-#login-box h2 {
-    color: rgba(240,220,250,0.95);
-    font-size: 22px;
-    font-weight: 400;
     letter-spacing: 2px;
-    margin: 0 0 20px;
 }
 
-/* inputs Sergio */
-#login-box input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.9);
+/* ================= MUSIC ================= */
 
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    border-radius: 10px;
-
-    padding: 14px 18px;
-
-    color: rgba(240,220,150,0.9);
-    font-size: 15px;
-
-    text-align: center;
-    outline: none;
-
-    letter-spacing: 4px;
-    box-sizing: border-box;
-
-    margin-bottom: 16px;
+.music-container{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+    width:80%;
 }
 
-/* botones Sergio */
-#login-box button {
-    width: 100%;
-    padding: 14px;
-
-    background: rgba(212,175,55,0.12);
-    border: 1px solid rgba(212,175,55,0.5);
-
-    border-radius: 10px;
-
-    color: rgba(240,220,250,0.5);
-    font-size: 12px;
-
-    letter-spacing: 4px;
-    text-transform: uppercase;
-
-    cursor: pointer;
-    transition: all 0.3s;
+.music-container input{
+    display:none;
 }
 
-#login-box button:hover {
-    background: rgba(212,175,55,0.22);
-    border-color: rgba(212,175,55,0.8);
+.music-container label{
+    background: rgba(255,255,255,0.2);
+    border:1px solid gold;
+    color:white;
+    padding:12px 24px;
+    border-radius:30px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-#error-msg {
-    color: rgba(200,80,80,0.85);
-    font-size: 12px;
-    margin-top: 10px;
-    min-height: 16px;
+.music-container label:hover{
+    background: rgba(255,215,0,0.3);
+    transform: scale(1.05);
 }
 
-/* X mínima sin romper diseño */
+.beat-item{
+    width:100%;
+    padding:15px;
+    background:rgba(0,0,0,0.45);
+    border:1px solid gold;
+    border-radius:12px;
+    margin-top:10px;
+
+    backdrop-filter: blur(8px);
+    transition:0.3s;
+}
+
+.beat-item:hover{
+    transform: scale(1.02);
+}
+
+/* ================= LOGIN (SERGIO ORIGINAL) ================= */
+
+#login-overlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:rgba(0,0,20,0.88);
+    backdrop-filter:blur(6px);
+
+    opacity:0;
+    pointer-events:none;
+    transition:0.4s;
+    z-index:9999;
+}
+
+#login-overlay.visible{
+    opacity:1;
+    pointer-events:all;
+}
+
+#login-box{
+    background:rgba(5,10,35,0.95);
+    border:1px solid rgba(100,150,255,0.3);
+    border-radius:20px;
+
+    padding:48px 44px 40px;
+    width:90%;
+    max-width:420px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+
+    position:relative;
+    gap:16px;
+}
+
+#login-box h2{
+    color:rgba(240,220,250,0.95);
+    font-size:22px;
+    margin:0 0 20px;
+}
+
+#login-box input{
+    width:100%;
+    padding:14px 18px;
+    text-align:center;
+
+    border-radius:10px;
+    border:1px solid rgba(212,175,55,0.25);
+
+    background:rgba(255,255,255,0.9);
+    letter-spacing:4px;
+}
+
+#login-box button{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+
+    background:rgba(212,175,55,0.12);
+    border:1px solid rgba(212,175,55,0.5);
+
+    color:rgba(240,220,250,0.5);
+    letter-spacing:4px;
+    cursor:pointer;
+}
+
+#login-box button:hover{
+    background:rgba(212,175,55,0.22);
+}
+
+/* X */
 .close-x{
-    position: absolute;
-    top: 12px;
-    right: 16px;
-
-    color: rgba(240,220,250,0.7);
-    font-size: 18px;
-
-    cursor: pointer;
+    position:absolute;
+    top:10px;
+    right:14px;
+    color:white;
+    cursor:pointer;
+    opacity:0.7;
 }
 
 .close-x:hover{
-    color: rgba(240,220,250,1);
+    opacity:1;
 }
