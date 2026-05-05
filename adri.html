@@ -1,58 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Artista - portfolio</title>
-
-<link rel="stylesheet" href="adri.css">
-
+  <meta charset="UTF-8">
+  <title>Adri</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
-
 <body>
 
-   <div id="login-overlay">
-   <div id="login-box">
-    <h2>Acceso privado</h2>
-    <p class="nombre-artista">BEATS </p>
-    <input type="password" id="clave-input" placeholder="contraseña">
-    <button onclick="comprobarClave()">Entrar</button>
+<!-- ESQUINAS -->
+<div class="corner tl" onclick="showSection('home')"></div>
+<div class="corner tr" onclick="showSection('music')"></div>
+<div class="corner bl" onclick="showSection('about')"></div>
+<div class="corner br" onclick="showLogin()"></div>
+
+<!-- SECCIONES -->
+<section id="home" class="active">
+  <h1>Bienvenido</h1>
+</section>
+
+<section id="music">
+  <h1>Mis Beats</h1>
+
+  <div class="music-container">
+    <label for="fileInput">Subir beat</label>
+    <input type="file" id="fileInput" accept="audio/*">
+
+    <div id="beatList"></div>
+  </div>
+</section>
+
+<section id="about">
+  <h1>Sobre mí</h1>
+</section>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div id="login-box">
+    <h2>Acceso</h2>
+    <input type="text" id="user" placeholder="Usuario">
+    <input type="password" id="pass" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
     <p id="error-msg"></p>
+  </div>
 </div>
-</div>
-    <!--NAV ESQUINAS -->
-    <div class="corner tl" onclick="go('home')">🏡</div>
-    <div class="corner tr" onclick="go('about')">👤</div>
-    <div class="corner bl" onclick="go('music')">🎵</div>
-    <div class="corner br" onclick="go('contact')">✉️</div>
 
-    <!-- SECCIONES -->
-     <section id="home" class="active">
-        ><h1>ARTISTA</h1>
-        <p>Música emocional y cinematografica</p>
-     </section>
+<!-- JAVASCRIPT -->
+<script>
+function showSection(id){
+  document.querySelectorAll("section").forEach(sec=>{
+    sec.classList.remove("active");
+  });
+  document.getElementById(id).classList.add("active");
+}
 
-     <section id="about">
-        <h1>Sobre el</h1>
-     </section>
+function showLogin(){
+  document.getElementById("login-overlay").classList.add("visible");
+}
 
-     <section id="music">
-        <h1>Música</h1>
-        <div class="music-container">
-            <input type="file" id="subirBeat" accept="audio/*">
-            <label for="subirBeat">⬆️ Subir Beat</label>
-            <div id="listaBeat"></div>
-        </div>
-     </section>
+function login(){
+  const user = document.getElementById("user").value;
+  const pass = document.getElementById("pass").value;
 
-     <section id="contact">
-        <h1>Contacto</h1>
-     </section>
+  if(user === "adri" && pass === "1234"){
+    document.getElementById("login-overlay").classList.remove("visible");
+    document.getElementById("error-msg").innerText = "";
+  } else {
+    document.getElementById("error-msg").innerText = "Datos incorrectos";
+  }
+}
 
-     <script src="adri.js"></script>
+// SUBIR Y REPRODUCIR BEATS (local)
+document.getElementById("fileInput").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(!file) return;
 
-    
+  const url = URL.createObjectURL(file);
+
+  const container = document.createElement("div");
+  container.className = "beat-item";
+
+  const name = document.createElement("p");
+  name.innerText = file.name;
+
+  const audio = document.createElement("audio");
+  audio.controls = true;
+  audio.src = url;
+
+  container.appendChild(name);
+  container.appendChild(audio);
+
+  document.getElementById("beatList").appendChild(container);
+});
+</script>
+
 </body>
 </html>
