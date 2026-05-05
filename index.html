@@ -8,24 +8,24 @@
 <body>
 
 <!-- ESQUINAS -->
-<div class="corner tl" onclick="showSection('home')"></div>
-<div class="corner tr" onclick="showSection('music')"></div>
-<div class="corner bl" onclick="showSection('about')"></div>
-<div class="corner br" onclick="showLogin()"></div>
+<div class="corner tl" onclick="go('home')"></div>
+<div class="corner tr" onclick="go('music')"></div>
+<div class="corner bl" onclick="go('about')"></div>
+<div class="corner br" onclick="go('home')"></div>
 
 <!-- SECCIONES -->
 <section id="home" class="active">
-  <h1>Bienvenido</h1>
+  <h1>ADRI</h1>
 </section>
 
 <section id="music">
-  <h1>Mis Beats</h1>
+  <h1>BEATS PRIVADOS</h1>
 
   <div class="music-container">
-    <label for="fileInput">Subir beat</label>
-    <input type="file" id="fileInput" accept="audio/*">
+    <label for="subirBeat">Subir beat</label>
+    <input type="file" id="subirBeat" accept="audio/*">
 
-    <div id="beatList"></div>
+    <div id="listaBeat"></div>
   </div>
 </section>
 
@@ -36,62 +36,14 @@
 <!-- LOGIN -->
 <div id="login-overlay">
   <div id="login-box">
-    <h2>Acceso</h2>
-    <input type="text" id="user" placeholder="Usuario">
-    <input type="password" id="pass" placeholder="Contraseña">
-    <button onclick="login()">Entrar</button>
+    <h2>Acceso privado</h2>
+    <input type="password" id="clave-input" placeholder="Clave">
+    <button onclick="comprobarClave()">Entrar</button>
     <p id="error-msg"></p>
   </div>
 </div>
 
-<!-- JAVASCRIPT -->
-<script>
-function showSection(id){
-  document.querySelectorAll("section").forEach(sec=>{
-    sec.classList.remove("active");
-  });
-  document.getElementById(id).classList.add("active");
-}
-
-function showLogin(){
-  document.getElementById("login-overlay").classList.add("visible");
-}
-
-function login(){
-  const user = document.getElementById("user").value;
-  const pass = document.getElementById("pass").value;
-
-  if(user === "adri" && pass === "1234"){
-    document.getElementById("login-overlay").classList.remove("visible");
-    document.getElementById("error-msg").innerText = "";
-  } else {
-    document.getElementById("error-msg").innerText = "Datos incorrectos";
-  }
-}
-
-// SUBIR Y REPRODUCIR BEATS (local)
-document.getElementById("fileInput").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-
-  const url = URL.createObjectURL(file);
-
-  const container = document.createElement("div");
-  container.className = "beat-item";
-
-  const name = document.createElement("p");
-  name.innerText = file.name;
-
-  const audio = document.createElement("audio");
-  audio.controls = true;
-  audio.src = url;
-
-  container.appendChild(name);
-  container.appendChild(audio);
-
-  document.getElementById("beatList").appendChild(container);
-});
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
