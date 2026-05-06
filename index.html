@@ -37,14 +37,13 @@
   <button onclick="openLogin('privado'); toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
 </div>
 
-<!-- PÁGINAS -->
 <main id="app">
 
   <!-- HOME -->
   <section id="home" class="page active">
     <div class="hero">
       <div class="hero-img-wrap">
-        <img src="./hero.jpg" alt="mitø" class="hero-img">
+        <img src="./hero.jpg" alt="mitø" class="hero-img" onerror="this.style.display='none'">
         <div class="hero-img-overlay"></div>
       </div>
       <div class="hero-text">
@@ -64,8 +63,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ÚLTIMOS BEATS en home -->
     <div class="home-section">
       <div class="section-header">
         <h2>ÚLTIMOS BEATS</h2>
@@ -75,7 +72,7 @@
     </div>
   </section>
 
-  <!-- BEATS PÚBLICOS -->
+  <!-- BEATS -->
   <section id="beats" class="page">
     <div class="page-wrap">
       <div class="section-header">
@@ -90,14 +87,14 @@
   <section id="about" class="page">
     <div class="about-wrap">
       <div class="about-img-col">
-        <img src="./hero.jpg" alt="mitø" class="about-img">
+        <img src="./hero.jpg" alt="mitø" class="about-img" onerror="this.style.display='none'">
       </div>
       <div class="about-text-col">
         <p class="hero-sub">SOBRE MÍ</p>
         <h2 class="about-title">mit<span class="o">ø</span></h2>
         <p class="about-bio">
           Soy <strong>mitø</strong>, productor y artista independiente de Córdoba.<br><br>
-          Creo mis propios beats, escribo mis letras y construyo mi mundo desde cero. 
+          Creo mis propios beats, escribo mis letras y construyo mi mundo desde cero.
           Sin sellos, sin intermediarios — solo música honesta.
         </p>
         <div class="social-row">
@@ -110,15 +107,13 @@
     </div>
   </section>
 
-  <!-- ZONA PRIVADA -->
+  <!-- PRIVADO -->
   <section id="privado" class="page">
     <div class="page-wrap">
       <div class="section-header">
         <h2>ZONA PRIVADA <span class="badge">BAND ONLY</span></h2>
         <p class="section-sub">Solo para la banda</p>
       </div>
-
-      <!-- SUBIR BEAT -->
       <div class="upload-box">
         <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> SUBIR BEAT</h3>
         <div class="upload-form">
@@ -129,7 +124,6 @@
             <span id="file-name-label">Elige un archivo de audio</span>
             <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
           </label>
-          <!-- SELECTOR PÚBLICO / PRIVADO -->
           <div class="visibility-toggle">
             <span class="vis-label">Visibilidad:</span>
             <div class="vis-options">
@@ -144,20 +138,17 @@
           <button class="btn-primary" onclick="subirBeat()">Subir beat 🔥</button>
         </div>
       </div>
-
-      <!-- BEATS PRIVADOS -->
-      <div class="section-header" style="margin-top:40px">
+      <div class="section-header" style="margin-top:36px">
         <h3>BEATS PRIVADOS</h3>
       </div>
       <div id="admin-list" class="beats-grid"></div>
-
       <button class="btn-back" onclick="go('home')">← Volver al inicio</button>
     </div>
   </section>
 
 </main>
 
-<!-- LOGIN OVERLAY -->
+<!-- LOGIN -->
 <div id="login-overlay" onclick="cerrarLoginOverlay(event)">
   <div id="login-box">
     <button class="close-btn" onclick="cerrarLogin()">✕</button>
