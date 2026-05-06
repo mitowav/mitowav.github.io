@@ -94,8 +94,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn   = document.querySelector(".upload-form .btn-primary");
     if (!file) { alert("Selecciona un archivo de audio"); return; }
 
-    btn.textContent = "Subiendo..."; btn.disabled = true;
+    btn.textContent = "Analizando audio..."; btn.disabled = true;
+
     try {
+      // 1. Analizar la forma de onda ANTES de subir
+      const waveformData = await analizarWaveform(file);
+
+      btn.textContent = "Subiendo...";
+
+      // 2. Limpiar nombre y subir al storage
       const cleanName = file.name.normalize("NFD")
         .replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
       const fileName = `${Date.now()}-${cleanName}`;
@@ -105,9 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const { data: urlData } = db.storage.from("beats").getPublicUrl(fileName);
 
+      // 3. Guardar en tabla con waveform
       const { error: dbErr } = await db.from("beats").insert([{
         title: title || "Sin título", genre: genre || "—",
-        audio_url: urlData.publicUrl, privado: esPrivado
+        audio_url: urlData.publicUrl, privado: esPrivado,
+        waveform: JSON.stringify(waveformData)
       }]);
       if (dbErr) throw dbErr;
 
@@ -123,19 +132,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ── WAVEFORM GENERATOR ────────────────────────
+  // ── ANALIZAR WAVEFORM REAL ────────────────────
+  // Lee el MP3, lo decodifica con Web Audio API y
+  // extrae 55 valores de amplitud normalizados (0-100)
 
-  function generateBars(seed) {
-    let s = (typeof seed === "number" ? seed : 0) % 99999 + 1;
+  async function analizarWaveform(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const arrayBuffer = e.target.result;
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+          // Usa el canal izquierdo (o el único si es mono)
+          const rawData = audioBuffer.getChannelData(0);
+          const samples = 55;
+          const blockSize = Math.floor(rawData.length / samples);
+          const peaks = [];
+
+          for (let i = 0; i < samples; i++) {
+            let sum = 0;
+            for (let j = 0; j < blockSize; j++) {
+              sum += Math.abs(rawData[i * blockSize + j]);
+            }
+            peaks.push(sum / blockSize);
+          }
+
+          // Normaliza entre 15 y 95 para que no queden barras demasiado pequeñas
+          const max = Math.max(...peaks);
+          const normalized = peaks.map(v => Math.round(15 + (v / max) * 80));
+
+          audioCtx.close();
+          resolve(normalized);
+        } catch(err) {
+          reject(err);
+        }
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // ── WAVEFORM GENERATOR ────────────────────────
+  // Si el beat tiene datos reales los usa; si no, genera aleatorios
+
+  function generateBars(beat, index) {
+    // Intenta usar waveform real guardada en Supabase
+    if (beat && beat.waveform) {
+      try {
+        const data = typeof beat.waveform === "string"
+          ? JSON.parse(beat.waveform)
+          : beat.waveform;
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map(h => `<span style="height:${h}%"></span>`).join("");
+        }
+      } catch(e) { /* fallback a aleatorio */ }
+    }
+
+    // Fallback: aleatorio consistente por seed
+    let s = ((beat && beat.id) ? beat.id : (index * 7 + 13)) % 99999 + 1;
     function rand() {
       s = (s * 1664525 + 1013904223) & 0xffffffff;
       return ((s >>> 0) / 0xffffffff);
     }
     let html = "";
-    const count = 55;
-    for (let i = 0; i < count; i++) {
-      const h = Math.round(15 + rand() * 68);
-      html += `<span style="height:${h}%"></span>`;
+    for (let i = 0; i < 55; i++) {
+      html += `<span style="height:${Math.round(15 + rand() * 68)}%"></span>`;
     }
     return html;
   }
@@ -146,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const card = document.createElement("div");
     card.className = "beat-card";
 
-    const bars = generateBars(beat.id || index * 7 + 13);
+    const bars = generateBars(beat, index);
 
     card.innerHTML = `
       <span class="beat-num">${String(index + 1).padStart(2, "0")}</span>
