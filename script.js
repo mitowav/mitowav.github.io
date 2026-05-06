@@ -15,29 +15,60 @@ document.addEventListener("DOMContentLoaded", () => {
     console.warn("Supabase error:", e.message);
   }
 
-  /* ===== CLAVE DE ACCESO PRIVADO =====
-     Cambia "1234" por la clave que quieras
-  ===== */
-  const CLAVE_SECRETA = "1234";
+  /* ===== CONFIG ===== */
+  const CLAVE_SECRETA = "1234"; // ← cámbiala!
 
-  // ─── PÁGINAS ──────────────────────────────────────
+  // Estado: si el beat a subir es privado o no
+  let esPrivado = false;
 
-  function go(id) {
+  // Página destino tras login
+  let loginDestino = "privado";
+
+  // ─── NAVEGACIÓN ──────────────────────────────
+
+  function go(id, btnEl, closeMenu) {
+    // Actualiza página activa
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     const target = document.getElementById(id);
     if (target) target.classList.add("active");
-    if (id === "music") cargarBeats("beats-list");
-    if (id === "secret") cargarBeats("admin-list");
+
+    // Actualiza nav button activo
+    if (btnEl) {
+      document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+      btnEl.classList.add("active");
+    }
+
+    // Cierra menú móvil si toca
+    if (closeMenu) toggleMenu(true);
+
+    // Carga datos según página
+    if (id === "beats")   cargarBeats("beats-list", false);
+    if (id === "home")    cargarBeats("home-beats", false, 3);
+    if (id === "privado") {
+      cargarBeats("admin-list", true);
+    }
   }
 
   window.go = go;
 
-  // ─── LOGIN ──────────────────────────────────────
+  // ─── MENÚ MÓVIL ──────────────────────────────
 
-  function openLogin() {
+  function toggleMenu(forceClose) {
+    const m = document.getElementById("mobile-menu");
+    if (forceClose) { m.classList.remove("open"); return; }
+    m.classList.toggle("open");
+  }
+
+  window.toggleMenu = toggleMenu;
+
+  // ─── LOGIN ──────────────────────────────────
+
+  function openLogin(destino) {
+    loginDestino = destino || "privado";
     document.getElementById("login-overlay").classList.add("visible");
-    document.getElementById("clave-input").focus();
+    setTimeout(() => document.getElementById("clave-input").focus(), 100);
     document.getElementById("error-msg").textContent = "";
+    document.getElementById("clave-input").value = "";
   }
 
   function cerrarLogin() {
@@ -47,18 +78,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function cerrarLoginOverlay(e) {
-    if (e.target === document.getElementById("login-overlay")) {
-      cerrarLogin();
-    }
+    if (e.target === document.getElementById("login-overlay")) cerrarLogin();
   }
 
   function comprobarClave() {
     const input = document.getElementById("clave-input").value;
     const errorEl = document.getElementById("error-msg");
-
     if (input === CLAVE_SECRETA) {
       cerrarLogin();
-      go("secret");
+      go(loginDestino);
     } else {
       errorEl.textContent = "Clave incorrecta ✕";
       document.getElementById("clave-input").value = "";
@@ -71,132 +99,141 @@ document.addEventListener("DOMContentLoaded", () => {
   window.cerrarLoginOverlay = cerrarLoginOverlay;
   window.comprobarClave = comprobarClave;
 
-  // ─── NOMBRE DE ARCHIVO ──────────────────────────
+  // ─── VISIBILIDAD DEL BEAT ─────────────────────
+
+  window.setVisibilidad = function(privado) {
+    esPrivado = privado;
+    document.getElementById("vis-publico").classList.toggle("active", !privado);
+    document.getElementById("vis-privado").classList.toggle("active", privado);
+  };
+
+  // ─── NOMBRE DE ARCHIVO ────────────────────────
 
   window.updateFileName = function(input) {
     const label = document.getElementById("file-name-label");
-    if (input.files && input.files[0]) {
-      label.textContent = input.files[0].name;
-    }
+    label.textContent = input.files?.[0]?.name || "Elige un archivo de audio";
   };
 
-  // ─── SUBIR BEAT ──────────────────────────────────
+  // ─── SUBIR BEAT ──────────────────────────────
 
-  window.subirBeat = async function () {
-    if (!db) { alert("Supabase no está configurado"); return; }
+  window.subirBeat = async function() {
+    if (!db) { alert("Supabase no configurado"); return; }
 
     const title = document.getElementById("beat-title").value.trim();
     const genre = document.getElementById("beat-genre").value.trim();
     const file  = document.getElementById("audio-file").files[0];
-    const btn   = document.querySelector(".upload-card .btn-gold");
+    const btn   = document.querySelector(".upload-form .btn-primary");
 
-    if (!file) {
-      alert("Selecciona un archivo de audio primero");
-      return;
-    }
+    if (!file) { alert("Selecciona un archivo de audio"); return; }
 
     btn.textContent = "Subiendo...";
     btn.disabled = true;
 
     try {
-      const cleanName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+      // Limpia el nombre del archivo
+      const cleanName = file.name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9._-]/g, "_");
       const fileName = `${Date.now()}-${cleanName}`;
 
+      // 1. Subir audio al storage
       const { error: uploadError } = await db.storage
-        .from("beats")
-        .upload(fileName, file);
-
+        .from("beats").upload(fileName, file);
       if (uploadError) throw uploadError;
 
+      // 2. URL pública
       const { data: urlData } = db.storage
-        .from("beats")
-        .getPublicUrl(fileName);
+        .from("beats").getPublicUrl(fileName);
 
+      // 3. Guardar en tabla con campo privado
       const { error: dbError } = await db.from("beats").insert([{
         title: title || "Sin título",
         genre: genre || "—",
-        audio_url: urlData.publicUrl
+        audio_url: urlData.publicUrl,
+        privado: esPrivado
       }]);
-
       if (dbError) throw dbError;
 
+      // Reset form
       document.getElementById("beat-title").value = "";
       document.getElementById("beat-genre").value = "";
       document.getElementById("audio-file").value = "";
       document.getElementById("file-name-label").textContent = "Elige un archivo de audio";
 
       btn.textContent = "¡Subido! 🔥";
-      setTimeout(() => {
-        btn.textContent = "Subir beat 🔥";
-        btn.disabled = false;
-      }, 2000);
+      setTimeout(() => { btn.textContent = "Subir beat 🔥"; btn.disabled = false; }, 2000);
 
-      cargarBeats("admin-list");
+      // Recarga la lista privada
+      cargarBeats("admin-list", true);
 
-    } catch (err) {
-      console.error("Error al subir beat:", err);
-      alert("Error al subir: " + (err.message || "revisa la consola"));
+    } catch(err) {
+      console.error("Error al subir:", err);
+      alert("Error: " + (err.message || "revisa la consola"));
       btn.textContent = "Subir beat 🔥";
       btn.disabled = false;
     }
   };
 
-  // ─── CARGAR BEATS ──────────────────────────────────
+  // ─── CARGAR BEATS ────────────────────────────
+  // soloPrivados: true → solo privados | false → solo públicos
+  // limite: número máximo de beats a mostrar (opcional)
 
-  async function cargarBeats(containerId) {
+  async function cargarBeats(containerId, soloPrivados, limite) {
     const cont = document.getElementById(containerId);
-    if (!cont) return;
-
-    if (!db) {
-      cont.innerHTML = `<p class="loading-msg">Supabase no configurado.</p>`;
-      return;
-    }
+    if (!cont || !db) return;
 
     cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
 
     try {
-      const { data, error } = await db
-        .from("beats")
-        .select("*")
+      let query = db.from("beats").select("*")
+        .eq("privado", soloPrivados)
         .order("id", { ascending: false });
 
+      if (limite) query = query.limit(limite);
+
+      const { data, error } = await query;
       if (error) throw error;
 
       if (!data || data.length === 0) {
-        cont.innerHTML = `<p class="loading-msg">Aún no hay beats. ¡Sube el primero! 🎧</p>`;
+        cont.innerHTML = `<p class="loading-msg">${soloPrivados ? "No hay beats privados aún." : "No hay beats públicos aún."}</p>`;
         return;
       }
 
       cont.innerHTML = "";
-      data.forEach(beat => {
+      data.forEach((beat, i) => {
         const card = document.createElement("div");
         card.className = "beat-card";
         card.innerHTML = `
-          <h3>${escapeHtml(beat.title)}</h3>
-          <p>${escapeHtml(beat.genre)}</p>
-          <audio controls src="${beat.audio_url}" preload="none"></audio>
+          <span class="beat-num">${String(i + 1).padStart(2, "0")}</span>
+          <div class="beat-info">
+            <h3>${escapeHtml(beat.title)}</h3>
+            <p>${escapeHtml(beat.genre)}</p>
+          </div>
+          ${beat.privado ? `<span class="beat-priv-tag"><i class="fa-solid fa-lock"></i> PRIVADO</span>` : ""}
+          <div class="beat-audio">
+            <audio controls src="${beat.audio_url}" preload="none"></audio>
+          </div>
         `;
         cont.appendChild(card);
       });
 
-    } catch (err) {
+    } catch(err) {
       console.error("Error al cargar beats:", err);
-      cont.innerHTML = `<p class="loading-msg">Error al cargar beats.</p>`;
+      cont.innerHTML = `<p class="loading-msg">Error al cargar.</p>`;
     }
   }
 
-  // ─── HELPERS ──────────────────────────────────────
+  // ─── HELPERS ────────────────────────────────
 
   function escapeHtml(str) {
     if (!str) return "";
     return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
-  // ─── INIT ──────────────────────────────────────
+  // ─── INIT ────────────────────────────────────
 
   go("home");
 
