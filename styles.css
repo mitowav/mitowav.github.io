@@ -1,32 +1,32 @@
 body{
-   margin:0;
-   overflow:hidden;
+    margin:0;
+    overflow-x:hidden;
+    font-family: Arial, sans-serif;
 }
 
-/* ================= FONDOS (NUEVO SISTEMA) ================= */
+/* ================= FONDOS ================= */
 
 .bg{
-    position: fixed;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-
-    transition: opacity 0.8s ease;
-    z-index: -2;
+    position:fixed;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    transition:opacity 0.8s ease;
+    z-index:-2;
 }
 
-#bg1{ opacity:1; }
-#bg2{ opacity:0; }
+#bg1{opacity:1;}
+#bg2{opacity:0;}
 
-/* ================= ICONOS SERGIO ================= */
+/* ================= ICONOS ================= */
 
 .corner{
-    position: fixed;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.25);
-    border: 1px solid gold;
+    position:fixed;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.25);
+    border:1px solid gold;
 
     display:flex;
     justify-content:center;
@@ -40,22 +40,21 @@ body{
 }
 
 .corner:hover{
-   opacity:1;
-   transform:scale(1.2);
-   background:rgba(255,215,0,0.3);
+    opacity:1;
+    transform:scale(1.2);
+    background:rgba(255,215,0,0.3);
 }
 
-.tl{top:20px; left:20px;}
-.tr{top:20px; right:20px;}
-.bl{bottom:20px; left:20px;}
-.br{bottom:20px; right:20px;}
+.tl{top:20px;left:20px;}
+.tr{top:20px;right:20px;}
+.bl{bottom:20px;left:20px;}
+.br{bottom:20px;right:20px;}
 
-/* ================= SECCIONES ================= */
+/* ================= SECCIONES (BEATSTARS STYLE) ================= */
 
 section{
-    position:absolute;
-    width:100%;
-    height:100vh;
+    position:relative;
+    min-height:100vh;
 
     display:flex;
     flex-direction:column;
@@ -63,8 +62,8 @@ section{
     align-items:center;
 
     opacity:0;
-    transform:translateY(40px);
-    transition:0.6s;
+    transform:translateY(60px);
+    transition:0.8s ease;
 }
 
 section.active{
@@ -72,57 +71,43 @@ section.active{
     transform:translateY(0);
 }
 
-/* ================= TITULO ================= */
+/* animación scroll */
+section.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+/* ================= TITULOS ================= */
 
 h1{
     color:#cbd5e1;
+    font-size:40px;
 }
 
-/* ================= MUSIC ================= */
+/* ================= CARDS STYLE BEATSTARS ================= */
 
-.music-container{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:20px;
+.card{
     width:80%;
-}
+    max-width:600px;
 
-.music-container input[type="file"]{
-    display:none;
-}
+    background:rgba(0,0,0,0.45);
+    backdrop-filter:blur(10px);
 
-.music-container label{
-    background:rgba(255,255,255,0.2);
-    border:1px solid gold;
-    color:white;
+    border:1px solid rgba(255,215,0,0.4);
+    border-radius:16px;
 
-    padding:12px 24px;
-    border-radius:30px;
+    padding:20px;
+    margin:10px 0;
 
-    cursor:pointer;
     transition:0.3s;
+    color:white;
 }
 
-.music-container label:hover{
-    background:rgba(255,215,0,0.3);
-    transform:scale(1.05);
+.card:hover{
+    transform:scale(1.02);
 }
 
-.beat-item{
-    background:rgba(0,0,0,0.5);
-    border:1px solid gold;
-    border-radius:12px;
-
-    padding:15px 20px;
-    width:100%;
-
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-/* ================= LOGIN (SERGIO ORIGINAL SIN TOCAR) ================= */
+/* ================= LOGIN ================= */
 
 #login-overlay{
     position:fixed;
@@ -133,7 +118,6 @@ h1{
     align-items:center;
 
     background:rgba(0,0,20,0.88);
-    backdrop-filter:blur(6px);
 
     opacity:0;
     pointer-events:none;
@@ -149,32 +133,28 @@ h1{
 
 #login-box{
     background:rgba(5,10,35,0.95);
-    border:1px solid rgba(100,150,255,0.3);
-
+    padding:40px;
     border-radius:20px;
-    padding:48px 44px 40px;
 
     display:flex;
     flex-direction:column;
-    align-items:center;
-
-    width:90%;
-    max-width:420px;
-
-    gap:16px;
-    transform:scale(0.9) translateY(30px);
-    transition:all 0.4s ease;
+    gap:10px;
 }
 
-#login-overlay.visible #login-box{
-    transform:scale(1) translateY(0);
+#login-box input{
+    padding:10px;
 }
 
-/* ================= SECRET PAGE ================= */
+#login-box button{
+    padding:10px;
+    cursor:pointer;
+}
+
+/* ================= PRIVATE ================= */
 
 .secret{
-    position:absolute;
-    inset:0;
+    position:relative;
+    min-height:100vh;
 
     display:flex;
     flex-direction:column;
@@ -184,8 +164,6 @@ h1{
     opacity:0;
     transform:translateY(40px);
     transition:0.6s;
-
-    z-index:1;
 }
 
 .secret.active{
@@ -196,10 +174,8 @@ h1{
 .back{
     margin-top:20px;
     padding:10px 20px;
-
     border:1px solid gold;
     background:rgba(0,0,0,0.4);
     color:white;
-
     cursor:pointer;
 }
