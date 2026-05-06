@@ -378,3 +378,33 @@ html, body {
   .beat-info { max-width: none; flex: 1; }
   .custom-player { width: 100%; }
 }
+
+/* ── DELETE BUTTON ── */
+.delete-btn {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 80, 80, 0.25);
+  background: rgba(255, 80, 80, 0.05);
+  color: rgba(255, 100, 100, 0.5);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  opacity: 0;
+}
+
+.beat-card:hover .delete-btn { opacity: 1; }
+
+.delete-btn:hover {
+  background: rgba(255, 60, 60, 0.15);
+  border-color: rgba(255, 80, 80, 0.6);
+  color: #ff5555;
+  transform: scale(1.1);
+}
+
+.delete-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  transform: none;
+}
