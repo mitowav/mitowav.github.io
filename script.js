@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── CREAR CARD CON PLAYER ─────────────────────
 
-  function crearCard(beat, index) {
+  function crearCard(beat, index, admin) {
     const card = document.createElement("div");
     card.className = "beat-card";
 
@@ -171,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       </div>
+      ${admin ? `<button class="delete-btn" title="Borrar beat"><i class="fa-solid fa-trash"></i></button>` : ""}
     `;
 
     // Ajusta ancho del waveform-filled una vez en el DOM
@@ -179,6 +180,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const filled = card.querySelector(".waveform-filled");
       if (wrap && filled) filled.style.width = wrap.offsetWidth + "px";
     });
+
+    // Botón borrar
+    if (admin) {
+      const delBtn = card.querySelector(".delete-btn");
+      delBtn.addEventListener("click", async () => {
+        if (!confirm(`¿Borrar "${beat.title}"?`)) return;
+        delBtn.disabled = true;
+        delBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+        try {
+          // Borra de la tabla
+          const { error } = await db.from("beats").delete().eq("id", beat.id);
+          if (error) throw error;
+          // Anima la tarjeta antes de quitarla
+          card.style.transition = "opacity 0.3s, transform 0.3s";
+          card.style.opacity = "0";
+          card.style.transform = "translateX(20px)";
+          setTimeout(() => card.remove(), 310);
+        } catch(err) {
+          console.error(err);
+          alert("Error al borrar: " + (err.message || "revisa la consola"));
+          delBtn.disabled = false;
+          delBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+        }
+      });
+    }
 
     // Init player
     const playBtn   = card.querySelector(".play-btn");
@@ -276,7 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       cont.innerHTML = "";
-      data.forEach((beat, i) => cont.appendChild(crearCard(beat, i)));
+      data.forEach((beat, i) => cont.appendChild(crearCard(beat, i, soloPrivados)));
     } catch(err) {
       console.error(err);
       cont.innerHTML = `<p class="loading-msg">Error al cargar.</p>`;
