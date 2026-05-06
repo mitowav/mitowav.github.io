@@ -99,7 +99,8 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = true;
 
     try {
-      const fileName = `${Date.now()}-${file.name}`;
+      const cleanName = file.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+      const fileName = `${Date.now()}-${cleanName}`;
 
       const { error: uploadError } = await db.storage
         .from("beats")
