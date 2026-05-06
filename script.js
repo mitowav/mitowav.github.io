@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (closeMenu) toggleMenu(true);
     if (id === "beats")   cargarBeats("beats-list", false);
     if (id === "home")    cargarBeats("home-beats", false, 3);
-    if (id === "privado") cargarBeats("admin-list", true);
+    if (id === "privado") cargarBeats("admin-list", null);
   }
   window.go = go;
 
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("file-name-label").textContent = "Elige un archivo de audio";
       btn.textContent = "¡Subido! 🔥";
       setTimeout(() => { btn.textContent = "Subir beat 🔥"; btn.disabled = false; }, 2000);
-      cargarBeats("admin-list", true);
+      cargarBeats("admin-list", null);
     } catch(err) {
       console.error(err);
       alert("Error: " + (err.message || "revisa la consola"));
@@ -353,19 +353,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const cont = document.getElementById(containerId);
     if (!cont || !db) return;
     cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    // soloPrivados=false → solo públicos | soloPrivados=true → solo privados | null → todos
+    const admin = soloPrivados === null;
     try {
-      let q = db.from("beats").select("*")
-        .eq("privado", soloPrivados)
-        .order("id", { ascending: false });
+      let q = db.from("beats").select("*").order("id", { ascending: false });
+      if (soloPrivados !== null) q = q.eq("privado", soloPrivados);
       if (limite) q = q.limit(limite);
       const { data, error } = await q;
       if (error) throw error;
       if (!data || data.length === 0) {
-        cont.innerHTML = `<p class="loading-msg">${soloPrivados ? "No hay beats privados aún." : "No hay beats públicos aún. 🎧"}</p>`;
+        cont.innerHTML = `<p class="loading-msg">No hay beats aún. 🎧</p>`;
         return;
       }
       cont.innerHTML = "";
-      data.forEach((beat, i) => cont.appendChild(crearCard(beat, i, soloPrivados)));
+      data.forEach((beat, i) => cont.appendChild(crearCard(beat, i, admin)));
     } catch(err) {
       console.error(err);
       cont.innerHTML = `<p class="loading-msg">Error al cargar.</p>`;
