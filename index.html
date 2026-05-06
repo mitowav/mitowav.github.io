@@ -10,32 +10,74 @@
 
 <body>
 
-<!-- 🌌 FONDOS (NUEVO SISTEMA) -->
+<!-- 🌌 FONDOS -->
 <div id="bg1" class="bg"></div>
 <div id="bg2" class="bg"></div>
 
-<!-- ICONOS SERGIO -->
-<div class="corner tl" onclick="go('home')"><i class="fa-solid fa-house"></i></div>
-<div class="corner tr" onclick="go('music')"><i class="fa-solid fa-music"></i></div>
-<div class="corner bl" onclick="go('about')"><i class="fa-solid fa-user"></i></div>
-<div class="corner br" onclick="openLogin()"><i class="fa-solid fa-lock"></i></div>
+<!-- ================= ICONOS SERGIO ================= -->
 
-<!-- HOME -->
+<div class="corner tl" onclick="go('home')">
+  <i class="fa-solid fa-house"></i>
+</div>
+
+<div class="corner tr" onclick="go('music')">
+  <i class="fa-solid fa-music"></i>
+</div>
+
+<div class="corner bl" onclick="go('about')">
+  <i class="fa-solid fa-user"></i>
+</div>
+
+<div class="corner br" onclick="openLogin()">
+  <i class="fa-solid fa-lock"></i>
+</div>
+
+<!-- ================= HOME ================= -->
+
 <section id="home" class="active">
+
   <h1>ADRI</h1>
+
+  <div class="card">
+    Bienvenido a mi mundo musical 🎧
+  </div>
+
 </section>
 
-<!-- MUSIC -->
+<!-- ================= MUSIC ================= -->
+
 <section id="music">
+
   <h1>BEATS</h1>
+
+  <div class="card">
+    Beat 1 - preview
+  </div>
+
+  <div class="card">
+    Beat 2 - preview
+  </div>
+
+  <div class="card">
+    Beat 3 - preview
+  </div>
+
 </section>
 
-<!-- ABOUT -->
+<!-- ================= ABOUT ================= -->
+
 <section id="about">
+
   <h1>ABOUT</h1>
+
+  <div class="card">
+    Soy Adri, artista independiente creando sonido propio.
+  </div>
+
 </section>
 
-<!-- LOGIN -->
+<!-- ================= LOGIN ================= -->
+
 <div id="login-overlay">
   <div id="login-box">
 
@@ -50,11 +92,20 @@
   </div>
 </div>
 
-<!-- PRIVADO -->
+<!-- ================= PRIVADO ================= -->
+
 <section id="secret" class="secret">
+
   <h1>ZONA PRIVADA</h1>
 
-  <button class="back" onclick="go('home')">← Volver</button>
+  <div class="card">
+    Aquí irán los beats exclusivos 🔒
+  </div>
+
+  <button class="back" onclick="go('home')">
+    ← Volver
+  </button>
+
 </section>
 
 <script src="script.js"></script>
