@@ -1,7 +1,8 @@
 body{
-    margin:0;
-    overflow-x:hidden;
-    font-family: Arial, sans-serif;
+   margin:0;
+   font-family: Arial, sans-serif;
+   overflow-x:hidden;
+   background: black;
 }
 
 /* ================= FONDOS ================= */
@@ -11,22 +12,26 @@ body{
     inset:0;
     background-size:cover;
     background-position:center;
+
     transition:opacity 0.8s ease;
     z-index:-2;
+
+    filter: brightness(0.7) contrast(1.1);
 }
 
 #bg1{opacity:1;}
 #bg2{opacity:0;}
 
-/* ================= ICONOS ================= */
+/* ================= ICONOS SERGIO (MISMO ADN) ================= */
 
 .corner{
     position:fixed;
-    width:60px;
-    height:60px;
+    width:58px;
+    height:58px;
+
     border-radius:50%;
-    background:rgba(255,255,255,0.25);
-    border:1px solid gold;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,215,0,0.6);
 
     display:flex;
     justify-content:center;
@@ -34,15 +39,17 @@ body{
 
     cursor:pointer;
     transition:0.3s;
-    z-index:1000;
 
-    opacity:0;
+    z-index:1000;
+    opacity:0.7;
+
+    backdrop-filter: blur(6px);
 }
 
 .corner:hover{
     opacity:1;
-    transform:scale(1.2);
-    background:rgba(255,215,0,0.3);
+    transform:scale(1.15);
+    background:rgba(255,215,0,0.15);
 }
 
 .tl{top:20px;left:20px;}
@@ -50,7 +57,7 @@ body{
 .bl{bottom:20px;left:20px;}
 .br{bottom:20px;right:20px;}
 
-/* ================= SECCIONES (BEATSTARS STYLE) ================= */
+/* ================= SECCIONES ================= */
 
 section{
     position:relative;
@@ -62,8 +69,8 @@ section{
     align-items:center;
 
     opacity:0;
-    transform:translateY(60px);
-    transition:0.8s ease;
+    transform:translateY(50px);
+    transition:0.7s ease;
 }
 
 section.active{
@@ -71,40 +78,36 @@ section.active{
     transform:translateY(0);
 }
 
-/* animación scroll */
-section.show{
-    opacity:1;
-    transform:translateY(0);
-}
-
 /* ================= TITULOS ================= */
 
 h1{
-    color:#cbd5e1;
-    font-size:40px;
+    color:#e5e7eb;
+    letter-spacing:3px;
+    font-weight:300;
 }
 
-/* ================= CARDS STYLE BEATSTARS ================= */
+/* ================= CARDS (ESTILO SERGIO + MODERNO) ================= */
 
 .card{
     width:80%;
-    max-width:600px;
+    max-width:520px;
 
-    background:rgba(0,0,0,0.45);
-    backdrop-filter:blur(10px);
+    padding:18px 22px;
 
-    border:1px solid rgba(255,215,0,0.4);
-    border-radius:16px;
+    background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(12px);
 
-    padding:20px;
-    margin:10px 0;
+    border:1px solid rgba(255,215,0,0.25);
+    border-radius:14px;
+
+    color:white;
 
     transition:0.3s;
-    color:white;
 }
 
 .card:hover{
-    transform:scale(1.02);
+    transform:translateY(-3px);
+    border-color:rgba(255,215,0,0.6);
 }
 
 /* ================= LOGIN ================= */
@@ -117,7 +120,7 @@ h1{
     justify-content:center;
     align-items:center;
 
-    background:rgba(0,0,20,0.88);
+    background:rgba(0,0,0,0.85);
 
     opacity:0;
     pointer-events:none;
@@ -132,25 +135,27 @@ h1{
 }
 
 #login-box{
-    background:rgba(5,10,35,0.95);
-    padding:40px;
-    border-radius:20px;
+    background:rgba(10,10,20,0.9);
+    border:1px solid rgba(255,215,0,0.3);
+
+    padding:30px;
+    border-radius:16px;
 
     display:flex;
     flex-direction:column;
     gap:10px;
+
+    color:white;
 }
 
 #login-box input{
     padding:10px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,215,0,0.3);
+    color:white;
 }
 
-#login-box button{
-    padding:10px;
-    cursor:pointer;
-}
-
-/* ================= PRIVATE ================= */
+/* ================= PRIVADO ================= */
 
 .secret{
     position:relative;
@@ -173,9 +178,16 @@ h1{
 
 .back{
     margin-top:20px;
-    padding:10px 20px;
+    padding:10px 18px;
+
     border:1px solid gold;
-    background:rgba(0,0,0,0.4);
+    background:rgba(0,0,0,0.3);
     color:white;
+
     cursor:pointer;
+    transition:0.3s;
+}
+
+.back:hover{
+    background:rgba(255,215,0,0.1);
 }
