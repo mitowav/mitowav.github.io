@@ -1,46 +1,34 @@
 function go(id){
-    document.querySelectorAll(".page").forEach(p=>{
-        p.classList.remove("active");
+    document.querySelectorAll("section").forEach(sec=>{
+        sec.classList.remove("active");
     });
 
-    document.getElementById(id).classList.add("active");
+    const el = document.getElementById(id);
+    if(el) el.classList.add("active");
 }
 
 /* LOGIN */
 function openLogin(){
-    document.getElementById("login-overlay").classList.add("visible");
+    document.getElementById("login-overlay").style.opacity = "1";
+    document.getElementById("login-overlay").style.pointerEvents = "all";
 }
 
 function cerrarLogin(){
-    document.getElementById("login-overlay").classList.remove("visible");
+    document.getElementById("login-overlay").style.opacity = "0";
+    document.getElementById("login-overlay").style.pointerEvents = "none";
 }
 
-/* 🔑 CLAVE SIMPLE */
+/* CLAVE SIMPLE */
 function comprobarClave(){
-    const clave = document.getElementById("clave-input").value;
+    const input = document.getElementById("clave-input");
+    const error = document.getElementById("error-msg");
 
-    if(clave === "1234"){
+    if(!input) return;
+
+    if(input.value === "1234"){
         cerrarLogin();
         go("secret");
     } else {
-        document.getElementById("error-msg").textContent = "Clave incorrecta";
+        error.textContent = "Clave incorrecta";
     }
 }
-
-/* BEATS */
-document.getElementById("subirBeat")?.addEventListener("change", e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const url = URL.createObjectURL(file);
-
-    const div = document.createElement("div");
-    div.className = "beat-item";
-
-    div.innerHTML = `
-        <p>🎵 ${file.name}</p>
-        <audio controls src="${url}"></audio>
-    `;
-
-    document.getElementById("listaBeat").appendChild(div);
-});
