@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mitø</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="bg-gradient"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo" onclick="go('home')">mit<span class="o">ø</span></div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="go('home', this)">HOME</button>
+    <button class="nav-btn" onclick="go('beats', this)">BEATS</button>
+    <button class="nav-btn" onclick="go('about', this)">ABOUT</button>
+    <button class="nav-btn lock-btn" onclick="openLogin('privado')">
+      <i class="fa-solid fa-lock"></i> PRIVADO
+    </button>
+  </div>
+  <button class="nav-burger" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <button onclick="go('home', null, true)">HOME</button>
+  <button onclick="go('beats', null, true)">BEATS</button>
+  <button onclick="go('about', null, true)">ABOUT</button>
+  <button onclick="openLogin('privado'); toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
+</div>
+
+<!-- PÁGINAS -->
+<main id="app">
+
+  <!-- HOME -->
+  <section id="home" class="page active">
+    <div class="hero">
+      <div class="hero-img-wrap">
+        <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=900&q=80" alt="mitø" class="hero-img">
+        <div class="hero-img-overlay"></div>
+      </div>
+      <div class="hero-text">
+        <p class="hero-sub">ARTISTA INDEPENDIENTE · CÓRDOBA</p>
+        <h1 class="hero-title">mit<span class="o">ø</span></h1>
+        <p class="hero-desc">Beats desde cero. Sonido propio. Sin filtros.</p>
+        <div class="hero-btns">
+          <button class="btn-primary" onclick="go('beats', document.querySelector('.nav-btn:nth-child(2)'))">
+            <i class="fa-solid fa-play"></i> ESCUCHAR BEATS
+          </button>
+          <div class="social-row">
+            <a href="#" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
+            <a href="#" title="SoundCloud"><i class="fa-brands fa-soundcloud"></i></a>
+            <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMOS BEATS en home -->
+    <div class="home-section">
+      <div class="section-header">
+        <h2>ÚLTIMOS BEATS</h2>
+        <button class="link-btn" onclick="go('beats', document.querySelector('.nav-btn:nth-child(2)'))">Ver todos →</button>
+      </div>
+      <div id="home-beats" class="beats-grid"></div>
+    </div>
+  </section>
+
+  <!-- BEATS PÚBLICOS -->
+  <section id="beats" class="page">
+    <div class="page-wrap">
+      <div class="section-header">
+        <h2>BEATS</h2>
+        <p class="section-sub">Producciones disponibles</p>
+      </div>
+      <div id="beats-list" class="beats-grid"></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="page">
+    <div class="about-wrap">
+      <div class="about-img-col">
+        <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80" alt="mitø" class="about-img">
+      </div>
+      <div class="about-text-col">
+        <p class="hero-sub">SOBRE MÍ</p>
+        <h2 class="about-title">mit<span class="o">ø</span></h2>
+        <p class="about-bio">
+          Soy <strong>mitø</strong>, productor y artista independiente de Córdoba.<br><br>
+          Creo mis propios beats, escribo mis letras y construyo mi mundo desde cero. 
+          Sin sellos, sin intermediarios — solo música honesta.
+        </p>
+        <div class="social-row">
+          <a href="#" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
+          <a href="#" title="SoundCloud"><i class="fa-brands fa-soundcloud"></i></a>
+          <a href="#" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ZONA PRIVADA -->
+  <section id="privado" class="page">
+    <div class="page-wrap">
+      <div class="section-header">
+        <h2>ZONA PRIVADA <span class="badge">BAND ONLY</span></h2>
+        <p class="section-sub">Solo para la banda</p>
+      </div>
+
+      <!-- SUBIR BEAT -->
+      <div class="upload-box">
+        <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> SUBIR BEAT</h3>
+        <div class="upload-form">
+          <input type="text" id="beat-title" placeholder="Nombre del beat" class="field">
+          <input type="text" id="beat-genre" placeholder="Género / vibe" class="field">
+          <label class="file-label">
+            <i class="fa-solid fa-file-audio"></i>
+            <span id="file-name-label">Elige un archivo de audio</span>
+            <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
+          </label>
+          <!-- SELECTOR PÚBLICO / PRIVADO -->
+          <div class="visibility-toggle">
+            <span class="vis-label">Visibilidad:</span>
+            <div class="vis-options">
+              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)">
+                <i class="fa-solid fa-globe"></i> PÚBLICO
+              </button>
+              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)">
+                <i class="fa-solid fa-lock"></i> PRIVADO
+              </button>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="subirBeat()">Subir beat 🔥</button>
+        </div>
+      </div>
+
+      <!-- BEATS PRIVADOS -->
+      <div class="section-header" style="margin-top:40px">
+        <h3>BEATS PRIVADOS</h3>
+      </div>
+      <div id="admin-list" class="beats-grid"></div>
+
+      <button class="btn-back" onclick="go('home')">← Volver al inicio</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" onclick="cerrarLoginOverlay(event)">
+  <div id="login-box">
+    <button class="close-btn" onclick="cerrarLogin()">✕</button>
+    <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+    <h2>ACCESO PRIVADO</h2>
+    <p class="login-sub">Solo para la banda</p>
+    <input type="password" id="clave-input" placeholder="Clave secreta" class="field"
+      onkeydown="if(event.key==='Enter') comprobarClave()">
+    <button class="btn-primary" onclick="comprobarClave()">Entrar</button>
+    <p id="error-msg"></p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
