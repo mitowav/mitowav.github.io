@@ -4,31 +4,28 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  /* ===== SUPABASE =====
-     Reemplaza estas dos variables con tus datos reales de Supabase
-     Los encuentras en: Project Settings → API
-  ===== */
+  /* ===== SUPABASE ===== */
   const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
-  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let db = null;
+  try {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  } catch(e) {
+    console.warn("Supabase error:", e.message);
+  }
 
   /* ===== CLAVE DE ACCESO PRIVADO =====
-     Cambia "1234" por la clave que quieras usar
-     (más adelante puedes moverlo a Supabase para más seguridad)
+     Cambia "1234" por la clave que quieras
   ===== */
   const CLAVE_SECRETA = "1234";
 
   // ─── PÁGINAS ──────────────────────────────────────
 
   function go(id) {
-    // Oculta todas las páginas
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-
-    // Muestra la solicitada
     const target = document.getElementById(id);
     if (target) target.classList.add("active");
-
-    // Carga beats si vamos a music o secret
     if (id === "music") cargarBeats("beats-list");
     if (id === "secret") cargarBeats("admin-list");
   }
@@ -49,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("error-msg").textContent = "";
   }
 
-  // Cierra el overlay si hace click fuera del login-box
   function cerrarLoginOverlay(e) {
     if (e.target === document.getElementById("login-overlay")) {
       cerrarLogin();
@@ -87,36 +83,34 @@ document.addEventListener("DOMContentLoaded", () => {
   // ─── SUBIR BEAT ──────────────────────────────────
 
   window.subirBeat = async function () {
-    const title  = document.getElementById("beat-title").value.trim();
-    const genre  = document.getElementById("beat-genre").value.trim();
-    const file   = document.getElementById("audio-file").files[0];
-    const btn    = document.querySelector(".upload-card .btn-gold");
+    if (!db) { alert("Supabase no está configurado"); return; }
+
+    const title = document.getElementById("beat-title").value.trim();
+    const genre = document.getElementById("beat-genre").value.trim();
+    const file  = document.getElementById("audio-file").files[0];
+    const btn   = document.querySelector(".upload-card .btn-gold");
 
     if (!file) {
       alert("Selecciona un archivo de audio primero");
       return;
     }
 
-    // Estado de carga
     btn.textContent = "Subiendo...";
     btn.disabled = true;
 
     try {
       const fileName = `${Date.now()}-${file.name}`;
 
-      // 1. Subir archivo al storage de Supabase (bucket "beats")
       const { error: uploadError } = await db.storage
         .from("beats")
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Obtener URL pública
       const { data: urlData } = db.storage
         .from("beats")
         .getPublicUrl(fileName);
 
-      // 3. Guardar metadatos en la tabla "beats"
       const { error: dbError } = await db.from("beats").insert([{
         title: title || "Sin título",
         genre: genre || "—",
@@ -125,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (dbError) throw dbError;
 
-      // Reset form
       document.getElementById("beat-title").value = "";
       document.getElementById("beat-genre").value = "";
       document.getElementById("audio-file").value = "";
@@ -137,7 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.disabled = false;
       }, 2000);
 
-      // Recargar lista en la zona privada
       cargarBeats("admin-list");
 
     } catch (err) {
@@ -153,6 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarBeats(containerId) {
     const cont = document.getElementById(containerId);
     if (!cont) return;
+
+    if (!db) {
+      cont.innerHTML = `<p class="loading-msg">Supabase no configurado.</p>`;
+      return;
+    }
 
     cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
 
