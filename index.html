@@ -6,6 +6,10 @@
 
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 
 <body>
@@ -14,97 +18,56 @@
 <div id="bg1" class="bg"></div>
 <div id="bg2" class="bg"></div>
 
-<!-- ================= ICONOS SERGIO ================= -->
+<!-- ICONOS -->
+<div class="corner tl" onclick="go('home')"><i class="fa-solid fa-house"></i></div>
+<div class="corner tr" onclick="go('music')"><i class="fa-solid fa-music"></i></div>
+<div class="corner bl" onclick="go('about')"><i class="fa-solid fa-user"></i></div>
+<div class="corner br" onclick="openLogin()"><i class="fa-solid fa-lock"></i></div>
 
-<div class="corner tl" onclick="go('home')">
-  <i class="fa-solid fa-house"></i>
-</div>
-
-<div class="corner tr" onclick="go('music')">
-  <i class="fa-solid fa-music"></i>
-</div>
-
-<div class="corner bl" onclick="go('about')">
-  <i class="fa-solid fa-user"></i>
-</div>
-
-<div class="corner br" onclick="openLogin()">
-  <i class="fa-solid fa-lock"></i>
-</div>
-
-<!-- ================= HOME ================= -->
-
+<!-- HOME -->
 <section id="home" class="active">
-
   <h1>ADRI</h1>
-
-  <div class="card">
-    Bienvenido a mi mundo musical 🎧
-  </div>
-
+  <div class="card">Bienvenido a mi mundo musical 🎧</div>
 </section>
 
-<!-- ================= MUSIC ================= -->
-
+<!-- MUSIC -->
 <section id="music">
-
   <h1>BEATS</h1>
-
-  <div class="card">
-    Beat 1 - preview
-  </div>
-
-  <div class="card">
-    Beat 2 - preview
-  </div>
-
-  <div class="card">
-    Beat 3 - preview
-  </div>
-
+  <div id="beats-list"></div>
 </section>
 
-<!-- ================= ABOUT ================= -->
-
+<!-- ABOUT -->
 <section id="about">
-
   <h1>ABOUT</h1>
-
-  <div class="card">
-    Soy Adri, artista independiente creando sonido propio.
-  </div>
-
+  <div class="card">Soy Adri, artista independiente creando sonido propio.</div>
 </section>
 
-<!-- ================= LOGIN ================= -->
-
+<!-- LOGIN -->
 <div id="login-overlay">
   <div id="login-box">
-
     <h2>Acceso privado</h2>
-
     <input type="password" id="clave-input" placeholder="Clave">
-
     <button onclick="comprobarClave()">Entrar</button>
-
     <p id="error-msg"></p>
-
   </div>
 </div>
 
-<!-- ================= PRIVADO ================= -->
-
+<!-- PRIVADO -->
 <section id="secret" class="secret">
 
   <h1>ZONA PRIVADA</h1>
 
   <div class="card">
-    Aquí irán los beats exclusivos 🔒
+    <input type="text" id="title" placeholder="Nombre beat"><br><br>
+    <input type="text" id="genre" placeholder="Género"><br><br>
+    <input type="file" id="audio"><br><br>
+
+    <button onclick="subirBeat()">Subir beat</button>
   </div>
 
-  <button class="back" onclick="go('home')">
-    ← Volver
-  </button>
+  <div id="admin-list"></div>
+
+  <button class="back" onclick="go('home')">← Volver</button>
 
 </section>
 
