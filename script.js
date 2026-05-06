@@ -1,132 +1,205 @@
+// =============================================
+//   mitø — SCRIPT.JS
+// =============================================
+
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* ================= SUPABASE ================= */
+  /* ===== SUPABASE =====
+     Reemplaza estas dos variables con tus datos reales de Supabase
+     Los encuentras en: Project Settings → API
+  ===== */
+  const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
+  const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const supabaseUrl = "TU_URL_DE_SUPABASE";
-    const supabaseKey = "TU_ANON_KEY";
+  /* ===== CLAVE DE ACCESO PRIVADO =====
+     Cambia "1234" por la clave que quieras usar
+     (más adelante puedes moverlo a Supabase para más seguridad)
+  ===== */
+  const CLAVE_SECRETA = "1234";
 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  // ─── PÁGINAS ──────────────────────────────────────
 
-    /* ================= NAV ================= */
+  function go(id) {
+    // Oculta todas las páginas
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
 
-    function go(id){
+    // Muestra la solicitada
+    const target = document.getElementById(id);
+    if (target) target.classList.add("active");
 
-        document.querySelectorAll("section").forEach(sec=>{
-            sec.classList.remove("active");
-        });
+    // Carga beats si vamos a music o secret
+    if (id === "music") cargarBeats("beats-list");
+    if (id === "secret") cargarBeats("admin-list");
+  }
 
-        const el = document.getElementById(id);
-        if(el) el.classList.add("active");
+  window.go = go;
 
-        if(id === "music") cargarBeats();
+  // ─── LOGIN ──────────────────────────────────────
+
+  function openLogin() {
+    document.getElementById("login-overlay").classList.add("visible");
+    document.getElementById("clave-input").focus();
+    document.getElementById("error-msg").textContent = "";
+  }
+
+  function cerrarLogin() {
+    document.getElementById("login-overlay").classList.remove("visible");
+    document.getElementById("clave-input").value = "";
+    document.getElementById("error-msg").textContent = "";
+  }
+
+  // Cierra el overlay si hace click fuera del login-box
+  function cerrarLoginOverlay(e) {
+    if (e.target === document.getElementById("login-overlay")) {
+      cerrarLogin();
+    }
+  }
+
+  function comprobarClave() {
+    const input = document.getElementById("clave-input").value;
+    const errorEl = document.getElementById("error-msg");
+
+    if (input === CLAVE_SECRETA) {
+      cerrarLogin();
+      go("secret");
+    } else {
+      errorEl.textContent = "Clave incorrecta ✕";
+      document.getElementById("clave-input").value = "";
+      document.getElementById("clave-input").focus();
+    }
+  }
+
+  window.openLogin = openLogin;
+  window.cerrarLogin = cerrarLogin;
+  window.cerrarLoginOverlay = cerrarLoginOverlay;
+  window.comprobarClave = comprobarClave;
+
+  // ─── NOMBRE DE ARCHIVO ──────────────────────────
+
+  window.updateFileName = function(input) {
+    const label = document.getElementById("file-name-label");
+    if (input.files && input.files[0]) {
+      label.textContent = input.files[0].name;
+    }
+  };
+
+  // ─── SUBIR BEAT ──────────────────────────────────
+
+  window.subirBeat = async function () {
+    const title  = document.getElementById("beat-title").value.trim();
+    const genre  = document.getElementById("beat-genre").value.trim();
+    const file   = document.getElementById("audio-file").files[0];
+    const btn    = document.querySelector(".upload-card .btn-gold");
+
+    if (!file) {
+      alert("Selecciona un archivo de audio primero");
+      return;
     }
 
-    window.go = go;
+    // Estado de carga
+    btn.textContent = "Subiendo...";
+    btn.disabled = true;
 
-    /* ================= LOGIN ================= */
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
 
-    function openLogin(){
-        document.getElementById("login-overlay").classList.add("visible");
+      // 1. Subir archivo al storage de Supabase (bucket "beats")
+      const { error: uploadError } = await db.storage
+        .from("beats")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // 2. Obtener URL pública
+      const { data: urlData } = db.storage
+        .from("beats")
+        .getPublicUrl(fileName);
+
+      // 3. Guardar metadatos en la tabla "beats"
+      const { error: dbError } = await db.from("beats").insert([{
+        title: title || "Sin título",
+        genre: genre || "—",
+        audio_url: urlData.publicUrl
+      }]);
+
+      if (dbError) throw dbError;
+
+      // Reset form
+      document.getElementById("beat-title").value = "";
+      document.getElementById("beat-genre").value = "";
+      document.getElementById("audio-file").value = "";
+      document.getElementById("file-name-label").textContent = "Elige un archivo de audio";
+
+      btn.textContent = "¡Subido! 🔥";
+      setTimeout(() => {
+        btn.textContent = "Subir beat 🔥";
+        btn.disabled = false;
+      }, 2000);
+
+      // Recargar lista en la zona privada
+      cargarBeats("admin-list");
+
+    } catch (err) {
+      console.error("Error al subir beat:", err);
+      alert("Error al subir: " + (err.message || "revisa la consola"));
+      btn.textContent = "Subir beat 🔥";
+      btn.disabled = false;
     }
+  };
 
-    function cerrarLogin(){
-        document.getElementById("login-overlay").classList.remove("visible");
+  // ─── CARGAR BEATS ──────────────────────────────────
+
+  async function cargarBeats(containerId) {
+    const cont = document.getElementById(containerId);
+    if (!cont) return;
+
+    cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+
+    try {
+      const { data, error } = await db
+        .from("beats")
+        .select("*")
+        .order("id", { ascending: false });
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        cont.innerHTML = `<p class="loading-msg">Aún no hay beats. ¡Sube el primero! 🎧</p>`;
+        return;
+      }
+
+      cont.innerHTML = "";
+      data.forEach(beat => {
+        const card = document.createElement("div");
+        card.className = "beat-card";
+        card.innerHTML = `
+          <h3>${escapeHtml(beat.title)}</h3>
+          <p>${escapeHtml(beat.genre)}</p>
+          <audio controls src="${beat.audio_url}" preload="none"></audio>
+        `;
+        cont.appendChild(card);
+      });
+
+    } catch (err) {
+      console.error("Error al cargar beats:", err);
+      cont.innerHTML = `<p class="loading-msg">Error al cargar beats.</p>`;
     }
+  }
 
-    function comprobarClave(){
+  // ─── HELPERS ──────────────────────────────────────
 
-        const input = document.getElementById("clave-input");
-        const error = document.getElementById("error-msg");
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
 
-        if(input.value === "1234"){
-            cerrarLogin();
-            go("secret");
-        } else {
-            error.textContent = "Clave incorrecta";
-        }
-    }
+  // ─── INIT ──────────────────────────────────────
 
-    window.openLogin = openLogin;
-    window.cerrarLogin = cerrarLogin;
-    window.comprobarClave = comprobarClave;
-
-    /* ================= SUBIR BEAT ================= */
-
-    window.subirBeat = async function(){
-
-        const title = document.getElementById("title").value;
-        const genre = document.getElementById("genre").value;
-        const file = document.getElementById("audio").files[0];
-
-        if(!file){
-            alert("Selecciona un audio");
-            return;
-        }
-
-        const fileName = Date.now() + "-" + file.name;
-
-        // subir a storage
-        const { error: uploadError } = await supabase
-            .storage
-            .from("beats")
-            .upload(fileName, file);
-
-        if(uploadError){
-            console.log(uploadError);
-            return;
-        }
-
-        const url = supabase
-            .storage
-            .from("beats")
-            .getPublicUrl(fileName).data.publicUrl;
-
-        // guardar en base de datos
-        await supabase.from("beats").insert([
-            {
-                title: title || "Sin título",
-                genre: genre || "Unknown",
-                audio_url: url
-            }
-        ]);
-
-        alert("Beat subido 🔥");
-
-        cargarBeats();
-    }
-
-    /* ================= CARGAR BEATS ================= */
-
-    async function cargarBeats(){
-
-        const cont = document.getElementById("beats-list");
-        if(!cont) return;
-
-        const { data, error } = await supabase
-            .from("beats")
-            .select("*")
-            .order("id", { ascending:false });
-
-        if(error){
-            console.log(error);
-            return;
-        }
-
-        cont.innerHTML = "";
-
-        data.forEach(beat=>{
-            cont.innerHTML += `
-            <div class="card">
-                <h3>${beat.title}</h3>
-                <p>${beat.genre}</p>
-                <audio controls src="${beat.audio_url}"></audio>
-            </div>
-            `;
-        });
-    }
-
-    /* ================= INIT ================= */
-
-    go("home");
+  go("home");
 
 });
