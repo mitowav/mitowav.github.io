@@ -1,244 +1,504 @@
-body{
-   margin:0;
-   font-family: Arial, sans-serif;
-   overflow-x:hidden;
-   background: black;
+/* =============================================
+   mitø — WEBSITE CSS
+   ============================================= */
+
+:root {
+  --gold: #f5c842;
+  --gold-dim: rgba(245, 200, 66, 0.25);
+  --gold-glow: rgba(245, 200, 66, 0.08);
+  --bg: #080810;
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --text: #e8e8f0;
+  --text-dim: rgba(232, 232, 240, 0.5);
+  --radius: 14px;
 }
 
-/* ================= FONDOS ================= */
+/* ===== RESET & BASE ===== */
 
-.bg{
-    position:fixed;
-    inset:0;
-    background-size:cover;
-    background-position:center;
-
-    transition:opacity 1.2s ease, transform 1.2s ease;
-    z-index:-2;
-
-    filter: brightness(0.65) contrast(1.15) saturate(1.1);
-    transform: scale(1.05);
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-#bg1{opacity:1;}
-#bg2{opacity:0;}
-
-/* ================= ICONOS SERGIO ================= */
-
-.corner{
-    position:fixed;
-    width:58px;
-    height:58px;
-
-    border-radius:50%;
-    background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,215,0,0.6);
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    cursor:pointer;
-    transition:0.25s;
-
-    z-index:1000;
-    opacity:0.75;
-
-    backdrop-filter: blur(8px);
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* ← CLAVE: sin scroll, una sola vista */
+  background: var(--bg);
+  font-family: 'Space Mono', monospace;
+  color: var(--text);
 }
 
-.corner:hover{
-    opacity:1;
-    transform:scale(1.18) rotate(2deg);
-    background:rgba(255,215,0,0.15);
+/* ===== FONDO ===== */
+
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(80, 40, 140, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 70%, rgba(245, 200, 66, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, rgba(10, 8, 25, 1) 40%, rgba(5, 5, 15, 1) 100%);
+  animation: bgPulse 12s ease-in-out infinite alternate;
 }
 
-.tl{top:20px;left:20px;}
-.tr{top:20px;right:20px;}
-.bl{bottom:20px;left:20px;}
-.br{bottom:20px;right:20px;}
-
-/* ================= SECCIONES ================= */
-
-section{
-    position:relative;
-    min-height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-
-    opacity:0;
-    transform:translateY(60px);
-    transition:0.8s cubic-bezier(.2,.8,.2,1);
-
-    padding:80px 20px;
+@keyframes bgPulse {
+  0%   { filter: brightness(1) hue-rotate(0deg); }
+  100% { filter: brightness(1.12) hue-rotate(8deg); }
 }
 
-section.active{
-    opacity:1;
-    transform:translateY(0);
+/* Textura de grano */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.04;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px;
 }
 
-/* ================= TITULOS ================= */
+/* ===== NAVEGACIÓN ESQUINAS ===== */
 
-h1{
-    color:#e5e7eb;
-    letter-spacing:4px;
-    font-weight:300;
-
-    animation: fadeIn 1s ease;
+.corner-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
 }
 
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(10px);}
-    to{opacity:1; transform:translateY(0);}
+.corner {
+  position: fixed;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--gold-dim);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(.2,.8,.2,1);
+  z-index: 100;
+  pointer-events: all;
+  backdrop-filter: blur(12px);
+  color: var(--gold);
+  font-size: 16px;
+  opacity: 0.7;
 }
 
-/* ================= CARDS ================= */
-
-.card{
-    width:80%;
-    max-width:520px;
-
-    padding:18px 22px;
-
-    background:rgba(0,0,0,0.35);
-    backdrop-filter:blur(14px);
-
-    border:1px solid rgba(255,215,0,0.25);
-    border-radius:14px;
-
-    color:white;
-
-    transition:0.3s;
-
-    margin:10px 0;
+.corner:hover {
+  opacity: 1;
+  transform: scale(1.15);
+  background: var(--gold-glow);
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(245, 200, 66, 0.2);
 }
 
-.card:hover{
-    transform:translateY(-5px) scale(1.01);
-    border-color:rgba(255,215,0,0.6);
+.tl { top: 22px; left: 22px; }
+.tr { top: 22px; right: 22px; }
+.bl { bottom: 22px; left: 22px; }
+.br { bottom: 22px; right: 22px; }
+
+/* ===== MAIN / PÁGINAS ===== */
+
+#app {
+  position: fixed;       /* ← Todo ocupa exactamente la pantalla */
+  inset: 0;
+  z-index: 10;
 }
 
-/* ================= AUDIO (IMPORTANTE PARA BEATS) ================= */
+.page {
+  position: absolute;    /* ← Todas las páginas apiladas */
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 90px 24px;
 
-audio{
-    width:100%;
-    margin-top:10px;
-    filter: drop-shadow(0 0 10px rgba(255,215,0,0.15));
+  opacity: 0;
+  transform: translateY(24px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.55s cubic-bezier(.2,.8,.2,1),
+              transform 0.55s cubic-bezier(.2,.8,.2,1);
 }
 
-/* ================= LOGIN ================= */
-
-#login-overlay{
-    position:fixed;
-    inset:0;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    background:rgba(0,0,0,0.88);
-
-    opacity:0;
-    pointer-events:none;
-
-    transition:0.4s;
-    z-index:9999;
+.page.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
 }
 
-#login-overlay.visible{
-    opacity:1;
-    pointer-events:all;
+.page-content {
+  width: 100%;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dim) transparent;
 }
 
-#login-box{
-    background:rgba(10,10,20,0.92);
-    border:1px solid rgba(255,215,0,0.35);
+.page-content::-webkit-scrollbar { width: 4px; }
+.page-content::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 10px; }
 
-    padding:30px;
-    border-radius:16px;
+/* ===== HOME / LOGO ===== */
 
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-
-    color:white;
-
-    transform:scale(0.95);
-    transition:0.3s;
+.logo-wrap {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 18vw, 140px);
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--text);
+  animation: logoIn 1s cubic-bezier(.2,.8,.2,1) both;
 }
 
-#login-overlay.visible #login-box{
-    transform:scale(1);
+.logo-o {
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(245, 200, 66, 0.4);
 }
 
-#login-box input{
-    padding:10px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,215,0,0.3);
-    color:white;
-
-    outline:none;
+@keyframes logoIn {
+  from { opacity: 0; transform: translateY(30px); letter-spacing: 20px; }
+  to   { opacity: 1; transform: translateY(0); letter-spacing: -2px; }
 }
 
-/* ================= PRIVADO ================= */
-
-.secret{
-    position:relative;
-    min-height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-
-    opacity:0;
-    transform:translateY(40px);
-    transition:0.6s;
+.tagline {
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
 }
 
-.secret.active{
-    opacity:1;
-    transform:translateY(0);
+.social-row {
+  display: flex;
+  gap: 22px;
+  margin-top: 8px;
 }
 
-/* ================= BOTON VOLVER ================= */
-
-.back{
-    margin-top:20px;
-    padding:10px 18px;
-
-    border:1px solid gold;
-    background:rgba(0,0,0,0.3);
-    color:white;
-
-    cursor:pointer;
-    transition:0.3s;
+.social-row a {
+  color: var(--text-dim);
+  font-size: 22px;
+  transition: all 0.2s;
+  text-decoration: none;
 }
 
-.back:hover{
-    background:rgba(255,215,0,0.12);
-    transform:translateY(-2px);
+.social-row a:hover {
+  color: var(--gold);
+  transform: translateY(-3px);
+  filter: drop-shadow(0 0 8px rgba(245, 200, 66, 0.5));
 }
 
-/* ================= SCROLL STYLE (BEATSTARS VIBE) ================= */
+/* ===== TÍTULOS ===== */
 
-html{
-    scroll-behavior:smooth;
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 10vw, 72px);
+  letter-spacing: 6px;
+  font-weight: 400;
+  color: var(--text);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
-body::-webkit-scrollbar{
-    width:6px;
+.badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  background: var(--gold);
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
-body::-webkit-scrollbar-thumb{
-    background:rgba(255,215,0,0.4);
-    border-radius:10px;
+/* ===== CARDS ===== */
+
+.card {
+  width: 100%;
+  padding: 20px 24px;
+  background: var(--card-bg);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius);
+  color: var(--text);
+  transition: border-color 0.3s, transform 0.3s;
+  line-height: 1.7;
+  font-size: 14px;
 }
 
-body::-webkit-scrollbar-track{
-    background:transparent;
+.card:hover {
+  border-color: rgba(245, 200, 66, 0.5);
+  transform: translateY(-2px);
+}
+
+/* ===== BEATS GRID ===== */
+
+.beats-grid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.beat-card {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--card-bg);
+  backdrop-filter: blur(18px);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius);
+  transition: border-color 0.3s, transform 0.3s;
+}
+
+.beat-card:hover {
+  border-color: rgba(245, 200, 66, 0.5);
+  transform: translateY(-2px);
+}
+
+.beat-card h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: var(--text);
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+
+.beat-card p {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+audio {
+  width: 100%;
+  height: 36px;
+  filter: drop-shadow(0 0 6px rgba(245, 200, 66, 0.1));
+}
+
+.loading-msg {
+  color: var(--text-dim);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* ===== UPLOAD FORM ===== */
+
+.upload-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.field:focus {
+  border-color: var(--gold);
+}
+
+.field::placeholder {
+  color: var(--text-dim);
+}
+
+.file-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--gold-dim);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.file-label:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.file-label input[type="file"] {
+  display: none;
+}
+
+.btn-gold {
+  padding: 12px 20px;
+  background: var(--gold);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+
+.btn-gold:hover {
+  background: #ffd84d;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 200, 66, 0.3);
+}
+
+.btn-back {
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.btn-back:hover {
+  border-color: var(--gold);
+  color: var(--text);
+}
+
+/* ===== LOGIN OVERLAY ===== */
+
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s;
+  z-index: 9999;
+}
+
+#login-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#login-box {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  background: rgba(8, 8, 18, 0.96);
+  border: 1px solid var(--gold-dim);
+  border-radius: 18px;
+  padding: 36px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  transform: scale(0.94) translateY(10px);
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+}
+
+#login-overlay.visible #login-box {
+  transform: scale(1) translateY(0);
+}
+
+.close-btn {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+.close-btn:hover { color: var(--gold); }
+
+.lock-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--gold-glow);
+  border: 1px solid var(--gold-dim);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--gold);
+  font-size: 18px;
+}
+
+#login-box h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 4px;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.login-sub {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: -8px;
+}
+
+#login-box .field {
+  width: 100%;
+  text-align: center;
+}
+
+#login-box .btn-gold {
+  width: 100%;
+}
+
+#error-msg {
+  font-size: 12px;
+  color: #ff6b6b;
+  min-height: 16px;
+  letter-spacing: 1px;
+}
+
+/* ===== SCROLLBAR GLOBAL ===== */
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 480px) {
+  .tl { top: 14px; left: 14px; }
+  .tr { top: 14px; right: 14px; }
+  .bl { bottom: 14px; left: 14px; }
+  .br { bottom: 14px; right: 14px; }
+  .corner { width: 44px; height: 44px; font-size: 14px; }
+  .page { padding: 80px 16px; }
 }
