@@ -1,10 +1,9 @@
 let currentBg = 1;
 
-/* =========================
-   NAVEGACIÓN
-========================= */
+/* ================= NAV ================= */
 
 function go(id){
+
     document.querySelectorAll("section").forEach(sec=>{
         sec.classList.remove("active");
     });
@@ -12,43 +11,27 @@ function go(id){
     const el = document.getElementById(id);
     if(el) el.classList.add("active");
 
-    // 🌌 CAMBIO DE FONDO
-    if(id === "home"){
-        cambiarFondo("adri.jpg");
-    }
-
-    if(id === "music"){
-        cambiarFondo("fondo2.png");
-    }
-
-    if(id === "about"){
-        cambiarFondo("adri.jpg");
-    }
-
-    if(id === "secret"){
-        cambiarFondo("fondo2.png");
-    }
+    // fondos
+    if(id === "home") cambiarFondo("adri.jpg");
+    if(id === "music") cambiarFondo("fondo2.png");
+    if(id === "about") cambiarFondo("adri.jpg");
+    if(id === "secret") cambiarFondo("fondo2.png");
 }
 
-/* =========================
-   LOGIN (NO TOCADO ESTILO)
-========================= */
+/* ================= LOGIN ================= */
 
 function openLogin(){
-    document.getElementById("login-overlay").style.opacity = "1";
-    document.getElementById("login-overlay").style.pointerEvents = "all";
+    document.getElementById("login-overlay").classList.add("visible");
 }
 
 function cerrarLogin(){
-    document.getElementById("login-overlay").style.opacity = "0";
-    document.getElementById("login-overlay").style.pointerEvents = "none";
+    document.getElementById("login-overlay").classList.remove("visible");
 }
 
 function comprobarClave(){
+
     const input = document.getElementById("clave-input");
     const error = document.getElementById("error-msg");
-
-    if(!input) return;
 
     if(input.value === "1234"){
         cerrarLogin();
@@ -58,9 +41,7 @@ function comprobarClave(){
     }
 }
 
-/* =========================
-   FONDO CON TRANSICIÓN
-========================= */
+/* ================= BACKGROUND FADE ================= */
 
 function cambiarFondo(img){
 
@@ -81,3 +62,17 @@ function cambiarFondo(img){
         currentBg = 1;
     }
 }
+
+/* ================= SCROLL ANIMATION ================= */
+
+const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+        if(entry.isIntersecting){
+            entry.target.classList.add("show");
+        }
+    });
+},{threshold:0.2});
+
+document.querySelectorAll("section").forEach(sec=>{
+    observer.observe(sec);
+});
