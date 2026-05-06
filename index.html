@@ -2,74 +2,114 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Adri</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mitø</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 </head>
-
 <body>
 
-<!-- 🌌 FONDOS -->
-<div id="bg1" class="bg"></div>
-<div id="bg2" class="bg"></div>
+<!-- FONDO ANIMADO -->
+<div class="bg-layer"></div>
+<div class="noise"></div>
 
-<!-- ICONOS -->
-<div class="corner tl" onclick="go('home')"><i class="fa-solid fa-house"></i></div>
-<div class="corner tr" onclick="go('music')"><i class="fa-solid fa-music"></i></div>
-<div class="corner bl" onclick="go('about')"><i class="fa-solid fa-user"></i></div>
-<div class="corner br" onclick="openLogin()"><i class="fa-solid fa-lock"></i></div>
+<!-- ICONOS DE NAVEGACIÓN -->
+<nav class="corner-nav">
+  <div class="corner tl" onclick="go('home')" title="Inicio">
+    <i class="fa-solid fa-house"></i>
+  </div>
+  <div class="corner tr" onclick="go('music')" title="Música">
+    <i class="fa-solid fa-music"></i>
+  </div>
+  <div class="corner bl" onclick="go('about')" title="About">
+    <i class="fa-solid fa-user"></i>
+  </div>
+  <div class="corner br" onclick="openLogin()" title="Zona privada">
+    <i class="fa-solid fa-lock"></i>
+  </div>
+</nav>
 
-<!-- HOME -->
-<section id="home" class="active">
-  <h1>ADRI</h1>
-  <div class="card">Bienvenido a mi mundo musical 🎧</div>
-</section>
+<!-- CONTENEDOR PRINCIPAL (una sola vista, sin scroll) -->
+<main id="app">
 
-<!-- MUSIC -->
-<section id="music">
-  <h1>BEATS</h1>
-  <div id="beats-list"></div>
-</section>
+  <!-- HOME -->
+  <section id="home" class="page active">
+    <div class="page-content">
+      <div class="logo-wrap">
+        <span class="logo-text">mit</span><span class="logo-o">ø</span>
+      </div>
+      <p class="tagline">sonido propio · beats desde cero</p>
+      <div class="social-row">
+        <a href="https://open.spotify.com" target="_blank" title="Spotify">
+          <i class="fa-brands fa-spotify"></i>
+        </a>
+        <a href="https://soundcloud.com" target="_blank" title="SoundCloud">
+          <i class="fa-brands fa-soundcloud"></i>
+        </a>
+        <a href="https://instagram.com" target="_blank" title="Instagram">
+          <i class="fa-brands fa-instagram"></i>
+        </a>
+      </div>
+    </div>
+  </section>
 
-<!-- ABOUT -->
-<section id="about">
-  <h1>ABOUT</h1>
-  <div class="card">Soy Adri, artista independiente creando sonido propio.</div>
-</section>
+  <!-- MUSIC -->
+  <section id="music" class="page">
+    <div class="page-content">
+      <h1 class="section-title">BEATS</h1>
+      <div id="beats-list" class="beats-grid">
+        <p class="loading-msg">Cargando beats...</p>
+      </div>
+    </div>
+  </section>
 
-<!-- LOGIN -->
-<div id="login-overlay">
+  <!-- ABOUT -->
+  <section id="about" class="page">
+    <div class="page-content">
+      <h1 class="section-title">ABOUT</h1>
+      <div class="card about-card">
+        <p>Soy <strong>mitø</strong> — artista independiente creando sonido propio.<br><br>
+        Produzco mis propios beats, escribo mis letras y construyo mi mundo desde cero.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ZONA PRIVADA -->
+  <section id="secret" class="page">
+    <div class="page-content">
+      <h1 class="section-title">ZONA PRIVADA <span class="badge">BAND ONLY</span></h1>
+      <div class="card upload-card">
+        <input type="text" id="beat-title" placeholder="Nombre del beat" class="field">
+        <input type="text" id="beat-genre" placeholder="Género / vibe" class="field">
+        <label class="file-label">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span id="file-name-label">Elige un archivo de audio</span>
+          <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
+        </label>
+        <button class="btn-gold" onclick="subirBeat()">Subir beat 🔥</button>
+      </div>
+      <div id="admin-list" class="beats-grid"></div>
+      <button class="btn-back" onclick="go('home')">← Volver</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay" onclick="cerrarLoginOverlay(event)">
   <div id="login-box">
+    <button class="close-btn" onclick="cerrarLogin()">✕</button>
+    <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
     <h2>Acceso privado</h2>
-    <input type="password" id="clave-input" placeholder="Clave">
-    <button onclick="comprobarClave()">Entrar</button>
+    <p class="login-sub">Solo para la banda</p>
+    <input type="password" id="clave-input" placeholder="Clave secreta" class="field" onkeydown="if(event.key==='Enter') comprobarClave()">
+    <button class="btn-gold" onclick="comprobarClave()">Entrar</button>
     <p id="error-msg"></p>
   </div>
 </div>
-
-<!-- PRIVADO -->
-<section id="secret" class="secret">
-
-  <h1>ZONA PRIVADA</h1>
-
-  <div class="card">
-    <input type="text" id="title" placeholder="Nombre beat"><br><br>
-    <input type="text" id="genre" placeholder="Género"><br><br>
-    <input type="file" id="audio"><br><br>
-
-    <button onclick="subirBeat()">Subir beat</button>
-  </div>
-
-  <div id="admin-list"></div>
-
-  <button class="back" onclick="go('home')">← Volver</button>
-
-</section>
 
 <script src="script.js"></script>
 </body>
