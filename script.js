@@ -188,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
     msg.textContent = "Entrando..."; msg.className = "auth-msg";
     const { error } = await db.auth.signInWithPassword({ email, password: pass });
     if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
-    else { msg.textContent = "¡Bienvenido!"; msg.className = "auth-msg success"; setTimeout(() => go("home"), 800); }
+    else { msg.textContent = "¡Bienvenido!"; msg.className = "auth-msg success"; window.sfx?.login(); setTimeout(() => go("home"), 800); }
   };
 
   window.doRegister = async function() {
@@ -234,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (error) {
       msg.textContent = "Código incorrecto o caducado"; msg.className = "auth-msg error";
     } else {
-      msg.textContent = "¡Cuenta verificada! 🎉"; msg.className = "auth-msg success";
+      msg.textContent = "¡Cuenta verificada! 🎉"; msg.className = "auth-msg success"; window.sfx?.success();
       setTimeout(() => go("home"), 1000);
     }
   };
@@ -306,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
     else {
       const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
       currentPerfil = data;
-      msg.textContent = "¡Guardado!"; msg.className = "auth-msg success";
+      msg.textContent = "¡Guardado!"; msg.className = "auth-msg success"; window.sfx?.success();
       updateNavUser();
       setTimeout(() => renderPerfil(), 600);
     }
@@ -733,7 +733,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       document.getElementById("file-name-label").textContent = "Elige un archivo de audio";
       document.getElementById("cover-name-label").textContent = "Cover / imagen (opcional)";
-      btn.textContent = "¡Subido! 🔥";
+      btn.textContent = "¡Subido! 🔥"; window.sfx?.upload();
       setTimeout(() => { btn.textContent = "Subir beat 🔥"; btn.disabled = false; }, 2000);
       cargarBeats("admin-list", null);
     } catch(err) {
@@ -887,7 +887,7 @@ document.addEventListener("DOMContentLoaded", () => {
       delBtn.addEventListener("click", async () => {
         if (!confirm(`¿Borrar "${beat.title}"?`)) return;
         delBtn.disabled = true; delBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
-        const { error } = await db.from("beats").delete().eq("id", beat.id);
+        window.sfx?.delete(); const { error } = await db.from("beats").delete().eq("id", beat.id);
         if (error) { alert("Error: " + error.message); delBtn.disabled = false; delBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`; return; }
         card.style.transition = "opacity 0.3s, transform 0.3s";
         card.style.opacity = "0"; card.style.transform = "translateX(20px)";
