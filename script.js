@@ -9,15 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let db = null;
   try {
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession:     true,
-        autoRefreshToken:   true,
-        detectSessionInUrl: false,
-        storageKey:         'mito-auth',
-        storage:            window.localStorage
-      }
-    });
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   } catch(e) { console.warn("Supabase:", e.message); }
 
   let currentUser = null, currentPerfil = null;
@@ -222,6 +214,11 @@ document.addEventListener("DOMContentLoaded", () => {
         msg.textContent = m[result.error.message]||"Error al entrar — revisa tu conexión"; msg.className="auth-msg error"; window.sfx?.error();
       } else {
         msg.textContent="¡Bienvenido! 👋"; msg.className="auth-msg success"; window.sfx?.login();
+        // Guarda sesión manual para recuperarla al recargar
+        if (result.data?.user) {
+          const { data: p } = await db.from("perfiles").select("*").eq("id", result.data.user.id).single();
+          guardarSesionLocal(result.data.user, p);
+        }
         setTimeout(()=>go("home"),800);
       }
     } catch(e) { msg.textContent=e.message==="TIMEOUT"?"Sin respuesta — comprueba tu conexión":"Error inesperado"; msg.className="auth-msg error"; window.sfx?.error(); }
@@ -1099,7 +1096,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const{error}=await db.from("perfiles").update(updates).eq("id",currentUser.id);
     if(error){msg.textContent="Error: "+error.message;msg.className="auth-msg error";}
-    else{const{data}=await db.from("perfiles").select("*").eq("id",currentUser.id).single();currentPerfil=data;msg.textContent="¡Guardado!";msg.className="auth-msg success";window.sfx?.success();updateNavUser();setTimeout(()=>renderPerfil(),600);}
+    else{const{data}=await db.from("perfiles").select("*").eq("id",currentUser.id).single();currentPerfil=data;guardarSesionLocal(currentUser,data);msg.textContent="¡Guardado!";msg.className="auth-msg success";window.sfx?.success();updateNavUser();setTimeout(()=>renderPerfil(),600);}
   };
 
   window.añadirMiembroBanda = async function() {
@@ -1134,7 +1131,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.doLogout = async function() {
-    await db.auth.signOut(); currentUser=null; currentPerfil=null; tieneAccesoPrivado=false;
+    await db.auth.signOut();
+    borrarSesionLocal();
+    currentUser=null; currentPerfil=null; tieneAccesoPrivado=false;
     updateNavUser(); go("home");
   };
 
