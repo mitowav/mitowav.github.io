@@ -10,7 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let db = null;
   try {
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage }
+      auth: {
+        persistSession:     true,
+        autoRefreshToken:   true,
+        detectSessionInUrl: true,
+        flowType:           'pkce',
+        storageKey:         'mito-auth-token',
+        storage:            window.localStorage
+      }
     });
   } catch(e) { console.warn("Supabase:", e.message); }
 
@@ -59,18 +66,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ── AUTH STATE ────────────────────────────────
-  db.auth.getSession().then(async ({ data: { session } }) => {
-    currentUser = session?.user || null;
-    if (currentUser) {
-      const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
-      currentPerfil = data;
-      if (data?.tema)        aplicarTema(data.tema, data.color_acento, data.color_fondo);
-      if (data?.color_acento) document.documentElement.style.setProperty("--accent", data.color_acento);
-      if (data?.color_fondo)  document.documentElement.style.setProperty("--bg", data.color_fondo);
-      await comprobarAccesoPrivado();
-    }
+  // Recupera sesión guardada en localStorage
+  async function initSession() {
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      currentUser = session?.user || null;
+      if (currentUser) {
+        const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
+        currentPerfil = data;
+        if (data?.tema || data?.color_acento || data?.color_fondo)
+          aplicarTema(data.tema||"oscuro", data.color_acento, data.color_fondo);
+        await comprobarAccesoPrivado();
+      }
+    } catch(e) { console.warn("Error recuperando sesión:", e); }
     updateNavUser();
-  });
+  }
+  initSession();
 
   db.auth.onAuthStateChange(async (event, session) => {
     currentUser = session?.user || null;
@@ -192,7 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (result.error) {
         const m = {"Invalid login credentials":"Email o contraseña incorrectos","Email not confirmed":"Confirma tu email — revisa también el spam","Too many requests":"Demasiados intentos, espera un momento"};
         msg.textContent = m[result.error.message]||"Error al entrar — revisa tu conexión"; msg.className="auth-msg error"; window.sfx?.error();
-      } else { msg.textContent="¡Bienvenido! 👋"; msg.className="auth-msg success"; window.sfx?.login(); setTimeout(()=>go("home"),800); }
+      } else {
+        msg.textContent="¡Bienvenido! 👋"; msg.className="auth-msg success"; window.sfx?.login();
+        setTimeout(()=>go("home"),800);
+      }
     } catch(e) { msg.textContent=e.message==="TIMEOUT"?"Sin respuesta — comprueba tu conexión":"Error inesperado"; msg.className="auth-msg error"; window.sfx?.error(); }
   };
 
@@ -762,30 +776,122 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── FORO ──────────────────────────────────────
   async function renderForo() {
-    const cont=document.getElementById("foro-content");
-    if(foroPost){await renderPostDetalle(foroPost);return;}
-    const{data:cats}=await db.from("categorias").select("*").order("orden");
-    if(!foroCategoria&&cats?.length) foroCategoria=cats[0].id;
-    const{data:posts}=await db.from("posts").select("*,perfiles(display_name,username),comentarios(id)").eq("categoria_id",foroCategoria).order("created_at",{ascending:false});
-    const catsHtml=(cats||[]).map(c=>`<div class="categoria-card ${foroCategoria===c.id?"active":""}" onclick="filtrarCategoria(${c.id})"><i class="fa-solid ${c.icono||"fa-comments"}"></i><h4>${esc(c.nombre)}</h4><p>${esc(c.descripcion||"")}</p></div>`).join("");
-    const postsHtml=!posts?.length?`<p class="loading-msg no-spin">No hay posts aún. ¡Sé el primero!</p>`:posts.map(p=>{const a=p.perfiles?.display_name||p.perfiles?.username||"Anónimo";return`<div class="post-card" onclick="abrirPost(${p.id})"><div class="post-card-icon">${a[0].toUpperCase()}</div><div class="post-card-body"><h4>${esc(p.titulo)}</h4><p class="post-card-meta">por ${esc(a)} · ${formatFecha(p.created_at)}</p></div><div class="post-card-comments"><i class="fa-regular fa-comment"></i> ${p.comentarios?.length||0}</div></div>`;}).join("");
-    const newBtn=currentUser?`<button class="btn-primary" onclick="abrirNuevoPost()"><i class="fa-solid fa-plus"></i> NUEVO POST</button>`:`<button class="btn-secondary" onclick="go('auth')"><i class="fa-solid fa-user"></i> Entrar para postear</button>`;
-    cont.innerHTML=`<div class="foro-header"><h2>FORO</h2>${newBtn}</div><div class="categorias-grid">${catsHtml}</div><div class="posts-list">${postsHtml}</div>`;
+    const cont = document.getElementById("foro-content");
+    cont.innerHTML = `<p class="loading-msg">Cargando</p>`;
+
+    try {
+      const { data: cats } = await db.from("categorias").select("*").order("orden");
+      if (!foroCategoria && cats?.length) foroCategoria = cats[0].id;
+
+      let q = db.from("posts")
+        .select("*, perfiles(display_name, username, avatar_url), comentarios(id)")
+        .order("created_at", { ascending: false });
+      if (foroCategoria !== "todos") q = q.eq("categoria_id", foroCategoria);
+
+      const { data: posts } = await withTimeout(q, 5000);
+
+      const catsHtml = [
+        `<div class="cat-pill ${foroCategoria==="todos"?"active":""}" onclick="filtrarCategoria('todos')">Todo</div>`,
+        ...(cats||[]).map(c => `<div class="cat-pill ${foroCategoria===c.id?"active":""}" onclick="filtrarCategoria(${c.id})">${esc(c.nombre)}</div>`)
+      ].join("");
+
+      const newBtn = currentUser
+        ? `<button class="btn-primary" onclick="abrirNuevoPost()"><i class="fa-solid fa-plus"></i> PUBLICAR</button>`
+        : `<button class="btn-secondary" onclick="go('auth')"><i class="fa-solid fa-user"></i> Entrar</button>`;
+
+      const postsHtml = !posts?.length
+        ? `<p class="loading-msg no-spin">Aún no hay publicaciones. ¡Sé el primero!</p>`
+        : posts.map(p => crearPostCard(p)).join("");
+
+      cont.innerHTML = `
+        <div class="feed-header">
+          <h2>FORO</h2>
+          ${newBtn}
+        </div>
+        <div class="cat-pills">${catsHtml}</div>
+        <div class="feed-list">${postsHtml}</div>`;
+
+    } catch(err) {
+      cont.innerHTML = `<p class="loading-msg no-spin">⚠️ ${err.message==="TIMEOUT"?"Sin conexión":"Error al cargar"}</p>`;
+    }
   }
 
-  window.filtrarCategoria=function(id){foroCategoria=id;foroPost=null;renderForo();};
-  window.abrirPost=function(id){foroPost=id;renderForo();};
-  window.volverForo=function(){foroPost=null;renderForo();};
+  function crearPostCard(p) {
+    const autor = p.perfiles?.display_name || p.perfiles?.username || "Anónimo";
+    const ini   = autor[0].toUpperCase();
+    const avatar = p.perfiles?.avatar_url
+      ? `<img src="${p.perfiles.avatar_url}" class="feed-avatar" alt="">`
+      : `<div class="feed-avatar-placeholder">${ini}</div>`;
+    const imgHtml = p.imagen_url
+      ? `<img src="${p.imagen_url}" class="feed-img" alt="" onclick="event.stopPropagation();abrirImgFeed('${p.imagen_url}')">`
+      : "";
+    const numComs = p.comentarios?.length || 0;
 
-  async function renderPostDetalle(postId) {
-    const cont=document.getElementById("foro-content"); cont.innerHTML=`<p class="loading-msg">Cargando</p>`;
-    const{data:post}=await db.from("posts").select("*,perfiles(display_name,username)").eq("id",postId).single();
-    const{data:coms}=await db.from("comentarios").select("*,perfiles(display_name,username)").eq("post_id",postId).order("created_at");
-    const autor=post.perfiles?.display_name||post.perfiles?.username||"Anónimo";
-    const comsHtml=(coms||[]).map(c=>{const ca=c.perfiles?.display_name||c.perfiles?.username||"Anónimo";return`<div class="comentario-card"><div class="comentario-autor">${esc(ca)} · ${formatFecha(c.created_at)}</div><div class="comentario-texto">${esc(c.contenido)}</div></div>`;}).join("")||`<p class="loading-msg no-spin" style="padding:12px 0">Aún no hay comentarios.</p>`;
-    const comentarHtml=currentUser?`<div class="comentar-form"><textarea id="nuevo-comentario" placeholder="Tu comentario..." class="field textarea" rows="3"></textarea><button class="btn-primary" onclick="enviarComentario(${postId})">Comentar</button><p class="auth-msg" id="com-msg"></p></div>`:`<p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:10px"><a onclick="go('auth')" style="color:var(--accent);cursor:pointer">Inicia sesión</a> para comentar</p>`;
-    cont.innerHTML=`<div class="post-detail"><button class="back-foro" onclick="volverForo()">← Volver al foro</button><div class="post-detail-header"><h2>${esc(post.titulo)}</h2><p class="post-detail-meta">por ${esc(autor)} · ${formatFecha(post.created_at)}</p></div><div class="post-detail-body">${esc(post.contenido)}</div><div class="comentarios-section"><h3>COMENTARIOS</h3>${comsHtml}${comentarHtml}</div></div>`;
+    return `
+      <div class="feed-card" id="feed-card-${p.id}">
+        <div class="feed-card-left">${avatar}</div>
+        <div class="feed-card-body">
+          <div class="feed-card-meta">
+            <span class="feed-autor">${esc(autor)}</span>
+            <span class="feed-fecha">${formatFecha(p.created_at)}</span>
+            ${p.titulo ? `<span class="feed-titulo">${esc(p.titulo)}</span>` : ""}
+          </div>
+          <div class="feed-card-text">${esc(p.contenido)}</div>
+          ${imgHtml}
+          <div class="feed-card-actions">
+            <button class="feed-action" onclick="toggleComentarios(${p.id})">
+              <i class="fa-regular fa-comment"></i> ${numComs}
+            </button>
+          </div>
+          <div class="feed-comentarios" id="feed-coms-${p.id}" style="display:none"></div>
+        </div>
+      </div>`;
   }
+
+  window.filtrarCategoria = function(id) { foroCategoria = id; renderForo(); };
+
+  window.toggleComentarios = async function(postId) {
+    const cont = document.getElementById(`feed-coms-${postId}`);
+    if (cont.style.display === "block") { cont.style.display = "none"; return; }
+    cont.style.display = "block";
+    cont.innerHTML = `<p class="loading-msg" style="padding:8px 0;font-size:10px">Cargando...</p>`;
+    const { data: coms } = await db.from("comentarios")
+      .select("*, perfiles(display_name, username)")
+      .eq("post_id", postId).order("created_at");
+
+    const comsHtml = (coms||[]).map(c => {
+      const ca = c.perfiles?.display_name||c.perfiles?.username||"Anónimo";
+      return `<div class="comentario-card"><div class="comentario-autor">${esc(ca)} · ${formatFecha(c.created_at)}</div><div class="comentario-texto">${esc(c.contenido)}</div></div>`;
+    }).join("") || `<p style="font-size:11px;color:var(--text-dim);padding:8px 0;letter-spacing:1px">Aún no hay comentarios.</p>`;
+
+    const comentarHtml = currentUser
+      ? `<div class="comentar-form" style="margin-top:8px">
+           <textarea id="com-${postId}" placeholder="Comenta..." class="field textarea" rows="2"></textarea>
+           <button class="btn-secondary" style="margin-top:6px" onclick="enviarComentario(${postId})">Comentar</button>
+           <p class="auth-msg" id="com-msg-${postId}"></p>
+         </div>`
+      : `<p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:8px"><a onclick="go('auth')" style="color:var(--accent);cursor:pointer">Inicia sesión</a> para comentar</p>`;
+
+    cont.innerHTML = comsHtml + comentarHtml;
+  };
+
+  window.enviarComentario = async function(postId) {
+    const el  = document.getElementById(`com-${postId}`);
+    const msg = document.getElementById(`com-msg-${postId}`);
+    const texto = el?.value.trim();
+    if (!texto) return;
+    if (!currentUser) { if(msg){msg.textContent="Inicia sesión primero";msg.className="auth-msg error";} return; }
+    if (msg) { msg.textContent="Enviando..."; msg.className="auth-msg"; }
+    const { error } = await db.from("comentarios").insert([{ post_id: postId, autor_id: currentUser.id, contenido: texto }]);
+    if (error) { if(msg){msg.textContent="Error: "+error.message;msg.className="auth-msg error";} }
+    else { window.sfx?.success(); await toggleComentarios(postId); toggleComentarios(postId); }
+  };
+
+  window.abrirImgFeed = function(url) {
+    document.getElementById("lightbox-img").src = url;
+    document.getElementById("lightbox-caption").textContent = "";
+    document.getElementById("lightbox").classList.add("visible");
+  };
 
   window.enviarComentario = async function(postId) {
     const texto=document.getElementById("nuevo-comentario").value.trim(); const msg=document.getElementById("com-msg");
@@ -794,6 +900,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const{error}=await db.from("comentarios").insert([{post_id:postId,autor_id:currentUser.id,contenido:texto}]);
     if(error){msg.textContent="Error: "+error.message;msg.className="auth-msg error";}
     else{window.sfx?.success();renderPostDetalle(postId);}
+  };
+
+  window.previewPostImg = function(input) {
+    const preview = document.getElementById("post-img-preview");
+    preview.innerHTML = "";
+    if (!input.files?.[0]) return;
+    const url = URL.createObjectURL(input.files[0]);
+    preview.innerHTML = `<img src="${url}" style="max-height:160px;border-radius:8px;border:1px solid var(--card-b);object-fit:cover">`;
   };
 
   window.abrirNuevoPost = async function() {
@@ -806,15 +920,35 @@ document.addEventListener("DOMContentLoaded", () => {
   window.cerrarPostOverlay=cerrarPostOverlay;
 
   window.crearPost = async function() {
-    const titulo=document.getElementById("post-titulo").value.trim();
-    const contenido=document.getElementById("post-contenido").value.trim();
-    const categoriaId=document.getElementById("post-categoria").value;
-    const msg=document.getElementById("post-msg");
-    if(!titulo||!contenido){msg.textContent="Rellena título y contenido";msg.className="auth-msg error";return;}
-    msg.textContent="Publicando...";msg.className="auth-msg";
-    const{error}=await db.from("posts").insert([{titulo,contenido,autor_id:currentUser.id,categoria_id:categoriaId}]);
-    if(error){msg.textContent="Error: "+error.message;msg.className="auth-msg error";}
-    else{cerrarPostOverlay();document.getElementById("post-titulo").value="";document.getElementById("post-contenido").value="";window.sfx?.success();renderForo();}
+    const titulo     = document.getElementById("post-titulo").value.trim();
+    const contenido  = document.getElementById("post-contenido").value.trim();
+    const categoriaId= document.getElementById("post-categoria").value;
+    const imgFile    = document.getElementById("post-img-file")?.files[0];
+    const msg        = document.getElementById("post-msg");
+    if (!contenido) { msg.textContent="Escribe algo"; msg.className="auth-msg error"; return; }
+    msg.textContent = "Publicando..."; msg.className = "auth-msg";
+    try {
+      let imagen_url = null;
+      if (imgFile) {
+        const cleanName = imgFile.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+        const fileName = `${Date.now()}-${cleanName}`;
+        const { error: upErr } = await db.storage.from("posts").upload(fileName, imgFile);
+        if (upErr) throw upErr;
+        const { data: ud } = db.storage.from("posts").getPublicUrl(fileName);
+        imagen_url = ud.publicUrl;
+      }
+      const { error } = await db.from("posts").insert([{
+        titulo: titulo||null, contenido, autor_id: currentUser.id,
+        categoria_id: categoriaId, imagen_url
+      }]);
+      if (error) throw error;
+      cerrarPostOverlay();
+      document.getElementById("post-titulo").value = "";
+      document.getElementById("post-contenido").value = "";
+      if (document.getElementById("post-img-file")) document.getElementById("post-img-file").value = "";
+      document.getElementById("post-img-preview").innerHTML = "";
+      window.sfx?.success(); renderForo();
+    } catch(err) { msg.textContent = "Error: "+err.message; msg.className = "auth-msg error"; }
   };
 
   // ── PERFIL ────────────────────────────────────
@@ -904,6 +1038,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const{error}=await db.from("perfiles").update(updates).eq("id",currentUser.id);
     if(error){msg.textContent="Error: "+error.message;msg.className="auth-msg error";}
     else{const{data}=await db.from("perfiles").select("*").eq("id",currentUser.id).single();currentPerfil=data;msg.textContent="¡Guardado!";msg.className="auth-msg success";window.sfx?.success();updateNavUser();setTimeout(()=>renderPerfil(),600);}
+  };
+
+  window.añadirMiembroBanda = async function() {
+    const email = document.getElementById("banda-email").value.trim().toLowerCase();
+    const msg   = document.getElementById("banda-msg");
+    if (!email || !email.includes("@")) { msg.textContent = "Pon un email válido"; msg.className = "auth-msg error"; return; }
+    msg.textContent = "Buscando usuario..."; msg.className = "auth-msg";
+    // Busca el perfil por email en auth (via perfiles si tiene email guardado, o por accesos)
+    const { data: perfil } = await db.from("perfiles")
+      .select("id, username, rol")
+      .eq("id", (await db.from("accesos_privados").select("id").eq("email", email).single())?.data?.id || "")
+      .single();
+    if (!perfil) {
+      // Intenta añadir a accesos y marcar rol si existe
+      const { error: accErr } = await db.from("accesos_privados").upsert([{ email }], { onConflict: "email" });
+      if (accErr) { msg.textContent = "Error: " + accErr.message; msg.className = "auth-msg error"; return; }
+      msg.textContent = "✓ Email añadido a accesos. Cuando inicie sesión aparecerá en la banda automáticamente.";
+      msg.className = "auth-msg success";
+      document.getElementById("banda-email").value = "";
+      cargarAccesos();
+      return;
+    }
+    // Si ya tiene perfil, cambia su rol a banda
+    const { error } = await db.from("perfiles").update({ rol: "banda" }).eq("id", perfil.id);
+    if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
+    else {
+      msg.textContent = "✓ Miembro añadido a la banda";
+      msg.className = "auth-msg success";
+      document.getElementById("banda-email").value = "";
+      setTimeout(() => { msg.textContent = ""; }, 3000);
+    }
   };
 
   window.doLogout = async function() {
