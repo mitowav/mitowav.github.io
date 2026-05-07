@@ -13,9 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
       auth: {
         persistSession:     true,
         autoRefreshToken:   true,
-        detectSessionInUrl: true,
-        flowType:           'pkce',
-        storageKey:         'mito-auth-token',
+        detectSessionInUrl: false,
+        storageKey:         'mito-auth',
         storage:            window.localStorage
       }
     });
@@ -638,6 +637,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return card;
   }
 
+  let todosLosBeats = []; // cache para filtrar sin re-fetch
+
   async function cargarBeats(containerId, soloPrivados, limite) {
     const cont=document.getElementById(containerId); if(!cont||!db)return;
     cont.innerHTML=`<p class="loading-msg">Cargando</p>`;
@@ -649,10 +650,53 @@ document.addEventListener("DOMContentLoaded", () => {
       const{data,error}=await withTimeout(q,5000);
       if(error) throw error;
       if(!data?.length){cont.innerHTML=`<p class="loading-msg no-spin">Aún no hay beats aquí. 🎧</p>`;return;}
-      cont.innerHTML="";
-      data.forEach((beat,i)=>cont.appendChild(crearCard(beat,i,admin)));
+      // Guarda en cache si es la lista pública principal
+      if(containerId==="beats-list") todosLosBeats = data;
+      renderBeats(cont, data, admin);
     } catch(err){console.error(err);cont.innerHTML=`<p class="loading-msg no-spin">⚠️ ${err.message==="TIMEOUT"?"Sin conexión — revisa tu wifi":"Error al cargar"}</p>`;}
   }
+
+  function renderBeats(cont, data, admin) {
+    cont.innerHTML="";
+    if (!data.length) { cont.innerHTML=`<p class="loading-msg no-spin">No hay beats que coincidan con los filtros.</p>`; return; }
+    data.forEach((beat,i)=>cont.appendChild(crearCard(beat,i,admin)));
+  }
+
+  window.filtrarBeats = function() {
+    const cont = document.getElementById("beats-list");
+    if (!cont || !todosLosBeats.length) return;
+    const nombre   = document.getElementById("filter-nombre")?.value.trim().toLowerCase() || "";
+    const bpmMin   = parseInt(document.getElementById("filter-bpm-min")?.value) || 0;
+    const bpmMax   = parseInt(document.getElementById("filter-bpm-max")?.value) || 9999;
+    const tono     = document.getElementById("filter-tono")?.value.toLowerCase() || "";
+    const genero   = document.getElementById("filter-genero")?.value.trim().toLowerCase() || "";
+
+    const filtrados = todosLosBeats.filter(b => {
+      if (nombre && !b.title?.toLowerCase().includes(nombre)) return false;
+      if (bpmMin > 0 && (!b.bpm || b.bpm < bpmMin)) return false;
+      if (bpmMax < 9999 && (!b.bpm || b.bpm > bpmMax)) return false;
+      if (tono && (!b.tono || !b.tono.toLowerCase().includes(tono))) return false;
+      if (genero && (!b.genre || !b.genre.toLowerCase().includes(genero))) return false;
+      return true;
+    });
+
+    const resEl = document.getElementById("filter-results");
+    if (resEl) {
+      const hayFiltro = nombre||bpmMin||bpmMax<9999||tono||genero;
+      resEl.textContent = hayFiltro ? `${filtrados.length} beat${filtrados.length!==1?"s":""} encontrado${filtrados.length!==1?"s":""}` : "";
+    }
+
+    renderBeats(cont, filtrados, false);
+  };
+
+  window.resetFiltros = function() {
+    ["filter-nombre","filter-bpm-min","filter-bpm-max","filter-genero"].forEach(id => {
+      const el = document.getElementById(id); if(el) el.value="";
+    });
+    const sel = document.getElementById("filter-tono"); if(sel) sel.value="";
+    document.getElementById("filter-results").textContent="";
+    renderBeats(document.getElementById("beats-list"), todosLosBeats, false);
+  };
 
   // ── GALERÍA ───────────────────────────────────
   async function cargarGaleria() {
