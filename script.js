@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
-  const CLAVE_SECRETA = "1234";
+  const CLAVE_SECRETA = "4312";
 
   let db = null;
   try {
@@ -182,13 +182,112 @@ document.addEventListener("DOMContentLoaded", () => {
   window.switchAuthTab = switchAuthTab;
 
   window.doLogin = async function() {
-    const email = document.getElementById("login-email").value.trim();
-    const pass  = document.getElementById("login-password").value;
-    const msg   = document.getElementById("login-msg");
+    let identifier = document.getElementById("login-email").value.trim();
+    const pass     = document.getElementById("login-password").value;
+    const msg      = document.getElementById("login-msg");
+    if (!identifier || !pass) { msg.textContent = "Rellena usuario/email y contraseña"; msg.className = "auth-msg error"; return; }
+
     msg.textContent = "Entrando..."; msg.className = "auth-msg";
-    const { error } = await db.auth.signInWithPassword({ email, password: pass });
-    if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
-    else { msg.textContent = "¡Bienvenido!"; msg.className = "auth-msg success"; window.sfx?.login(); setTimeout(() => go("home"), 800); }
+
+    try {
+      // Si no contiene @ asumimos que es un username — buscamos el email
+      let email = identifier;
+      if (!identifier.includes("@")) {
+        msg.textContent = "Buscando usuario..."; msg.className = "auth-msg";
+        const { data: perfil, error: perfilErr } = await withTimeout(
+          db.from("perfiles").select("id").eq("username", identifier.toLowerCase()).single(),
+          6000
+        );
+        if (perfilErr || !perfil) {
+          msg.textContent = "Usuario no encontrado"; msg.className = "auth-msg error";
+          window.sfx?.error(); return;
+        }
+        // Obtenemos el email del usuario via auth (necesita el id)
+        // Como no tenemos acceso directo al email desde perfiles, pedimos al usuario
+        // que use el email directamente si el username no funciona
+        msg.textContent = "Usuario encontrado — introduce tu email completo para entrar";
+        msg.className = "auth-msg error";
+        document.getElementById("login-email").value = "";
+        document.getElementById("login-email").placeholder = "Email completo";
+        document.getElementById("login-email").focus();
+        window.sfx?.error();
+        return;
+      }
+
+      msg.textContent = "Entrando..."; msg.className = "auth-msg";
+      const result = await withTimeout(
+        db.auth.signInWithPassword({ email, password: pass }), 8000
+      );
+
+      if (result.error) {
+        const errMap = {
+          "Invalid login credentials": "Email o contraseña incorrectos",
+          "Email not confirmed": "Confirma tu email — revisa tu bandeja (también el spam)",
+          "Too many requests": "Demasiados intentos, espera un momento"
+        };
+        const friendly = errMap[result.error.message] || "Error al entrar — revisa tu conexión";
+        msg.textContent = friendly; msg.className = "auth-msg error";
+        window.sfx?.error();
+      } else {
+        msg.textContent = "¡Bienvenido! 👋"; msg.className = "auth-msg success";
+        window.sfx?.login();
+        setTimeout(() => go("home"), 800);
+      }
+    } catch(e) {
+      msg.textContent = e.message === "TIMEOUT"
+        ? "Sin respuesta — comprueba tu conexión"
+        : "Error inesperado, inténtalo de nuevo";
+      msg.className = "auth-msg error";
+      window.sfx?.error();
+    }
+  };
+
+  // ── RECUPERAR CONTRASEÑA ──────────────────────
+
+  function abrirOlvidePass() {
+    document.getElementById("auth-login").style.display = "none";
+    document.getElementById("auth-reset").style.display = "flex";
+    const loginEmail = document.getElementById("login-email").value;
+    if (loginEmail.includes("@")) document.getElementById("reset-email").value = loginEmail;
+    document.getElementById("reset-msg").textContent = "";
+    document.getElementById("reset-email").focus();
+  }
+
+  function cerrarReset() {
+    document.getElementById("auth-reset").style.display = "none";
+    document.getElementById("auth-login").style.display = "flex";
+    document.getElementById("reset-msg").textContent = "";
+  }
+
+  window.abrirOlvidePass = abrirOlvidePass;
+  window.cerrarReset = cerrarReset;
+
+  window.doReset = async function() {
+    const email = document.getElementById("reset-email").value.trim();
+    const msg   = document.getElementById("reset-msg");
+    if (!email || !email.includes("@")) { msg.textContent = "Introduce un email válido"; msg.className = "auth-msg error"; return; }
+    msg.textContent = "Enviando..."; msg.className = "auth-msg";
+    try {
+      const result = await withTimeout(
+        db.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname
+        }),
+        8000
+      );
+      if (result.error) {
+        msg.textContent = "Error: " + result.error.message; msg.className = "auth-msg error";
+        window.sfx?.error();
+      } else {
+        msg.textContent = "📧 Enlace enviado — revisa tu email (y el spam)"; msg.className = "auth-msg success";
+        window.sfx?.success();
+      }
+    } catch(e) {
+      msg.textContent = e.message === "TIMEOUT"
+        ? "Sin respuesta — comprueba tu conexión"
+        : "Error al enviar, inténtalo de nuevo";
+      msg.className = "auth-msg error";
+      window.sfx?.error();
+    }
   };
 
   window.doRegister = async function() {
@@ -196,23 +295,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("reg-username").value.trim();
     const pass     = document.getElementById("reg-password").value;
     const msg      = document.getElementById("reg-msg");
+    if (!email || !email.includes("@")) { msg.textContent = "Pon un email válido"; msg.className = "auth-msg error"; return; }
     if (!username) { msg.textContent = "Pon un nombre de usuario"; msg.className = "auth-msg error"; return; }
     if (pass.length < 6) { msg.textContent = "La contraseña debe tener al menos 6 caracteres"; msg.className = "auth-msg error"; return; }
     msg.textContent = "Creando cuenta..."; msg.className = "auth-msg";
-    const { error } = await db.auth.signUp({
-      email, password: pass,
-      options: { data: { username }, emailRedirectTo: null }
-    });
-    if (error) {
-      msg.textContent = "Error: " + error.message; msg.className = "auth-msg error";
-    } else {
-      // Guarda el email para usarlo en la verificación
-      window._regEmail = email;
-      // Muestra el paso 2 — OTP
-      document.getElementById("reg-step-1").style.display = "none";
-      document.getElementById("reg-step-2").style.display = "flex";
-      msg.textContent = "📧 Código enviado a " + email; msg.className = "auth-msg success";
-      setTimeout(() => document.getElementById("reg-otp").focus(), 100);
+    try {
+      const result = await withTimeout(
+        db.auth.signUp({ email, password: pass, options: { data: { username }, emailRedirectTo: null } }),
+        8000
+      );
+      if (result.error) {
+        const errMap = {
+          "User already registered": "Este email ya tiene una cuenta",
+          "Password should be at least 6 characters": "La contraseña debe tener al menos 6 caracteres",
+          "Unable to validate email address: invalid format": "El email no es válido"
+        };
+        const friendly = errMap[result.error.message] || "Error al crear la cuenta — revisa tu conexión";
+        msg.textContent = friendly; msg.className = "auth-msg error";
+        window.sfx?.error();
+      } else {
+        window._regEmail = email;
+        document.getElementById("reg-step-1").style.display = "none";
+        document.getElementById("reg-step-2").style.display = "flex";
+        msg.textContent = "📧 Código enviado a " + email; msg.className = "auth-msg success";
+        setTimeout(() => document.getElementById("reg-otp").focus(), 100);
+      }
+    } catch(e) {
+      msg.textContent = e.message === "TIMEOUT"
+        ? "Sin respuesta — comprueba tu conexión e inténtalo de nuevo"
+        : "Error inesperado, inténtalo de nuevo";
+      msg.className = "auth-msg error";
+      window.sfx?.error();
     }
   };
 
@@ -224,18 +337,33 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.verificarOTP = async function() {
-    const otp  = document.getElementById("reg-otp").value.trim();
-    const msg  = document.getElementById("reg-msg");
+    const otp   = document.getElementById("reg-otp").value.trim();
+    const msg   = document.getElementById("reg-msg");
     const email = window._regEmail;
-    if (!otp || otp.length < 6) { msg.textContent = "Introduce el código de 6 dígitos"; msg.className = "auth-msg error"; return; }
-    if (!email) { msg.textContent = "Error: vuelve a registrarte"; msg.className = "auth-msg error"; return; }
+    if (!otp || otp.length < 6) { msg.textContent = "El código tiene 6 dígitos"; msg.className = "auth-msg error"; return; }
+    if (!email) { msg.textContent = "Algo fue mal — vuelve a registrarte"; msg.className = "auth-msg error"; volverRegStep1(); return; }
     msg.textContent = "Verificando..."; msg.className = "auth-msg";
-    const { error } = await db.auth.verifyOtp({ email, token: otp, type: "signup" });
-    if (error) {
-      msg.textContent = "Código incorrecto o caducado"; msg.className = "auth-msg error";
-    } else {
-      msg.textContent = "¡Cuenta verificada! 🎉"; msg.className = "auth-msg success"; window.sfx?.success();
-      setTimeout(() => go("home"), 1000);
+    try {
+      const result = await withTimeout(
+        db.auth.verifyOtp({ email, token: otp, type: "signup" }),
+        8000
+      );
+      if (result.error) {
+        msg.textContent = "Código incorrecto o caducado — revisa el email"; msg.className = "auth-msg error";
+        window.sfx?.error();
+        document.getElementById("reg-otp").value = "";
+        document.getElementById("reg-otp").focus();
+      } else {
+        msg.textContent = "¡Cuenta verificada! 🎉"; msg.className = "auth-msg success";
+        window.sfx?.success();
+        setTimeout(() => go("home"), 1000);
+      }
+    } catch(e) {
+      msg.textContent = e.message === "TIMEOUT"
+        ? "Sin respuesta — comprueba tu conexión e inténtalo de nuevo"
+        : "Error al verificar, inténtalo de nuevo";
+      msg.className = "auth-msg error";
+      window.sfx?.error();
     }
   };
 
@@ -922,6 +1050,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!iso) return "";
     const d = new Date(iso);
     return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // ── HELPER: TIMEOUT ──────────────────────────
+  function withTimeout(promise, ms) {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("TIMEOUT")), ms)
+    );
+    return Promise.race([promise, timeout]);
   }
 
   // ── INIT ─────────────────────────────────────
