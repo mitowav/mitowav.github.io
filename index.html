@@ -168,10 +168,33 @@
 
         <!-- LOGIN -->
         <div id="auth-login" class="auth-form">
-          <input type="email" id="login-email" placeholder="Email" class="field">
-          <input type="password" id="login-password" placeholder="Contraseña" class="field">
+          <input type="text" id="login-email" placeholder="Email o nombre de usuario" class="field"
+            onkeydown="if(event.key==='Enter') document.getElementById('login-password').focus()">
+          <input type="password" id="login-password" placeholder="Contraseña" class="field"
+            onkeydown="if(event.key==='Enter') doLogin()">
           <button class="btn-primary full" onclick="doLogin()">Entrar</button>
+          <button onclick="abrirOlvidePass()" style="background:none;border:none;color:var(--text-dim);
+            font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;
+            margin-top:-4px;transition:color 0.2s"
+            onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">
+            ¿Olvidaste tu contraseña?
+          </button>
           <p class="auth-msg" id="login-msg"></p>
+        </div>
+
+        <!-- RECUPERAR CONTRASEÑA -->
+        <div id="auth-reset" class="auth-form" style="display:none;flex-direction:column;gap:10px">
+          <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">
+            Introduce tu email y te mandamos un enlace para restablecer tu contraseña.
+          </p>
+          <input type="email" id="reset-email" placeholder="Tu email" class="field"
+            onkeydown="if(event.key==='Enter') doReset()">
+          <button class="btn-primary full" onclick="doReset()">Enviar enlace</button>
+          <button onclick="cerrarReset()" style="background:none;border:none;color:var(--text-dim);
+            font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">
+            ← Volver
+          </button>
+          <p class="auth-msg" id="reset-msg"></p>
         </div>
 
         <!-- REGISTER -->
