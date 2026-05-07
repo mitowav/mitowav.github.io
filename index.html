@@ -21,9 +21,18 @@
   <div class="nav-links">
     <button class="nav-btn active" onclick="go('home', this)">HOME</button>
     <button class="nav-btn" onclick="go('beats', this)">BEATS</button>
+    <button class="nav-btn" onclick="go('galeria', this)">GALERÍA</button>
+    <button class="nav-btn" onclick="go('banda', this)">BANDA</button>
+    <button class="nav-btn" onclick="go('foro', this)">FORO</button>
     <button class="nav-btn" onclick="go('about', this)">ABOUT</button>
     <button class="nav-btn lock-btn" onclick="openLogin('privado')">
       <i class="fa-solid fa-lock"></i> PRIVADO
+    </button>
+  </div>
+  <!-- USER AREA -->
+  <div class="nav-user" id="nav-user">
+    <button class="nav-auth-btn" id="btn-auth" onclick="go('auth', null)">
+      <i class="fa-solid fa-user"></i> ENTRAR
     </button>
   </div>
   <button class="nav-burger" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
@@ -33,8 +42,12 @@
 <div class="mobile-menu" id="mobile-menu">
   <button onclick="go('home', null, true)">HOME</button>
   <button onclick="go('beats', null, true)">BEATS</button>
+  <button onclick="go('galeria', null, true)">GALERÍA</button>
+  <button onclick="go('banda', null, true)">BANDA</button>
+  <button onclick="go('foro', null, true)">FORO</button>
   <button onclick="go('about', null, true)">ABOUT</button>
   <button onclick="openLogin('privado'); toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
+  <button id="mobile-auth-btn" onclick="go('auth', null, true)"><i class="fa-solid fa-user"></i> ENTRAR</button>
 </div>
 
 <main id="app">
@@ -82,6 +95,44 @@
     </div>
   </section>
 
+  <!-- GALERÍA -->
+  <section id="galeria" class="page">
+    <div class="page-wrap">
+      <div class="section-header">
+        <h2>GALERÍA</h2>
+        <p class="section-sub">Fotos y momentos</p>
+      </div>
+      <div id="galeria-grid" class="galeria-grid"></div>
+    </div>
+  </section>
+
+  <!-- BANDA -->
+  <section id="banda" class="page">
+    <div class="page-wrap">
+      <div class="section-header">
+        <h2>LA BANDA</h2>
+        <p class="section-sub">El equipo detrás del sonido</p>
+      </div>
+      <div id="banda-grid" class="banda-grid"></div>
+
+      <!-- SOLICITUD -->
+      <div class="solicitud-box" id="solicitud-box">
+        <div class="solicitud-header">
+          <h3><i class="fa-solid fa-guitar"></i> ÚNETE A LA BANDA</h3>
+          <p>¿Crees que encajas? Mándanos tu solicitud</p>
+        </div>
+        <div id="solicitud-content"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FORO -->
+  <section id="foro" class="page">
+    <div class="page-wrap">
+      <div id="foro-content"></div>
+    </div>
+  </section>
+
   <!-- ABOUT -->
   <section id="about" class="page">
     <div class="about-wrap">
@@ -93,8 +144,8 @@
         <h2 class="about-title">mit<span class="o">ø</span></h2>
         <p class="about-bio">
           Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>
-          Hago música personal que intenta contar siempre algo con un significado más profundo y que
-          he vivido de cerca para lograr conectar mejor con quien me escuche.
+          Hago música personal que normalmente trata de tener un significado profundo detrás.
+          Priorizo hablar de cosas personales y no inventadas, buscando expresarme y sentirme conectado con la gente que me escuche.
         </p>
         <div class="social-row">
           <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
@@ -105,6 +156,43 @@
     </div>
   </section>
 
+  <!-- AUTH -->
+  <section id="auth" class="page">
+    <div class="auth-wrap">
+      <div class="auth-box">
+        <div class="auth-logo">mit<span class="o">ø</span></div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchAuthTab('login', this)">ENTRAR</button>
+          <button class="auth-tab" onclick="switchAuthTab('register', this)">REGISTRARSE</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="auth-login" class="auth-form">
+          <input type="email" id="login-email" placeholder="Email" class="field">
+          <input type="password" id="login-password" placeholder="Contraseña" class="field">
+          <button class="btn-primary full" onclick="doLogin()">Entrar</button>
+          <p class="auth-msg" id="login-msg"></p>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="auth-register" class="auth-form hidden">
+          <input type="email" id="reg-email" placeholder="Email" class="field">
+          <input type="text" id="reg-username" placeholder="Nombre de usuario" class="field">
+          <input type="password" id="reg-password" placeholder="Contraseña (mín. 6 caracteres)" class="field">
+          <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
+          <p class="auth-msg" id="reg-msg"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERFIL -->
+  <section id="perfil" class="page">
+    <div class="page-wrap">
+      <div id="perfil-content"></div>
+    </div>
+  </section>
+
   <!-- PRIVADO -->
   <section id="privado" class="page">
     <div class="page-wrap">
@@ -112,11 +200,24 @@
         <h2>ZONA PRIVADA <span class="badge">BAND ONLY</span></h2>
         <p class="section-sub">Solo para la banda</p>
       </div>
+
+      <!-- SUBIR BEAT -->
       <div class="upload-box">
         <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> SUBIR BEAT</h3>
         <div class="upload-form">
-          <input type="text" id="beat-title" placeholder="Nombre del beat" class="field">
-          <input type="text" id="beat-genre" placeholder="Género / vibe" class="field">
+          <div class="field-row">
+            <input type="text" id="beat-title" placeholder="Nombre del beat" class="field">
+            <input type="text" id="beat-genre" placeholder="Género / vibe" class="field">
+          </div>
+          <div class="field-row">
+            <input type="number" id="beat-bpm" placeholder="BPM" class="field field-sm" min="40" max="300">
+            <input type="text" id="beat-tono" placeholder="Tono (ej: Am, C#)" class="field field-sm">
+          </div>
+          <label class="file-label">
+            <i class="fa-solid fa-image"></i>
+            <span id="cover-name-label">Cover / imagen (opcional)</span>
+            <input type="file" id="cover-file" accept="image/*" onchange="updateCoverName(this)">
+          </label>
           <label class="file-label">
             <i class="fa-solid fa-file-audio"></i>
             <span id="file-name-label">Elige un archivo de audio</span>
@@ -136,17 +237,40 @@
           <button class="btn-primary" onclick="subirBeat()">Subir beat 🔥</button>
         </div>
       </div>
+
+      <!-- SUBIR FOTO A GALERÍA -->
+      <div class="upload-box" style="margin-top:16px">
+        <h3 class="upload-title"><i class="fa-solid fa-images"></i> SUBIR FOTO A GALERÍA</h3>
+        <div class="upload-form">
+          <label class="file-label">
+            <i class="fa-solid fa-image"></i>
+            <span id="galeria-file-label">Elige una foto</span>
+            <input type="file" id="galeria-file" accept="image/*" onchange="updateGaleriaLabel(this)">
+          </label>
+          <input type="text" id="galeria-caption" placeholder="Descripción (opcional)" class="field">
+          <button class="btn-primary" onclick="subirFotoGaleria()">Subir foto</button>
+        </div>
+      </div>
+
+      <!-- SOLICITUDES DE BANDA -->
       <div class="section-header" style="margin-top:36px">
-        <h3>BEATS PRIVADOS</h3>
+        <h3>SOLICITUDES DE BANDA</h3>
+      </div>
+      <div id="solicitudes-admin" class="solicitudes-list"></div>
+
+      <!-- TODOS LOS BEATS -->
+      <div class="section-header" style="margin-top:36px">
+        <h3>TODOS LOS BEATS</h3>
       </div>
       <div id="admin-list" class="beats-grid"></div>
+
       <button class="btn-back" onclick="go('home')">← Volver al inicio</button>
     </div>
   </section>
 
 </main>
 
-<!-- LOGIN -->
+<!-- LOGIN PRIVADO OVERLAY -->
 <div id="login-overlay" onclick="cerrarLoginOverlay(event)">
   <div id="login-box">
     <button class="close-btn" onclick="cerrarLogin()">✕</button>
@@ -157,6 +281,28 @@
       onkeydown="if(event.key==='Enter') comprobarClave()">
     <button class="btn-primary" onclick="comprobarClave()">Entrar</button>
     <p id="error-msg"></p>
+  </div>
+</div>
+
+<!-- LIGHTBOX GALERÍA -->
+<div id="lightbox" onclick="cerrarLightbox()">
+  <button class="lightbox-close" onclick="cerrarLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+  <p id="lightbox-caption"></p>
+</div>
+
+<!-- FORO: NUEVO POST OVERLAY -->
+<div id="post-overlay" onclick="cerrarPostOverlay(event)">
+  <div class="post-box">
+    <button class="close-btn" onclick="cerrarPostOverlay()">✕</button>
+    <h2 class="upload-title">NUEVO POST</h2>
+    <div class="upload-form">
+      <select id="post-categoria" class="field"></select>
+      <input type="text" id="post-titulo" placeholder="Título" class="field">
+      <textarea id="post-contenido" placeholder="¿Qué quieres decir?" class="field textarea" rows="5"></textarea>
+      <button class="btn-primary" onclick="crearPost()">Publicar</button>
+      <p class="auth-msg" id="post-msg"></p>
+    </div>
   </div>
 </div>
 
