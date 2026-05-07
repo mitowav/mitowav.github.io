@@ -33,7 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function fmt(s) { if(!s||isNaN(s)) return "0:00"; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`; }
   function formatFecha(iso) { if(!iso) return ""; const d=new Date(iso); return d.toLocaleDateString("es-ES",{day:"numeric",month:"short",year:"numeric"}); }
-  function withTimeout(p, ms) { return Promise.race([p, new Promise((_,r)=>setTimeout(()=>r(new Error("TIMEOUT")),ms))]); }
+  function withTimeout(p, ms) {
+    return Promise.race([
+      p,
+      new Promise((_,r) => setTimeout(() => r(new Error("TIMEOUT")), ms))
+    ]);
+  }
 
   // ── TEMA ─────────────────────────────────────
   function aplicarTema(tema, acento, fondo) {
