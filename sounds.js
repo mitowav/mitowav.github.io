@@ -333,16 +333,25 @@
     }, { threshold: 0.08 });
 
     new MutationObserver(mutations => {
-      mutations.forEach(m => m.addedNodes.forEach(node => {
-        if (node.nodeType!==1) return;
-        const cls = ["beat-card","galeria-item","banda-card","post-card","solicitud-card"];
-        [node,...node.querySelectorAll(cls.map(c=>"."+c).join(","))].forEach((card,i) => {
-          if (!card.classList || !cls.some(c=>card.classList.contains(c))) return;
-          card.style.cssText += ";opacity:0;transform:translateY(14px);transition:opacity 0.38s ease "+((i*0.055).toFixed(2))+"s,transform 0.38s ease "+((i*0.055).toFixed(2))+"s";
-          observer.observe(card);
+      mutations.forEach(m => {
+        m.addedNodes.forEach(node => {
+          try {
+            if (!node || node.nodeType !== 1 || !node.classList) return;
+            const cls = ["beat-card","galeria-item","banda-card","post-card","solicitud-card","feed-card"];
+            const targets = [];
+            if (cls.some(c => node.classList.contains(c))) targets.push(node);
+            try { targets.push(...node.querySelectorAll(cls.map(c=>"."+c).join(","))); } catch(e) {}
+            targets.forEach((card, i) => {
+              if (!card || !card.classList) return;
+              card.style.opacity = "0";
+              card.style.transform = "translateY(14px)";
+              card.style.transition = `opacity 0.38s ease ${(i*0.055).toFixed(2)}s, transform 0.38s ease ${(i*0.055).toFixed(2)}s`;
+              observer.observe(card);
+            });
+          } catch(e) {}
         });
-      }));
-    }).observe(document.getElementById("app")||document.body, { childList:true, subtree:true });
+      });
+    }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
   }
 
   // ── PLAY BUTTON SOUND ─────────────────────────
