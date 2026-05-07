@@ -209,11 +209,18 @@ document.addEventListener("DOMContentLoaded", () => {
       // Guarda el email para usarlo en la verificación
       window._regEmail = email;
       // Muestra el paso 2 — OTP
-      document.getElementById("reg-step-1").classList.add("hidden");
-      document.getElementById("reg-step-2").classList.remove("hidden");
+      document.getElementById("reg-step-1").style.display = "none";
+      document.getElementById("reg-step-2").style.display = "flex";
       msg.textContent = "📧 Código enviado a " + email; msg.className = "auth-msg success";
       setTimeout(() => document.getElementById("reg-otp").focus(), 100);
     }
+  };
+
+  window.volverRegStep1 = function() {
+    document.getElementById("reg-step-1").style.display = "flex";
+    document.getElementById("reg-step-2").style.display = "none";
+    document.getElementById("reg-msg").textContent = "";
+    document.getElementById("reg-otp").value = "";
   };
 
   window.verificarOTP = async function() {
