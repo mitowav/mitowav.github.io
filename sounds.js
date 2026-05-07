@@ -64,65 +64,38 @@
       tone({ freq: 600, freq2: 400, type: "triangle", gain: 0.035, attack: 0.001, decay: 0.04, duration: 0.055 });
     },
 
-    // Tecla — mecánico agudo estilo Opera GX
+    // Tecla — click seco y corto, nada de laser
     key() {
       try {
         const c = getCtx(); const now = c.currentTime;
-
-        // Capa 1: impacto agudo (el "click" del switch)
-        const buf1 = c.createBuffer(1, Math.floor(c.sampleRate * 0.012), c.sampleRate);
-        const d1 = buf1.getChannelData(0);
-        for (let i = 0; i < d1.length; i++) d1[i] = (Math.random()*2-1) * Math.pow(1 - i/d1.length, 3);
-        const src1 = c.createBufferSource(); src1.buffer = buf1;
-        const f1 = c.createBiquadFilter(); f1.type = "highpass"; f1.frequency.value = 4000;
-        const g1 = c.createGain(); g1.gain.setValueAtTime(0.18, now); g1.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
-        src1.connect(f1); f1.connect(g1); g1.connect(c.destination); src1.start(now);
-
-        // Capa 2: tono medio (resonancia de la carcasa)
-        const osc = c.createOscillator(); const g2 = c.createGain();
-        osc.type = "square"; osc.frequency.setValueAtTime(3200, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.018);
-        g2.gain.setValueAtTime(0.06, now); g2.gain.exponentialRampToValueAtTime(0.001, now + 0.022);
-        const f2 = c.createBiquadFilter(); f2.type = "bandpass"; f2.frequency.value = 2500; f2.Q.value = 1.2;
-        osc.connect(f2); f2.connect(g2); g2.connect(c.destination); osc.start(now); osc.stop(now + 0.025);
-
-        // Capa 3: rebote grave muy sutil (el "thock")
-        const osc2 = c.createOscillator(); const g3 = c.createGain();
-        osc2.type = "triangle"; osc2.frequency.setValueAtTime(220, now + 0.005); osc2.frequency.exponentialRampToValueAtTime(80, now + 0.035);
-        g3.gain.setValueAtTime(0, now); g3.gain.linearRampToValueAtTime(0.045, now + 0.006);
-        g3.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-        osc2.connect(g3); g3.connect(c.destination); osc2.start(now + 0.004); osc2.stop(now + 0.045);
-
+        // Solo ruido muy corto filtrado — como un teclado de membrana bueno
+        const size = Math.floor(c.sampleRate * 0.008);
+        const buf  = c.createBuffer(1, size, c.sampleRate);
+        const d    = buf.getChannelData(0);
+        for (let i = 0; i < size; i++) d[i] = (Math.random()*2-1) * (1 - i/size);
+        const src = c.createBufferSource(); src.buffer = buf;
+        const f1  = c.createBiquadFilter(); f1.type = "bandpass"; f1.frequency.value = 1200; f1.Q.value = 0.8;
+        const f2  = c.createBiquadFilter(); f2.type = "highshelf"; f2.frequency.value = 3000; f2.gain.value = 6;
+        const g   = c.createGain(); g.gain.setValueAtTime(0.09, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.008);
+        src.connect(f1); f1.connect(f2); f2.connect(g); g.connect(c.destination);
+        src.start(now);
       } catch(e) {}
     },
 
-    // Tecla especial — más grave y con más cuerpo
+    // Tecla especial (enter, backspace) — igual pero ligeramente más fuerte
     keySpecial() {
       try {
         const c = getCtx(); const now = c.currentTime;
-
-        // Impacto
-        const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.018), c.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 2.5);
+        const size = Math.floor(c.sampleRate * 0.012);
+        const buf  = c.createBuffer(1, size, c.sampleRate);
+        const d    = buf.getChannelData(0);
+        for (let i = 0; i < size; i++) d[i] = (Math.random()*2-1) * (1 - i/size);
         const src = c.createBufferSource(); src.buffer = buf;
-        const f1 = c.createBiquadFilter(); f1.type = "highpass"; f1.frequency.value = 2500;
-        const g1 = c.createGain(); g1.gain.setValueAtTime(0.22, now); g1.gain.exponentialRampToValueAtTime(0.001, now + 0.018);
-        src.connect(f1); f1.connect(g1); g1.connect(c.destination); src.start(now);
-
-        // Tono más grave
-        const osc = c.createOscillator(); const g2 = c.createGain();
-        osc.type = "square"; osc.frequency.setValueAtTime(1800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-        g2.gain.setValueAtTime(0.08, now); g2.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-        const f2 = c.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 1800;
-        osc.connect(f2); f2.connect(g2); g2.connect(c.destination); osc.start(now); osc.stop(now + 0.04);
-
-        // Thock más pronunciado
-        const osc2 = c.createOscillator(); const g3 = c.createGain();
-        osc2.type = "triangle"; osc2.frequency.setValueAtTime(160, now + 0.006); osc2.frequency.exponentialRampToValueAtTime(55, now + 0.055);
-        g3.gain.setValueAtTime(0, now); g3.gain.linearRampToValueAtTime(0.07, now + 0.008);
-        g3.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-        osc2.connect(g3); g3.connect(c.destination); osc2.start(now + 0.005); osc2.stop(now + 0.065);
-
+        const f1  = c.createBiquadFilter(); f1.type = "bandpass"; f1.frequency.value = 900; f1.Q.value = 0.7;
+        const f2  = c.createBiquadFilter(); f2.type = "highshelf"; f2.frequency.value = 2500; f2.gain.value = 5;
+        const g   = c.createGain(); g.gain.setValueAtTime(0.13, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.012);
+        src.connect(f1); f1.connect(f2); f2.connect(g); g.connect(c.destination);
+        src.start(now);
       } catch(e) {}
     },
 
@@ -216,36 +189,7 @@
     if (e.key === "Enter" || e.key === "Backspace" || e.key === "Delete" || e.key === "Tab") {
       sounds.keySpecial();
     } else if (e.key.length === 1 || e.key === " ") {
-      // Pequeña variación de pitch para que no suene robótico
-      try {
-        const c = getCtx(); const now = c.currentTime;
-        const pitchVar = (Math.random() - 0.5) * 600;
-        const gainVar  = 0.85 + Math.random() * 0.3;
-
-        const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.011), c.sampleRate);
-        const d = buf.getChannelData(0);
-        for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 3);
-        const src = c.createBufferSource(); src.buffer = buf;
-        const f1 = c.createBiquadFilter(); f1.type = "highpass"; f1.frequency.value = 3800 + pitchVar;
-        const g1 = c.createGain(); g1.gain.setValueAtTime(0.16 * gainVar, now); g1.gain.exponentialRampToValueAtTime(0.001, now + 0.011);
-        src.connect(f1); f1.connect(g1); g1.connect(c.destination); src.start(now);
-
-        const osc = c.createOscillator(); const g2 = c.createGain();
-        osc.type = "square";
-        osc.frequency.setValueAtTime(3000 + pitchVar, now);
-        osc.frequency.exponentialRampToValueAtTime(700 + pitchVar * 0.3, now + 0.016);
-        g2.gain.setValueAtTime(0.055 * gainVar, now); g2.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
-        const f2 = c.createBiquadFilter(); f2.type = "bandpass"; f2.frequency.value = 2400; f2.Q.value = 1;
-        osc.connect(f2); f2.connect(g2); g2.connect(c.destination); osc.start(now); osc.stop(now + 0.022);
-
-        const osc2 = c.createOscillator(); const g3 = c.createGain();
-        osc2.type = "triangle";
-        osc2.frequency.setValueAtTime(200 + Math.random()*40, now + 0.004);
-        osc2.frequency.exponentialRampToValueAtTime(70, now + 0.032);
-        g3.gain.setValueAtTime(0, now); g3.gain.linearRampToValueAtTime(0.038 * gainVar, now + 0.005);
-        g3.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
-        osc2.connect(g3); g3.connect(c.destination); osc2.start(now + 0.003); osc2.stop(now + 0.038);
-      } catch(e2) {}
+      sounds.key();
     }
   }, { passive: true });
 
