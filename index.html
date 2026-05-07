@@ -176,10 +176,21 @@
 
         <!-- REGISTER -->
         <div id="auth-register" class="auth-form hidden">
-          <input type="email" id="reg-email" placeholder="Email" class="field">
-          <input type="text" id="reg-username" placeholder="Nombre de usuario" class="field">
-          <input type="password" id="reg-password" placeholder="Contraseña (mín. 6 caracteres)" class="field">
-          <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
+          <div id="reg-step-1">
+            <input type="email" id="reg-email" placeholder="Email" class="field">
+            <input type="text" id="reg-username" placeholder="Nombre de usuario" class="field">
+            <input type="password" id="reg-password" placeholder="Contraseña (mín. 6 caracteres)" class="field">
+            <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
+          </div>
+          <div id="reg-step-2" class="hidden">
+            <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">
+              Te hemos enviado un código de 6 dígitos.<br>Revisa tu email.
+            </p>
+            <input type="text" id="reg-otp" placeholder="Código de 6 dígitos" class="field"
+              maxlength="6" style="text-align:center;letter-spacing:8px;font-size:20px"
+              onkeydown="if(event.key==='Enter') verificarOTP()">
+            <button class="btn-primary full" onclick="verificarOTP()">Verificar</button>
+          </div>
           <p class="auth-msg" id="reg-msg"></p>
         </div>
       </div>
@@ -251,6 +262,23 @@
           <button class="btn-primary" onclick="subirFotoGaleria()">Subir foto</button>
         </div>
       </div>
+
+      <!-- ACCESOS PRIVADOS -->
+      <div class="section-header" style="margin-top:36px">
+        <h3>ACCESOS PRIVADOS</h3>
+      </div>
+      <div class="upload-box" style="margin-bottom:8px">
+        <div class="upload-form">
+          <div class="field-row">
+            <input type="email" id="nuevo-acceso-email" placeholder="email@ejemplo.com" class="field">
+            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap">
+              <i class="fa-solid fa-plus"></i> Añadir
+            </button>
+          </div>
+          <p class="auth-msg" id="acceso-msg"></p>
+        </div>
+      </div>
+      <div id="accesos-list" class="solicitudes-list"></div>
 
       <!-- SOLICITUDES DE BANDA -->
       <div class="section-header" style="margin-top:36px">
