@@ -256,6 +256,24 @@
       <div class="section-header" style="margin-top:32px"><h3>SOLICITUDES DE BANDA</h3></div>
       <div id="solicitudes-admin" class="solicitudes-list"></div>
 
+      <div class="section-header" style="margin-top:32px"><h3>MIEMBROS DE LA BANDA</h3></div>
+      <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:10px">
+        Para añadir a alguien a la banda, añade primero su email en Accesos Privados. 
+        Cuando inicie sesión, su rol cambiará a "banda" automáticamente y aparecerá aquí.
+        También puedes añadirlo manualmente:
+      </p>
+      <div class="upload-box">
+        <div class="upload-form">
+          <div class="field-row">
+            <input type="email" id="banda-email" placeholder="Email del miembro" class="field">
+            <button class="btn-primary" onclick="añadirMiembroBanda()" style="white-space:nowrap">
+              <i class="fa-solid fa-user-plus"></i> Añadir
+            </button>
+          </div>
+          <p class="auth-msg" id="banda-msg"></p>
+        </div>
+      </div>
+
       <div class="section-header" style="margin-top:32px"><h3>TODOS LOS BEATS</h3></div>
       <div id="admin-list" class="beats-grid"></div>
 
@@ -307,12 +325,18 @@
 <div id="post-overlay" onclick="cerrarPostOverlay(event)">
   <div class="post-box">
     <button class="close-btn" onclick="cerrarPostOverlay()">✕</button>
-    <h2 class="upload-title">NUEVO POST</h2>
+    <h2 class="upload-title">NUEVA PUBLICACIÓN</h2>
     <div class="upload-form">
       <select id="post-categoria" class="field"></select>
-      <input type="text" id="post-titulo" placeholder="Título" class="field">
-      <textarea id="post-contenido" placeholder="¿Qué quieres decir?" class="field textarea" rows="5"></textarea>
-      <button class="btn-primary" onclick="crearPost()">Publicar</button>
+      <input type="text" id="post-titulo" placeholder="Título (opcional)" class="field">
+      <textarea id="post-contenido" placeholder="¿Qué quieres compartir?" class="field textarea" rows="4"></textarea>
+      <div id="post-img-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <label class="file-label">
+        <i class="fa-solid fa-image"></i>
+        <span>Añadir imagen (opcional)</span>
+        <input type="file" id="post-img-file" accept="image/*" onchange="previewPostImg(this)">
+      </label>
+      <button class="btn-primary" onclick="crearPost()"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
       <p class="auth-msg" id="post-msg"></p>
     </div>
   </div>
