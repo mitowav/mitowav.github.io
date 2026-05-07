@@ -15,39 +15,33 @@
 <div class="noise"></div>
 <div class="bg-gradient"></div>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-logo" onclick="go('home')">mit<span class="o">ø</span></div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="go('home', this)">HOME</button>
-    <button class="nav-btn" onclick="go('beats', this)">BEATS</button>
-    <button class="nav-btn" onclick="go('galeria', this)">GALERÍA</button>
-    <button class="nav-btn" onclick="go('banda', this)">BANDA</button>
-    <button class="nav-btn" onclick="go('foro', this)">FORO</button>
-    <button class="nav-btn" onclick="go('about', this)">ABOUT</button>
-    <button class="nav-btn lock-btn" onclick="openLogin('privado')">
-      <i class="fa-solid fa-lock"></i> PRIVADO
-    </button>
+    <button class="nav-btn active" onclick="go('home',this)">HOME</button>
+    <button class="nav-btn" onclick="go('beats',this)">BEATS</button>
+    <button class="nav-btn" onclick="go('galeria',this)">GALERÍA</button>
+    <button class="nav-btn" onclick="go('banda',this)">BANDA</button>
+    <button class="nav-btn" onclick="go('foro',this)">FORO</button>
+    <button class="nav-btn" onclick="go('about',this)">ABOUT</button>
+    <button class="nav-btn lock-btn" onclick="openLogin('privado')"><i class="fa-solid fa-lock"></i> PRIVADO</button>
   </div>
-  <!-- USER AREA -->
-  <div class="nav-user" id="nav-user">
-    <button class="nav-auth-btn" id="btn-auth" onclick="go('auth', null)">
-      <i class="fa-solid fa-user"></i> ENTRAR
-    </button>
+  <div class="nav-right">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
+    <button class="nav-auth-btn" id="btn-auth" onclick="go('auth')"><i class="fa-solid fa-user"></i> ENTRAR</button>
+    <button class="nav-burger" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
   </div>
-  <button class="nav-burger" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
 </nav>
 
-<!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobile-menu">
-  <button onclick="go('home', null, true)">HOME</button>
-  <button onclick="go('beats', null, true)">BEATS</button>
-  <button onclick="go('galeria', null, true)">GALERÍA</button>
-  <button onclick="go('banda', null, true)">BANDA</button>
-  <button onclick="go('foro', null, true)">FORO</button>
-  <button onclick="go('about', null, true)">ABOUT</button>
-  <button onclick="openLogin('privado'); toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
-  <button id="mobile-auth-btn" onclick="go('auth', null, true)"><i class="fa-solid fa-user"></i> ENTRAR</button>
+  <button onclick="go('home',null,true)">HOME</button>
+  <button onclick="go('beats',null,true)">BEATS</button>
+  <button onclick="go('galeria',null,true)">GALERÍA</button>
+  <button onclick="go('banda',null,true)">BANDA</button>
+  <button onclick="go('foro',null,true)">FORO</button>
+  <button onclick="go('about',null,true)">ABOUT</button>
+  <button onclick="openLogin('privado');toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
+  <button id="mobile-auth-btn" onclick="go('auth',null,true)"><i class="fa-solid fa-user"></i> ENTRAR</button>
 </div>
 
 <main id="app">
@@ -64,13 +58,13 @@
         <h1 class="hero-title">mit<span class="o">ø</span></h1>
         <p class="hero-desc">Beats experimentales.</p>
         <div class="hero-btns">
-          <button class="btn-primary" onclick="go('beats', document.querySelector('.nav-btn:nth-child(2)'))">
+          <button class="btn-primary" onclick="go('beats',document.querySelector('.nav-btn:nth-child(2)'))">
             <i class="fa-solid fa-play"></i> ESCUCHAR BEATS
           </button>
           <div class="social-row">
-            <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
-            <a href="https://www.instagram.com/mit0.wav" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-            <a href="https://www.youtube.com/@mit%C3%B8wav" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank"><i class="fa-brands fa-spotify"></i></a>
+            <a href="https://www.instagram.com/mit0.wav" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://www.youtube.com/@mit%C3%B8wav" target="_blank"><i class="fa-brands fa-youtube"></i></a>
           </div>
         </div>
       </div>
@@ -78,7 +72,7 @@
     <div class="home-section">
       <div class="section-header">
         <h2>ÚLTIMOS BEATS</h2>
-        <button class="link-btn" onclick="go('beats', document.querySelector('.nav-btn:nth-child(2)'))">Ver todos →</button>
+        <button class="link-btn" onclick="go('beats',document.querySelector('.nav-btn:nth-child(2)'))">Ver todos →</button>
       </div>
       <div id="home-beats" class="beats-grid"></div>
     </div>
@@ -87,10 +81,7 @@
   <!-- BEATS -->
   <section id="beats" class="page">
     <div class="page-wrap">
-      <div class="section-header">
-        <h2>BEATS</h2>
-        <p class="section-sub">Producciones disponibles</p>
-      </div>
+      <div class="section-header"><h2>BEATS</h2><p class="section-sub">Producciones disponibles</p></div>
       <div id="beats-list" class="beats-grid"></div>
     </div>
   </section>
@@ -98,10 +89,7 @@
   <!-- GALERÍA -->
   <section id="galeria" class="page">
     <div class="page-wrap">
-      <div class="section-header">
-        <h2>GALERÍA</h2>
-        <p class="section-sub">Fotos y momentos</p>
-      </div>
+      <div class="section-header"><h2>GALERÍA</h2><p class="section-sub">Fotos y momentos</p></div>
       <div id="galeria-grid" class="galeria-grid"></div>
     </div>
   </section>
@@ -109,13 +97,8 @@
   <!-- BANDA -->
   <section id="banda" class="page">
     <div class="page-wrap">
-      <div class="section-header">
-        <h2>LA BANDA</h2>
-        <p class="section-sub">El equipo detrás del sonido</p>
-      </div>
+      <div class="section-header"><h2>LA BANDA</h2><p class="section-sub">El equipo detrás del sonido</p></div>
       <div id="banda-grid" class="banda-grid"></div>
-
-      <!-- SOLICITUD -->
       <div class="solicitud-box" id="solicitud-box">
         <div class="solicitud-header">
           <h3><i class="fa-solid fa-guitar"></i> ÚNETE A LA BANDA</h3>
@@ -128,9 +111,7 @@
 
   <!-- FORO -->
   <section id="foro" class="page">
-    <div class="page-wrap">
-      <div id="foro-content"></div>
-    </div>
+    <div class="page-wrap"><div id="foro-content"></div></div>
   </section>
 
   <!-- ABOUT -->
@@ -142,15 +123,11 @@
       <div class="about-text-col">
         <p class="hero-sub">SOBRE MÍ</p>
         <h2 class="about-title">mit<span class="o">ø</span></h2>
-        <p class="about-bio">
-          Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>
-          Hago música personal que normalmente trata de tener un significado profundo detrás.
-          Priorizo hablar de cosas personales y no inventadas, buscando expresarme y sentirme conectado con la gente que me escuche.
-        </p>
+        <p class="about-bio">Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>Hago música personal que normalmente trata de tener un significado profundo detrás. Priorizo hablar de cosas personales y no inventadas, buscando expresarme y sentirme conectado con la gente que me escuche.</p>
         <div class="social-row">
-          <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank" title="Spotify"><i class="fa-brands fa-spotify"></i></a>
-          <a href="https://www.instagram.com/mit0.wav" target="_blank" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-          <a href="https://www.youtube.com/@mit%C3%B8wav" target="_blank" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+          <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank"><i class="fa-brands fa-spotify"></i></a>
+          <a href="https://www.instagram.com/mit0.wav" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+          <a href="https://www.youtube.com/@mit%C3%B8wav" target="_blank"><i class="fa-brands fa-youtube"></i></a>
         </div>
       </div>
     </div>
@@ -162,42 +139,23 @@
       <div class="auth-box">
         <div class="auth-logo">mit<span class="o">ø</span></div>
         <div class="auth-tabs">
-          <button class="auth-tab active" onclick="switchAuthTab('login', this)">ENTRAR</button>
-          <button class="auth-tab" onclick="switchAuthTab('register', this)">REGISTRARSE</button>
+          <button class="auth-tab active" onclick="switchAuthTab('login',this)">ENTRAR</button>
+          <button class="auth-tab" onclick="switchAuthTab('register',this)">REGISTRARSE</button>
         </div>
-
-        <!-- LOGIN -->
         <div id="auth-login" class="auth-form">
-          <input type="text" id="login-email" placeholder="Email o nombre de usuario" class="field"
-            onkeydown="if(event.key==='Enter') document.getElementById('login-password').focus()">
-          <input type="password" id="login-password" placeholder="Contraseña" class="field"
-            onkeydown="if(event.key==='Enter') doLogin()">
+          <input type="text" id="login-email" placeholder="Email o nombre de usuario" class="field" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+          <input type="password" id="login-password" placeholder="Contraseña" class="field" onkeydown="if(event.key==='Enter')doLogin()">
           <button class="btn-primary full" onclick="doLogin()">Entrar</button>
-          <button onclick="abrirOlvidePass()" style="background:none;border:none;color:var(--text-dim);
-            font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;
-            margin-top:-4px;transition:color 0.2s"
-            onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-dim)'">
-            ¿Olvidaste tu contraseña?
-          </button>
+          <button onclick="abrirOlvidePass()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:color 0.2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">¿Olvidaste tu contraseña?</button>
           <p class="auth-msg" id="login-msg"></p>
         </div>
-
-        <!-- RECUPERAR CONTRASEÑA -->
         <div id="auth-reset" class="auth-form" style="display:none;flex-direction:column;gap:10px">
-          <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">
-            Introduce tu email y te mandamos un enlace para restablecer tu contraseña.
-          </p>
-          <input type="email" id="reset-email" placeholder="Tu email" class="field"
-            onkeydown="if(event.key==='Enter') doReset()">
+          <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">Introduce tu email y te mandamos un enlace para restablecer tu contraseña.</p>
+          <input type="email" id="reset-email" placeholder="Tu email" class="field" onkeydown="if(event.key==='Enter')doReset()">
           <button class="btn-primary full" onclick="doReset()">Enviar enlace</button>
-          <button onclick="cerrarReset()" style="background:none;border:none;color:var(--text-dim);
-            font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">
-            ← Volver
-          </button>
+          <button onclick="cerrarReset()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">← Volver</button>
           <p class="auth-msg" id="reset-msg"></p>
         </div>
-
-        <!-- REGISTER -->
         <div id="auth-register" class="auth-form hidden">
           <div id="reg-step-1" style="display:flex;flex-direction:column;gap:10px">
             <input type="email" id="reg-email" placeholder="Email" class="field">
@@ -206,12 +164,8 @@
             <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
           </div>
           <div id="reg-step-2" style="display:none;flex-direction:column;gap:10px">
-            <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">
-              📧 Te hemos enviado un código a tu email.<br>Introdúcelo aquí:
-            </p>
-            <input type="text" id="reg-otp" placeholder="000000" class="field"
-              maxlength="6" style="text-align:center;letter-spacing:6px;font-size:16px"
-              onkeydown="if(event.key==='Enter') verificarOTP()">
+            <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">📧 Te hemos enviado un código a tu email.<br>Introdúcelo aquí:</p>
+            <input type="text" id="reg-otp" placeholder="000000" class="field" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:16px" onkeydown="if(event.key==='Enter')verificarOTP()">
             <button class="btn-primary full" onclick="verificarOTP()">Verificar código</button>
             <button onclick="volverRegStep1()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">← Volver</button>
           </div>
@@ -223,9 +177,7 @@
 
   <!-- PERFIL -->
   <section id="perfil" class="page">
-    <div class="page-wrap">
-      <div id="perfil-content"></div>
-    </div>
+    <div class="page-wrap"><div id="perfil-content"></div></div>
   </section>
 
   <!-- PRIVADO -->
@@ -235,8 +187,6 @@
         <h2>ZONA PRIVADA <span class="badge">BAND ONLY</span></h2>
         <p class="section-sub">Solo para la banda</p>
       </div>
-
-      <!-- SUBIR BEAT -->
       <div class="upload-box">
         <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> SUBIR BEAT</h3>
         <div class="upload-form">
@@ -246,12 +196,20 @@
           </div>
           <div class="field-row">
             <input type="number" id="beat-bpm" placeholder="BPM" class="field field-sm" min="40" max="300">
-            <input type="text" id="beat-tono" placeholder="Tono (ej: Am, C#)" class="field field-sm">
+            <input type="text" id="beat-tono" placeholder="Tono (ej: Am)" class="field field-sm">
           </div>
-          <label class="file-label">
+          <!-- INSPIRACIONES -->
+          <div class="insps-wrap">
+            <div class="insps-tags" id="insps-tags"></div>
+            <div class="insps-input-row">
+              <input type="text" id="insp-input" placeholder="Añadir inspiración (ej: d4vd, jvke...)" class="field"
+                onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();añadirInsp()}">
+              <button class="btn-secondary" onclick="añadirInsp()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+          <label class="file-label" onclick="abrirCrop('cover')">
             <i class="fa-solid fa-image"></i>
-            <span id="cover-name-label">Cover / imagen (opcional)</span>
-            <input type="file" id="cover-file" accept="image/*" onchange="updateCoverName(this)">
+            <span id="cover-name-label">Cover / imagen (click para recortar)</span>
           </label>
           <label class="file-label">
             <i class="fa-solid fa-file-audio"></i>
@@ -261,89 +219,91 @@
           <div class="visibility-toggle">
             <span class="vis-label">Visibilidad:</span>
             <div class="vis-options">
-              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)">
-                <i class="fa-solid fa-globe"></i> PÚBLICO
-              </button>
-              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)">
-                <i class="fa-solid fa-lock"></i> PRIVADO
-              </button>
+              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)"><i class="fa-solid fa-globe"></i> PÚBLICO</button>
+              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)"><i class="fa-solid fa-lock"></i> PRIVADO</button>
             </div>
           </div>
           <button class="btn-primary" onclick="subirBeat()">Subir beat 🔥</button>
         </div>
       </div>
 
-      <!-- SUBIR FOTO A GALERÍA -->
-      <div class="upload-box" style="margin-top:16px">
+      <div class="upload-box" style="margin-top:12px">
         <h3 class="upload-title"><i class="fa-solid fa-images"></i> SUBIR FOTO A GALERÍA</h3>
         <div class="upload-form">
-          <label class="file-label">
+          <label class="file-label" onclick="abrirCrop('galeria')">
             <i class="fa-solid fa-image"></i>
-            <span id="galeria-file-label">Elige una foto</span>
-            <input type="file" id="galeria-file" accept="image/*" onchange="updateGaleriaLabel(this)">
+            <span id="galeria-file-label">Elige una foto (click para recortar)</span>
           </label>
           <input type="text" id="galeria-caption" placeholder="Descripción (opcional)" class="field">
           <button class="btn-primary" onclick="subirFotoGaleria()">Subir foto</button>
         </div>
       </div>
 
-      <!-- ACCESOS PRIVADOS -->
-      <div class="section-header" style="margin-top:36px">
+      <div class="section-header" style="margin-top:32px">
         <h3>ACCESOS PRIVADOS</h3>
       </div>
-      <div class="upload-box" style="margin-bottom:8px">
+      <div class="upload-box">
         <div class="upload-form">
           <div class="field-row">
             <input type="email" id="nuevo-acceso-email" placeholder="email@ejemplo.com" class="field">
-            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap">
-              <i class="fa-solid fa-plus"></i> Añadir
-            </button>
+            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap"><i class="fa-solid fa-plus"></i> Añadir</button>
           </div>
           <p class="auth-msg" id="acceso-msg"></p>
         </div>
       </div>
       <div id="accesos-list" class="solicitudes-list"></div>
 
-      <!-- SOLICITUDES DE BANDA -->
-      <div class="section-header" style="margin-top:36px">
-        <h3>SOLICITUDES DE BANDA</h3>
-      </div>
+      <div class="section-header" style="margin-top:32px"><h3>SOLICITUDES DE BANDA</h3></div>
       <div id="solicitudes-admin" class="solicitudes-list"></div>
 
-      <!-- TODOS LOS BEATS -->
-      <div class="section-header" style="margin-top:36px">
-        <h3>TODOS LOS BEATS</h3>
-      </div>
+      <div class="section-header" style="margin-top:32px"><h3>TODOS LOS BEATS</h3></div>
       <div id="admin-list" class="beats-grid"></div>
 
-      <button class="btn-back" onclick="go('home')">← Volver al inicio</button>
+      <button class="btn-secondary" onclick="go('home')" style="margin-top:20px">← Volver al inicio</button>
     </div>
   </section>
 
 </main>
 
-<!-- LOGIN PRIVADO OVERLAY -->
+<!-- LOGIN PRIVADO -->
 <div id="login-overlay" onclick="cerrarLoginOverlay(event)">
   <div id="login-box">
     <button class="close-btn" onclick="cerrarLogin()">✕</button>
     <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
     <h2>ACCESO PRIVADO</h2>
     <p class="login-sub">Solo para la banda</p>
-    <input type="password" id="clave-input" placeholder="Clave secreta" class="field"
-      onkeydown="if(event.key==='Enter') comprobarClave()">
+    <input type="password" id="clave-input" placeholder="Clave secreta" class="field" onkeydown="if(event.key==='Enter')comprobarClave()">
     <button class="btn-primary" onclick="comprobarClave()">Entrar</button>
     <p id="error-msg"></p>
   </div>
 </div>
 
-<!-- LIGHTBOX GALERÍA -->
+<!-- LIGHTBOX -->
 <div id="lightbox" onclick="cerrarLightbox()">
   <button class="lightbox-close" onclick="cerrarLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="">
   <p id="lightbox-caption"></p>
 </div>
 
-<!-- FORO: NUEVO POST OVERLAY -->
+<!-- BEAT DETAIL -->
+<div id="beat-overlay" onclick="cerrarBeatOverlay(event)">
+  <div class="beat-detail" id="beat-detail-content"></div>
+</div>
+
+<!-- CROP OVERLAY -->
+<div id="crop-overlay">
+  <p class="crop-hint">Arrastra para seleccionar el área · Cuadrado 1:1</p>
+  <div class="crop-container">
+    <canvas id="crop-canvas"></canvas>
+    <div class="crop-selection" id="crop-selection" style="display:none"></div>
+  </div>
+  <div class="crop-actions">
+    <button class="btn-primary" onclick="confirmarCrop()"><i class="fa-solid fa-crop"></i> Recortar</button>
+    <button class="btn-secondary" onclick="cerrarCrop()">Cancelar</button>
+  </div>
+</div>
+
+<!-- FORO POST OVERLAY -->
 <div id="post-overlay" onclick="cerrarPostOverlay(event)">
   <div class="post-box">
     <button class="close-btn" onclick="cerrarPostOverlay()">✕</button>
