@@ -112,12 +112,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function comprobarAccesoPrivado() {
     if (!currentUser) { tieneAccesoPrivado = false; return; }
-    const { data } = await db.from("accesos_privados").select("id").eq("email", currentUser.email).single();
-    tieneAccesoPrivado = !!data;
-    if (tieneAccesoPrivado && currentPerfil?.rol === "fan") {
-      await db.from("perfiles").update({ rol: "banda" }).eq("id", currentUser.id);
-      if (currentPerfil) currentPerfil.rol = "banda";
+    try {
+      // Usamos select sin .single() para evitar 406 cuando no hay resultado
+      const { data, error } = await db
+        .from("accesos_privados")
+        .select("id")
+        .eq("email", currentUser.email)
+        .limit(1);
+
+      tieneAccesoPrivado = !error && data && data.length > 0;
+
+      if (tieneAccesoPrivado && currentPerfil?.rol === "fan") {
+        await db.from("perfiles").update({ rol: "banda" }).eq("id", currentUser.id);
+        if (currentPerfil) currentPerfil.rol = "banda";
+      }
+    } catch(e) {
+      console.warn("comprobarAccesoPrivado:", e.message);
+      tieneAccesoPrivado = false;
     }
+
     const lockBtn = document.querySelector(".lock-btn");
     if (lockBtn) {
       if (tieneAccesoPrivado) {
@@ -194,11 +207,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       let email = identifier;
       if (!identifier.includes("@")) {
-        const { data: p } = await withTimeout(db.from("perfiles").select("id").eq("username", identifier.toLowerCase()).single(), 5000);
+        const { data: p } = await withTimeout(db.from("perfiles").select("id").eq("username", identifier.toLowerCase()).single(), 10000);
         if (!p) { msg.textContent="Usuario no encontrado — prueba con tu email"; msg.className="auth-msg error"; window.sfx?.error(); return; }
         msg.textContent="Usuario encontrado — introduce tu email completo"; msg.className="auth-msg error"; window.sfx?.error(); return;
       }
-      const result = await withTimeout(db.auth.signInWithPassword({ email, password: pass }), 5000);
+      const result = await withTimeout(db.auth.signInWithPassword({ email, password: pass }), 10000);
       if (result.error) {
         const m = {"Invalid login credentials":"Email o contraseña incorrectos","Email not confirmed":"Confirma tu email — revisa también el spam","Too many requests":"Demasiados intentos, espera un momento"};
         msg.textContent = m[result.error.message]||"Error al entrar — revisa tu conexión"; msg.className="auth-msg error"; window.sfx?.error();
@@ -756,7 +769,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function renderSolicitudForm() {
     const cont=document.getElementById("solicitud-content");
     if(!currentUser){cont.innerHTML=`<div class="solicitud-login"><p>Inicia sesión para enviar una solicitud</p><br><button class="btn-primary" onclick="go('auth')">Entrar</button></div>`;return;}
-    const{data}=await db.from("solicitudes").select("*").eq("user_id",currentUser.id).single();
+    const{data:solData}=await db.from("solicitudes").select("*").eq("user_id",currentUser.id).limit(1); const data=solData?.[0]||null;
     if(data){cont.innerHTML=`<div class="solicitud-enviada"><div style="font-size:32px;margin-bottom:10px">✅</div><p>Tu solicitud está <strong>${data.estado}</strong>.<br>Te avisaremos pronto.</p></div>`;return;}
     cont.innerHTML=`<div class="solicitud-form"><input type="text" id="sol-nombre" placeholder="Tu nombre" class="field" value="${esc(currentPerfil?.display_name||"")}"><input type="text" id="sol-instrumento" placeholder="Instrumento / rol" class="field"><input type="text" id="sol-redes" placeholder="Tu Instagram u otras redes" class="field"><textarea id="sol-experiencia" placeholder="¿Qué experiencia tienes?" class="field textarea" rows="3"></textarea><textarea id="sol-mensaje" placeholder="¿Por qué quieres unirte?" class="field textarea" rows="3"></textarea><button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud</button><p class="auth-msg" id="sol-msg"></p></div>`;
   }
@@ -832,7 +845,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .order("created_at", { ascending: false });
       if (foroCategoria !== "todos") q = q.eq("categoria_id", foroCategoria);
 
-      const { data: posts } = await withTimeout(q, 5000);
+      const { data: posts } = await withTimeout(q, 10000);
 
       const catsHtml = [
         `<div class="cat-pill ${foroCategoria==="todos"?"active":""}" onclick="filtrarCategoria('todos')">Todo</div>`,
