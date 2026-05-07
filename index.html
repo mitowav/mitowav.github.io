@@ -82,6 +82,51 @@
   <section id="beats" class="page">
     <div class="page-wrap">
       <div class="section-header"><h2>BEATS</h2><p class="section-sub">Producciones disponibles</p></div>
+
+      <!-- FILTROS -->
+      <div class="beats-filters">
+        <div class="filter-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="filter-nombre" placeholder="Buscar por nombre..." class="filter-input" oninput="filtrarBeats()">
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label class="filter-label">BPM</label>
+            <div class="filter-range-row">
+              <input type="number" id="filter-bpm-min" placeholder="Min" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
+              <span class="filter-sep">—</span>
+              <input type="number" id="filter-bpm-max" placeholder="Max" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
+            </div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">TONO</label>
+            <select id="filter-tono" class="filter-input filter-select" onchange="filtrarBeats()">
+              <option value="">Todos</option>
+              <option>Am</option><option>A</option>
+              <option>Bm</option><option>B</option>
+              <option>Cm</option><option>C</option>
+              <option>Dm</option><option>D</option>
+              <option>Em</option><option>E</option>
+              <option>Fm</option><option>F</option>
+              <option>Gm</option><option>G</option>
+              <option>C#m</option><option>C#</option>
+              <option>F#m</option><option>F#</option>
+              <option>G#m</option><option>G#</option>
+              <option>A#m</option><option>A#</option>
+              <option>D#m</option><option>D#</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">GÉNERO</label>
+            <input type="text" id="filter-genero" placeholder="Trap, lo-fi..." class="filter-input" oninput="filtrarBeats()">
+          </div>
+          <button class="filter-reset" onclick="resetFiltros()" title="Limpiar filtros">
+            <i class="fa-solid fa-xmark"></i> Limpiar
+          </button>
+        </div>
+        <p class="filter-results" id="filter-results"></p>
+      </div>
+
       <div id="beats-list" class="beats-grid"></div>
     </div>
   </section>
