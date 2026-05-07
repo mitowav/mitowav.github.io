@@ -6,10 +6,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
-  const CLAVE_SECRETA = "4312";
+  const CLAVE_SECRETA = "1234";
 
   let db = null;
-  try { db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+  try {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage
+      }
+    });
+  }
   catch(e) { console.warn("Supabase:", e.message); }
 
   let currentUser = null;
@@ -20,19 +29,63 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeCard = null;
   let foroCategoria = null;
   let foroPost = null;
+  let tieneAccesoPrivado = false;
 
   // ── AUTH STATE ────────────────────────────────
+
+  // Recupera sesión existente al cargar
+  db.auth.getSession().then(async ({ data: { session } }) => {
+    currentUser = session?.user || null;
+    if (currentUser) {
+      const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
+      currentPerfil = data;
+      await comprobarAccesoPrivado();
+    }
+    updateNavUser();
+  });
 
   db.auth.onAuthStateChange(async (event, session) => {
     currentUser = session?.user || null;
     if (currentUser) {
       const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
       currentPerfil = data;
+      await comprobarAccesoPrivado();
     } else {
       currentPerfil = null;
+      tieneAccesoPrivado = false;
     }
     updateNavUser();
   });
+
+  async function comprobarAccesoPrivado() {
+    if (!currentUser) { tieneAccesoPrivado = false; return; }
+    const email = currentUser.email;
+    const { data } = await db.from("accesos_privados").select("id").eq("email", email).single();
+    tieneAccesoPrivado = !!data;
+    // Si tiene acceso, actualiza su rol a 'banda' automáticamente
+    if (tieneAccesoPrivado && currentPerfil?.rol === "fan") {
+      await db.from("perfiles").update({ rol: "banda" }).eq("id", currentUser.id);
+      currentPerfil.rol = "banda";
+    }
+    updateNavPrivado();
+  }
+
+  function updateNavPrivado() {
+    // Muestra/oculta el botón PRIVADO según acceso
+    const lockBtn = document.querySelector(".lock-btn");
+    if (!lockBtn) return;
+    if (tieneAccesoPrivado) {
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> PRIVADO`;
+      lockBtn.onclick = () => go("privado");
+      lockBtn.style.borderColor = "rgba(107,255,184,0.4)";
+      lockBtn.style.color = "#6bffb8";
+    } else {
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
+      lockBtn.onclick = () => openLogin("privado");
+      lockBtn.style.borderColor = "";
+      lockBtn.style.color = "";
+    }
+  }
 
   function updateNavUser() {
     const btn = document.getElementById("btn-auth");
@@ -70,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (id === "beats")   cargarBeats("beats-list", false);
     if (id === "home")    cargarBeats("home-beats", false, 3);
-    if (id === "privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); }
+    if (id === "privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); }
     if (id === "galeria") cargarGaleria();
     if (id === "banda")   { cargarBanda(); renderSolicitudForm(); }
     if (id === "foro")    renderForo();
@@ -88,6 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── LOGIN PRIVADO ─────────────────────────────
 
   function openLogin(destino) {
+    // Si el usuario está logueado y tiene acceso, entra directo
+    if (tieneAccesoPrivado && destino === "privado") {
+      go("privado"); return;
+    }
     loginDestino = destino || "privado";
     document.getElementById("login-overlay").classList.add("visible");
     document.getElementById("error-msg").textContent = "";
@@ -140,10 +197,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const pass     = document.getElementById("reg-password").value;
     const msg      = document.getElementById("reg-msg");
     if (!username) { msg.textContent = "Pon un nombre de usuario"; msg.className = "auth-msg error"; return; }
+    if (pass.length < 6) { msg.textContent = "La contraseña debe tener al menos 6 caracteres"; msg.className = "auth-msg error"; return; }
     msg.textContent = "Creando cuenta..."; msg.className = "auth-msg";
-    const { error } = await db.auth.signUp({ email, password: pass, options: { data: { username } } });
-    if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
-    else { msg.textContent = "¡Cuenta creada! Revisa tu email para confirmar."; msg.className = "auth-msg success"; }
+    const { error } = await db.auth.signUp({
+      email, password: pass,
+      options: { data: { username }, emailRedirectTo: null }
+    });
+    if (error) {
+      msg.textContent = "Error: " + error.message; msg.className = "auth-msg error";
+    } else {
+      // Guarda el email para usarlo en la verificación
+      window._regEmail = email;
+      // Muestra el paso 2 — OTP
+      document.getElementById("reg-step-1").classList.add("hidden");
+      document.getElementById("reg-step-2").classList.remove("hidden");
+      msg.textContent = "📧 Código enviado a " + email; msg.className = "auth-msg success";
+      setTimeout(() => document.getElementById("reg-otp").focus(), 100);
+    }
+  };
+
+  window.verificarOTP = async function() {
+    const otp  = document.getElementById("reg-otp").value.trim();
+    const msg  = document.getElementById("reg-msg");
+    const email = window._regEmail;
+    if (!otp || otp.length < 6) { msg.textContent = "Introduce el código de 6 dígitos"; msg.className = "auth-msg error"; return; }
+    if (!email) { msg.textContent = "Error: vuelve a registrarte"; msg.className = "auth-msg error"; return; }
+    msg.textContent = "Verificando..."; msg.className = "auth-msg";
+    const { error } = await db.auth.verifyOtp({ email, token: otp, type: "signup" });
+    if (error) {
+      msg.textContent = "Código incorrecto o caducado"; msg.className = "auth-msg error";
+    } else {
+      msg.textContent = "¡Cuenta verificada! 🎉"; msg.className = "auth-msg success";
+      setTimeout(() => go("home"), 1000);
+    }
   };
 
   // ── PERFIL ────────────────────────────────────
@@ -349,6 +435,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }]);
     if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
     else { renderSolicitudForm(); }
+  };
+
+  // ── ACCESOS PRIVADOS ─────────────────────────
+
+  async function cargarAccesos() {
+    const cont = document.getElementById("accesos-list");
+    if (!cont) return;
+    cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    const { data } = await db.from("accesos_privados").select("*").order("created_at", { ascending: false });
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg">No hay accesos configurados.</p>`; return; }
+    cont.innerHTML = "";
+    data.forEach(a => {
+      const card = document.createElement("div");
+      card.className = "solicitud-card";
+      card.innerHTML = `
+        <div class="solicitud-card-info">
+          <h4>${esc(a.email)}</h4>
+          <p>Añadido el ${formatFecha(a.created_at)}</p>
+        </div>
+        <button class="delete-btn" style="opacity:1" title="Eliminar acceso" onclick="eliminarAcceso(${a.id}, '${esc(a.email)}', this)">
+          <i class="fa-solid fa-trash"></i>
+        </button>`;
+      cont.appendChild(card);
+    });
+  }
+
+  window.añadirAcceso = async function() {
+    const email = document.getElementById("nuevo-acceso-email").value.trim().toLowerCase();
+    const msg   = document.getElementById("acceso-msg");
+    if (!email || !email.includes("@")) { msg.textContent = "Pon un email válido"; msg.className = "auth-msg error"; return; }
+    msg.textContent = "Añadiendo..."; msg.className = "auth-msg";
+    const { error } = await db.from("accesos_privados").insert([{ email }]);
+    if (error) {
+      msg.textContent = error.code === "23505" ? "Ese email ya tiene acceso" : "Error: " + error.message;
+      msg.className = "auth-msg error";
+    } else {
+      document.getElementById("nuevo-acceso-email").value = "";
+      msg.textContent = "✓ Acceso añadido";
+      msg.className = "auth-msg success";
+      setTimeout(() => { msg.textContent = ""; }, 2000);
+      cargarAccesos();
+    }
+  };
+
+  window.eliminarAcceso = async function(id, email, btn) {
+    if (!confirm(`¿Quitar acceso a ${email}?`)) return;
+    btn.disabled = true;
+    const { error } = await db.from("accesos_privados").delete().eq("id", id);
+    if (error) { alert("Error: " + error.message); btn.disabled = false; return; }
+    btn.closest(".solicitud-card").remove();
   };
 
   async function cargarSolicitudesAdmin() {
