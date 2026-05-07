@@ -5,7 +5,22 @@
 (function() {
 
   let ctx = null;
+  let userInteracted = false;
+
+  // Chrome no permite AudioContext hasta que el usuario interactúa
+  // Esperamos al primer click/touch para crearlo
+  function unlockAudio() {
+    if (userInteracted) return;
+    userInteracted = true;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  document.addEventListener("click",     unlockAudio, { once: false, passive: true });
+  document.addEventListener("touchstart", unlockAudio, { once: false, passive: true });
+  document.addEventListener("keydown",    unlockAudio, { once: false, passive: true });
+
   function getCtx() {
+    if (!userInteracted) return null; // aún no hay gesto — ignoramos
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") ctx.resume();
     return ctx;
@@ -16,7 +31,8 @@
   function tone({ freq = 440, freq2 = null, type = "sine", gain = 0.04,
                   attack = 0.004, decay = 0.08, duration = 0.1 } = {}) {
     try {
-      const c = getCtx(); const now = c.currentTime;
+      const c = getCtx(); if (!c) return;
+      const now = c.currentTime;
       const osc = c.createOscillator();
       const g   = c.createGain();
       const f   = c.createBiquadFilter();
@@ -34,7 +50,8 @@
 
   function noise({ gain = 0.02, duration = 0.04, freq = 1000, q = 2 } = {}) {
     try {
-      const c = getCtx(); const now = c.currentTime;
+      const c = getCtx(); if (!c) return;
+      const now = c.currentTime;
       const size = Math.floor(c.sampleRate * duration);
       const buf  = c.createBuffer(1, size, c.sampleRate);
       const data = buf.getChannelData(0);
@@ -67,7 +84,8 @@
     // Tecla — click seco y corto, nada de laser
     key() {
       try {
-        const c = getCtx(); const now = c.currentTime;
+        const c = getCtx(); if (!c) return;
+        const now = c.currentTime;
         // Solo ruido muy corto filtrado — como un teclado de membrana bueno
         const size = Math.floor(c.sampleRate * 0.008);
         const buf  = c.createBuffer(1, size, c.sampleRate);
@@ -85,7 +103,8 @@
     // Tecla especial (enter, backspace) — igual pero ligeramente más fuerte
     keySpecial() {
       try {
-        const c = getCtx(); const now = c.currentTime;
+        const c = getCtx(); if (!c) return;
+        const now = c.currentTime;
         const size = Math.floor(c.sampleRate * 0.012);
         const buf  = c.createBuffer(1, size, c.sampleRate);
         const d    = buf.getChannelData(0);
