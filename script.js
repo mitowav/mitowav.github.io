@@ -451,14 +451,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function cargarGaleria() {
     const grid = document.getElementById("galeria-grid");
-    grid.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    grid.innerHTML = `<p class="loading-msg">Cargando</p>`;
     try {
       const { data, error } = await withTimeout(
         db.from("galeria").select("*").order("id", { ascending: false }), 7000
       );
       if (error) throw error;
       if (!data?.length) {
-        grid.innerHTML = `<p class="loading-msg">La galería está vacía por ahora.</p>`; return;
+        grid.innerHTML = `<p class="loading-msg no-spin">La galería está vacía por ahora.</p>`; return;
       }
     grid.innerHTML = "";
     data.forEach(foto => {
@@ -477,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = err.message === "TIMEOUT"
         ? "Sin conexión — comprueba tu wifi"
         : "Error al cargar la galería";
-      grid.innerHTML = `<p class="loading-msg">⚠️ ${msg}</p>`;
+      grid.innerHTML = `<p class="loading-msg no-spin">⚠️ ${msg}</p>`;
     }
   }
 
@@ -520,13 +520,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function cargarBanda() {
     const grid = document.getElementById("banda-grid");
-    grid.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    grid.innerHTML = `<p class="loading-msg">Cargando</p>`;
     try {
       const { data, error } = await withTimeout(
         db.from("perfiles").select("*").eq("rol", "banda").order("created_at"), 7000
       );
       if (error) throw error;
-      if (!data?.length) { grid.innerHTML = `<p class="loading-msg">La banda se está formando... 🎸</p>`; return; }
+      if (!data?.length) { grid.innerHTML = `<p class="loading-msg no-spin">La banda se está formando... 🎸</p>`; return; }
     grid.innerHTML = "";
     data.forEach(m => {
       const inicial = (m.display_name || m.username || "?")[0].toUpperCase();
@@ -543,7 +543,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     } catch(err) {
       console.error(err);
-      grid.innerHTML = `<p class="loading-msg">⚠️ ${err.message === "TIMEOUT" ? "Sin conexión — comprueba tu wifi" : "Error al cargar la banda"}</p>`;
+      grid.innerHTML = `<p class="loading-msg no-spin">⚠️ ${err.message === "TIMEOUT" ? "Sin conexión — comprueba tu wifi" : "Error al cargar la banda"}</p>`;
     }
   }
 
@@ -596,9 +596,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarAccesos() {
     const cont = document.getElementById("accesos-list");
     if (!cont) return;
-    cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    cont.innerHTML = `<p class="loading-msg">Cargando</p>`;
     const { data } = await db.from("accesos_privados").select("*").order("created_at", { ascending: false });
-    if (!data?.length) { cont.innerHTML = `<p class="loading-msg">No hay accesos configurados.</p>`; return; }
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg no-spin">No hay accesos configurados.</p>`; return; }
     cont.innerHTML = "";
     data.forEach(a => {
       const card = document.createElement("div");
@@ -643,9 +643,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function cargarSolicitudesAdmin() {
     const cont = document.getElementById("solicitudes-admin");
-    cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    cont.innerHTML = `<p class="loading-msg">Cargando</p>`;
     const { data } = await db.from("solicitudes").select("*").order("created_at", { ascending: false });
-    if (!data?.length) { cont.innerHTML = `<p class="loading-msg">No hay solicitudes aún.</p>`; return; }
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg no-spin">No hay solicitudes aún.</p>`; return; }
     cont.innerHTML = "";
     data.forEach(s => {
       const card = document.createElement("div");
@@ -681,7 +681,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let postsHtml = "";
     if (!posts?.length) {
-      postsHtml = `<p class="loading-msg">No hay posts en esta categoría aún. ¡Sé el primero!</p>`;
+      postsHtml = `<p class="loading-msg no-spin">No hay posts en esta categoría aún. ¡Sé el primero!</p>`;
     } else {
       postsHtml = posts.map(p => {
         const autor = p.perfiles?.display_name || p.perfiles?.username || "Anónimo";
@@ -1047,16 +1047,16 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarBeats(containerId, soloPrivados, limite) {
     const cont = document.getElementById(containerId);
     if (!cont || !db) return;
-    cont.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    cont.innerHTML = `<p class="loading-msg">Cargando</p>`;
     const admin = soloPrivados === null;
     try {
       let q = db.from("beats").select("*").order("id", { ascending: false });
       if (soloPrivados !== null) q = q.eq("privado", soloPrivados);
       if (limite) q = q.limit(limite);
-      const { data, error } = await withTimeout(q, 7000);
+      const { data, error } = await withTimeout(q, 5000);
       if (error) throw error;
       if (!data?.length) {
-        cont.innerHTML = `<p class="loading-msg">Aún no hay beats aquí. 🎧</p>`; return;
+        cont.innerHTML = `<p class="loading-msg no-spin">Aún no hay beats aquí. 🎧</p>`; return;
       }
       cont.innerHTML = "";
       data.forEach((beat, i) => cont.appendChild(crearCard(beat, i, admin)));
@@ -1065,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = err.message === "TIMEOUT"
         ? "Sin conexión — comprueba tu wifi e inténtalo de nuevo"
         : "Error al cargar los beats";
-      cont.innerHTML = `<p class="loading-msg">⚠️ ${msg}</p>`;
+      cont.innerHTML = `<p class="loading-msg no-spin">⚠️ ${msg}</p>`;
     }
   }
 
