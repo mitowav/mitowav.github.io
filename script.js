@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
-  const CLAVE_SECRETA = "4312";
+  const CLAVE_SECRETA = "1234";
 
   let db = null;
   try {
@@ -451,11 +451,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function cargarGaleria() {
     const grid = document.getElementById("galeria-grid");
-    grid.innerHTML = `<p class="loading-msg">Cargando galería...</p>`;
-    const { data, error } = await db.from("galeria").select("*").order("id", { ascending: false });
-    if (error || !data?.length) {
-      grid.innerHTML = `<p class="loading-msg">La galería está vacía.</p>`; return;
-    }
+    grid.innerHTML = `<p class="loading-msg">Cargando...</p>`;
+    try {
+      const { data, error } = await withTimeout(
+        db.from("galeria").select("*").order("id", { ascending: false }), 7000
+      );
+      if (error) throw error;
+      if (!data?.length) {
+        grid.innerHTML = `<p class="loading-msg">La galería está vacía por ahora.</p>`; return;
+      }
     grid.innerHTML = "";
     data.forEach(foto => {
       const item = document.createElement("div");
@@ -468,6 +472,13 @@ document.addEventListener("DOMContentLoaded", () => {
       item.addEventListener("click", () => abrirLightbox(foto.url, foto.caption));
       grid.appendChild(item);
     });
+    } catch(err) {
+      console.error(err);
+      const msg = err.message === "TIMEOUT"
+        ? "Sin conexión — comprueba tu wifi"
+        : "Error al cargar la galería";
+      grid.innerHTML = `<p class="loading-msg">⚠️ ${msg}</p>`;
+    }
   }
 
   function abrirLightbox(url, caption) {
@@ -510,8 +521,12 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarBanda() {
     const grid = document.getElementById("banda-grid");
     grid.innerHTML = `<p class="loading-msg">Cargando...</p>`;
-    const { data } = await db.from("perfiles").select("*").eq("rol", "banda").order("created_at");
-    if (!data?.length) { grid.innerHTML = `<p class="loading-msg">La banda se está formando... 🎸</p>`; return; }
+    try {
+      const { data, error } = await withTimeout(
+        db.from("perfiles").select("*").eq("rol", "banda").order("created_at"), 7000
+      );
+      if (error) throw error;
+      if (!data?.length) { grid.innerHTML = `<p class="loading-msg">La banda se está formando... 🎸</p>`; return; }
     grid.innerHTML = "";
     data.forEach(m => {
       const inicial = (m.display_name || m.username || "?")[0].toUpperCase();
@@ -526,6 +541,10 @@ document.addEventListener("DOMContentLoaded", () => {
         ${m.bio ? `<p class="banda-bio">${esc(m.bio)}</p>` : ""}`;
       grid.appendChild(card);
     });
+    } catch(err) {
+      console.error(err);
+      grid.innerHTML = `<p class="loading-msg">⚠️ ${err.message === "TIMEOUT" ? "Sin conexión — comprueba tu wifi" : "Error al cargar la banda"}</p>`;
+    }
   }
 
   async function renderSolicitudForm() {
@@ -1034,12 +1053,20 @@ document.addEventListener("DOMContentLoaded", () => {
       let q = db.from("beats").select("*").order("id", { ascending: false });
       if (soloPrivados !== null) q = q.eq("privado", soloPrivados);
       if (limite) q = q.limit(limite);
-      const { data, error } = await q;
+      const { data, error } = await withTimeout(q, 7000);
       if (error) throw error;
-      if (!data?.length) { cont.innerHTML = `<p class="loading-msg">No hay beats aún. 🎧</p>`; return; }
+      if (!data?.length) {
+        cont.innerHTML = `<p class="loading-msg">Aún no hay beats aquí. 🎧</p>`; return;
+      }
       cont.innerHTML = "";
       data.forEach((beat, i) => cont.appendChild(crearCard(beat, i, admin)));
-    } catch(err) { console.error(err); cont.innerHTML = `<p class="loading-msg">Error al cargar.</p>`; }
+    } catch(err) {
+      console.error(err);
+      const msg = err.message === "TIMEOUT"
+        ? "Sin conexión — comprueba tu wifi e inténtalo de nuevo"
+        : "Error al cargar los beats";
+      cont.innerHTML = `<p class="loading-msg">⚠️ ${msg}</p>`;
+    }
   }
 
   // ── HELPERS ──────────────────────────────────
