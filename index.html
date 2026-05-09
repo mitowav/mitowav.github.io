@@ -61,7 +61,7 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
   <button class="mob-nav-btn" onclick="go('beats',this)"><i class="fa-solid fa-music"></i><span>beats</span></button>
   <button class="mob-nav-btn" onclick="go('galeria',this)"><i class="fa-solid fa-images"></i><span>galería</span></button>
   <button class="mob-nav-btn" onclick="go('foro',this)"><i class="fa-solid fa-comments"></i><span>foro</span></button>
-  <button class="mob-nav-btn" onclick="go('letras',this)"><i class="fa-solid fa-microphone"></i><span>letras</span></button>
+  <button class="mob-nav-btn" id="mob-priv-btn" onclick="openLogin('privado')"><i class="fa-solid fa-lock"></i><span>privado</span></button>
   <button class="mob-nav-btn" id="mob-auth-btn" onclick="go('auth',this)"><i class="fa-solid fa-user"></i><span>yo</span></button>
 </nav>
 
@@ -106,7 +106,11 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
   <!-- BEATS -->
   <section id="beats" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>beats</h2><p class="section-sub">producciones disponibles</p></div>
+      <div class="section-header">
+        <h2>beats</h2>
+        <button class="reload-btn" onclick="cargarBeats('beats-list',false)" title="recargar"><i class="fa-solid fa-rotate-right"></i></button>
+      </div>
+      <p class="section-sub">producciones disponibles</p>
       <div class="beats-filters">
         <div class="filter-search">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -147,7 +151,11 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
   <!-- GALERÍA -->
   <section id="galeria" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>galería</h2><p class="section-sub">fotos y momentos</p></div>
+      <div class="section-header">
+        <h2>galería</h2>
+        <button class="reload-btn" onclick="cargarGaleria()" title="recargar"><i class="fa-solid fa-rotate-right"></i></button>
+      </div>
+      <p class="section-sub">fotos y momentos</p>
       <div id="galeria-grid" class="galeria-grid"></div>
     </div>
   </section>
@@ -226,7 +234,11 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
   <!-- LETRAS -->
   <section id="letras" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>letras</h2><p class="section-sub">canciones y poesía</p></div>
+      <div class="section-header">
+        <h2>letras</h2>
+        <button class="reload-btn" onclick="cargarLetras()" title="recargar"><i class="fa-solid fa-rotate-right"></i></button>
+      </div>
+      <p class="section-sub">canciones y poesía</p>
       <div id="letras-list"></div>
     </div>
   </section>
@@ -440,6 +452,26 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
           <div id="admin-list" class="beats-grid"></div>
         </div>
 
+        <!-- LETRAS -->
+        <div class="privado-panel" id="panel-letras-priv">
+          <h2 class="privado-title">letras</h2>
+          <div class="upload-form" style="margin-bottom:24px">
+            <div class="field-row">
+              <input type="text" id="letra-titulo" placeholder="título de la canción" class="field">
+              <input type="text" id="letra-artista" placeholder="artista (mitø por defecto)" class="field">
+            </div>
+            <input type="url" id="letra-enlace" placeholder="enlace a spotify, youtube... (opcional)" class="field">
+            <label class="file-label" onclick="abrirCrop('letra-cover')">
+              <i class="fa-solid fa-image"></i>
+              <span id="letra-cover-label">portada 1:1 — click para recortar</span>
+            </label>
+            <textarea id="letra-texto" placeholder="escribe la letra aquí, verso a verso...&#10;las líneas en blanco separan estrofas" class="field textarea" rows="12" style="font-family:'Instrument Serif',serif;font-size:14px;line-height:1.9"></textarea>
+            <button class="btn-primary" onclick="subirLetra()"><i class="fa-solid fa-paper-plane"></i> publicar letra</button>
+            <p class="auth-msg" id="letra-msg"></p>
+          </div>
+          <div id="letras-admin-list" class="solicitudes-list"></div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -481,6 +513,27 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
   <div id="letra-content" style="max-width:560px;margin:0 auto;padding:48px 28px 80px"></div>
 </div>
 
+<!-- MIEMBRO OVERLAY -->
+<div id="miembro-overlay" onclick="if(event.target===this)cerrarMiembro()" style="position:fixed;inset:0;z-index:7100;background:rgba(0,0,0,0.88);backdrop-filter:blur(16px);opacity:0;pointer-events:none;transition:opacity 0.25s;overflow-y:auto">
+  <div id="miembro-content" style="max-width:520px;margin:0 auto;padding:48px 28px 80px"></div>
+</div>
+
+<!-- DM OVERLAY -->
+<div id="dm-overlay" onclick="cerrarDM(event)" style="position:fixed;inset:0;z-index:7200;background:rgba(0,0,0,0.85);backdrop-filter:blur(16px);display:flex;justify-content:center;align-items:center;opacity:0;pointer-events:none;transition:opacity 0.25s;padding:20px">
+  <div class="dm-box">
+    <div class="dm-header">
+      <button onclick="cerrarDM()" class="letra-back-btn" style="margin:0"><i class="fa-solid fa-arrow-left"></i></button>
+      <span id="dm-title" style="font-family:'Instrument Serif',serif;font-style:italic;font-size:18px"></span>
+      <div></div>
+    </div>
+    <div id="dm-messages" class="dm-messages"></div>
+    <div class="dm-input-row">
+      <input type="text" id="dm-input" placeholder="escribe un mensaje..." class="field" onkeydown="if(event.key==='Enter')enviarDM()" style="flex:1">
+      <button class="btn-primary" onclick="enviarDM()" style="flex-shrink:0"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
 <!-- BEAT DETAIL -->
 <div id="beat-overlay" onclick="cerrarBeatOverlay(event)">
   <div class="beat-detail" id="beat-detail-content"></div>
@@ -506,7 +559,7 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
     <h2 class="upload-title">nueva publicación</h2>
     <div class="upload-form">
       <select id="post-categoria" class="field"></select>
-      <input type="text" id="post-titulo" placeholder="título (opcional)" class="field">
+      <input type="text" id="post-titulo" placeholder="título del post" class="field">
       <textarea id="post-contenido" placeholder="¿qué quieres compartir?" class="field textarea" rows="4"></textarea>
       <div id="post-img-preview"></div>
       <label class="file-label">
