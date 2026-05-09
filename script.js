@@ -249,41 +249,53 @@ document.addEventListener("DOMContentLoaded", () => {
     const username = document.getElementById("reg-username").value.trim().toLowerCase();
     const pass     = document.getElementById("reg-password").value;
     const msg      = document.getElementById("reg-msg");
-    const btn      = document.querySelector("#reg-step-1 .btn-primary");
+    const btn      = document.querySelector("#auth-register .btn-primary");
 
-    if (!email||!email.includes("@")) { msg.textContent="Pon un email válido"; msg.className="auth-msg error"; return; }
-    if (!username) { msg.textContent="Pon un nombre de usuario"; msg.className="auth-msg error"; return; }
-    if (pass.length<6) { msg.textContent="La contraseña debe tener al menos 6 caracteres"; msg.className="auth-msg error"; return; }
+    if (!email || !email.includes("@")) { msg.textContent="pon un email válido"; msg.className="auth-msg error"; return; }
+    if (!username) { msg.textContent="pon un nombre de usuario"; msg.className="auth-msg error"; return; }
+    if (pass.length < 6) { msg.textContent="la contraseña debe tener al menos 6 caracteres"; msg.className="auth-msg error"; return; }
 
-    msg.textContent="Creando cuenta..."; msg.className="auth-msg";
+    msg.textContent = "creando cuenta..."; msg.className = "auth-msg";
     if (btn) btn.disabled = true;
 
     try {
+      // Comprueba si ya existe antes de insertar
+      const { data: existe } = await db.from("usuarios")
+        .select("id").or(`email.eq.${email},username.eq.${username}`).limit(1);
+
+      if (existe && existe.length > 0) {
+        msg.textContent = "ese email o usuario ya existe";
+        msg.className = "auth-msg error"; window.sfx?.error();
+        if (btn) btn.disabled = false;
+        return;
+      }
+
       const passHash = await sha256(pass);
 
       const { data, error } = await db.from("usuarios").insert([{
-        email, username, password_hash: passHash,
-        display_name: username, rol: "fan"
+        email, username,
+        password_hash: passHash,
+        display_name: username,
+        rol: "fan"
       }]).select().single();
 
       if (error) {
-        const m = {
-          '23505': "Ese email o usuario ya existe"
-        };
-        msg.textContent = m[error.code] || "Error: " + error.message;
+        msg.textContent = error.code === "23505"
+          ? "ese email o usuario ya existe"
+          : "error: " + error.message;
         msg.className = "auth-msg error"; window.sfx?.error();
       } else {
-        // Login automático tras registro
         currentUser = data; currentPerfil = data;
         guardarSesionLocal(data);
         tieneAccesoPrivado = false;
         updateNavUser(); updateNavPrivado();
-        msg.textContent = "¡Cuenta creada! 🎉"; msg.className = "auth-msg success";
-        window.sfx?.success();
+        msg.textContent = "¡cuenta creada! 🎉";
+        msg.className = "auth-msg success"; window.sfx?.success();
         setTimeout(() => go("home"), 800);
       }
     } catch(e) {
-      msg.textContent = "Error de conexión — inténtalo de nuevo";
+      console.error(e);
+      msg.textContent = "error de conexión — inténtalo de nuevo";
       msg.className = "auth-msg error"; window.sfx?.error();
     } finally {
       if (btn) btn.disabled = false;
