@@ -288,7 +288,10 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
             <i class="fa-solid fa-music"></i> beats
           </button>
           <button class="privado-nav-btn" onclick="switchPrivado('galeria-priv', this)">
-            <i class="fa-solid fa-images"></i> galería
+            <i class="fa-solid fa-images"></i> subir foto
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('galeria-admin', this)">
+            <i class="fa-solid fa-pen-to-square"></i> editar galería
           </button>
           <button class="privado-nav-btn" onclick="switchPrivado('ambient', this)">
             <i class="fa-solid fa-headphones"></i> música fondo
@@ -378,6 +381,12 @@ body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflo
             <input type="text" id="galeria-caption" placeholder="descripción (opcional)" class="field">
             <button class="btn-primary" onclick="subirGaleria()">subir</button>
           </div>
+        </div>
+
+        <!-- GALERÍA ADMIN -->
+        <div class="privado-panel" id="panel-galeria-admin">
+          <h2 class="privado-title">editar galería</h2>
+          <div id="galeria-admin-list" class="galeria-admin-grid"></div>
         </div>
 
         <!-- MÚSICA FONDO -->
