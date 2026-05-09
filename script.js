@@ -1632,38 +1632,47 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
-  // ── PARALLAX GLOBAL ─────────────────────────
+  // ── PARALLAX GLOBAL — muy sutil ─────────────
   let mouseX = 0.5, mouseY = 0.5;
+  let targetX = 0.5, targetY = 0.5;
   let rafParallax = null;
 
   document.addEventListener("mousemove", (e) => {
-    mouseX = e.clientX / window.innerWidth;
-    mouseY = e.clientY / window.innerHeight;
+    targetX = e.clientX / window.innerWidth;
+    targetY = e.clientY / window.innerHeight;
+  }, { passive: true });
 
-    // Hero image parallax
+  // Lerp suave — el gradiente va MUY lento detrás del ratón
+  function tickParallax() {
+    // Interpolación lenta — solo se mueve un 2% del camino cada frame
+    mouseX += (targetX - mouseX) * 0.02;
+    mouseY += (targetY - mouseY) * 0.02;
+
+    // Hero image — movimiento muy leve
     const img = document.getElementById("hero-img");
     if (img && document.getElementById("home")?.classList.contains("active")) {
-      const dx = (mouseX - 0.5) * -16;
-      const dy = (mouseY - 0.5) * -10;
+      const dx = (mouseX - 0.5) * -6;
+      const dy = (mouseY - 0.5) * -4;
       img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
     }
 
-    // BG gradient follows mouse on all pages
-    if (!rafParallax) {
-      rafParallax = requestAnimationFrame(() => {
-        const bg = document.querySelector(".bg-gradient");
-        if (bg) {
-          const x = (mouseX * 100).toFixed(1);
-          const y = (mouseY * 100).toFixed(1);
-          bg.style.background = `
-            radial-gradient(ellipse 55% 40% at ${x}% ${y}%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 65%),
-            radial-gradient(ellipse 35% 25% at ${100-x}% ${100-y}%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 55%)
-          `;
-        }
-        rafParallax = null;
-      });
+    // Fondo — se mueve poquísimo, solo 15% del rango total
+    const bg = document.querySelector(".bg-gradient");
+    if (bg) {
+      // Posición base + desplazamiento muy pequeño
+      const bx = (50 + (mouseX - 0.5) * 15).toFixed(2);
+      const by = (20 + (mouseY - 0.5) * 10).toFixed(2);
+      const bx2 = (100 - bx).toFixed(2);
+      const by2 = (100 - by).toFixed(2);
+      bg.style.background = `
+        radial-gradient(ellipse 55% 40% at ${bx}% ${by}%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 65%),
+        radial-gradient(ellipse 35% 25% at ${bx2}% ${by2}%, color-mix(in srgb, var(--accent) 3%, transparent) 0%, transparent 55%)
+      `;
     }
-  }, { passive: true });
+
+    requestAnimationFrame(tickParallax);
+  }
+  requestAnimationFrame(tickParallax);
 
   // ── INIT ─────────────────────────────────────
   go("home");
