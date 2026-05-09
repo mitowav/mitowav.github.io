@@ -65,18 +65,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ── TEMA ─────────────────────────────────────
+  // Storage con fallback para Brave y navegadores estrictos
+  function setStorage(key, val) {
+    try { localStorage.setItem(key, val); } catch(e) {
+      try { sessionStorage.setItem(key, val); } catch(e2) {}
+    }
+  }
+  function getStorage(key) {
+    try { return localStorage.getItem(key) || sessionStorage.getItem(key); } catch(e) {
+      try { return sessionStorage.getItem(key); } catch(e2) { return null; }
+    }
+  }
+
   function aplicarTema(tema, acento, fondo) {
     document.body.classList.toggle("tema-claro", tema === "claro");
     if (acento) {
       document.documentElement.style.setProperty("--accent", acento);
       document.documentElement.style.setProperty("--cursor-color", acento);
-      localStorage.setItem("mitø-acento", acento);
+      setStorage("mitø-acento", acento);
     }
     if (fondo) {
       document.documentElement.style.setProperty("--bg", fondo);
-      localStorage.setItem("mitø-fondo", fondo);
+      setStorage("mitø-fondo", fondo);
     }
-    localStorage.setItem("mitø-tema", tema || "oscuro");
+    setStorage("mitø-tema", tema || "oscuro");
   }
 
   // ── SESIÓN LOCAL ─────────────────────────────
@@ -84,35 +96,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function guardarSesionLocal(usuario) {
     try {
-      localStorage.setItem(SESS_KEY, JSON.stringify({ ...usuario, _ts: Date.now() }));
+      setStorage(SESS_KEY, JSON.stringify({ ...usuario, _ts: Date.now() }));
       // También guarda tema en localStorage para carga inmediata
-      if (usuario.tema)         localStorage.setItem("mitø-tema", usuario.tema);
-      if (usuario.color_acento) localStorage.setItem("mitø-acento", usuario.color_acento);
-      if (usuario.color_fondo)  localStorage.setItem("mitø-fondo", usuario.color_fondo);
+      if (usuario.tema)         setStorage("mitø-tema", usuario.tema);
+      if (usuario.color_acento) setStorage("mitø-acento", usuario.color_acento);
+      if (usuario.color_fondo)  setStorage("mitø-fondo", usuario.color_fondo);
     } catch(e) {}
   }
 
   function leerSesionLocal() {
     try {
-      const raw = localStorage.getItem(SESS_KEY);
+      const raw = getStorage(SESS_KEY);
       if (!raw) return null;
       const data = JSON.parse(raw);
       if (Date.now() - data._ts > 30 * 24 * 60 * 60 * 1000) {
-        localStorage.removeItem(SESS_KEY); return null;
+        try { localStorage.removeItem(SESS_KEY); } catch(e) { try { sessionStorage.removeItem(SESS_KEY); } catch(e2) {} } return null;
       }
       return data;
     } catch(e) { return null; }
   }
 
   function borrarSesionLocal() {
-    localStorage.removeItem(SESS_KEY);
+    try { localStorage.removeItem(SESS_KEY); } catch(e) {} try { sessionStorage.removeItem(SESS_KEY); } catch(e) {}
   }
 
-  // Aplica colores INMEDIATAMENTE desde localStorage — antes de cualquier otra cosa
+  // Aplica colores INMEDIATAMENTE — con fallback para Brave
   (function() {
-    const tema   = localStorage.getItem("mitø-tema") || "oscuro";
-    const acento = localStorage.getItem("mitø-acento");
-    const fondo  = localStorage.getItem("mitø-fondo");
+    function get(key) {
+      try { return localStorage.getItem(key) || sessionStorage.getItem(key); } catch(e) {
+        try { return sessionStorage.getItem(key); } catch(e2) { return null; }
+      }
+    }
+    const tema   = get("mitø-tema") || "oscuro";
+    const acento = get("mitø-acento");
+    const fondo  = get("mitø-fondo");
     document.body.classList.toggle("tema-claro", tema === "claro");
     if (acento) {
       document.documentElement.style.setProperty("--accent", acento);
@@ -1631,8 +1648,8 @@ document.addEventListener("DOMContentLoaded", () => {
     aplicarTema(tema, acento, fondo);
     document.documentElement.style.setProperty("--cursor-color", acento);
     // Always save to localStorage even without account
-    localStorage.setItem("mitø-acento", acento);
-    if (fondo) localStorage.setItem("mitø-fondo", fondo);
+    setStorage("mitø-acento", acento);
+    if (fondo) setStorage("mitø-fondo", fondo);
     if (currentUser) {
       currentUser.color_acento = acento;
       currentUser.color_fondo  = fondo || currentUser.color_fondo;
@@ -2342,9 +2359,32 @@ document.addEventListener("DOMContentLoaded", () => {
       })
       .subscribe();
   }
+
+  // ── USUARIOS ACTIVOS ─────────────────────────
+  let onlineChannel = null;
+
+  function initPresencia() {
+    if (!db || onlineChannel) return;
+    const userId = currentUser?.id || ("anon-" + Math.random().toString(36).slice(2,8));
+    onlineChannel = db.channel("online-users", {
+      config: { presence: { key: userId } }
+    });
+    onlineChannel
+      .on("presence", { event: "sync" }, () => {
+        const state = onlineChannel.presenceState();
+        const count = Object.keys(state).length;
+        const el = document.getElementById("online-count");
+        if (el) el.textContent = count + " en línea";
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await onlineChannel.track({ online_at: new Date().toISOString() });
+        }
+      });
+  }
   // ── INIT ─────────────────────────────────────
   go("home");
   setTimeout(() => { if(!ambientTracks.length) cargarAmbientTracks(); }, 800);
-  setTimeout(() => { initRealtime(); initDMRealtime(); }, 1500);
+  setTimeout(() => { initRealtime(); initDMRealtime(); initPresencia(); }, 1500);
 
 });
