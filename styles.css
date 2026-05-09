@@ -61,7 +61,7 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .nav-links-right { display:flex;align-items:center;gap:2px;margin-right:12px; }
 .nav-link { background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.3px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all 0.15s;white-space:nowrap; }
 .nav-link:hover { color:var(--text);background:var(--card); }
-.nav-link.active { color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:5px; }
+.nav-link.active { color:var(--accent); background:var(--accent-dim); }
 .nav-icon-btn { width:34px;height:34px;border-radius:50%;border:1px solid var(--card-b);background:none;color:var(--text-dim);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
 .nav-icon-btn:hover { color:var(--accent);border-color:var(--accent-dim); }
 .nav-lock-btn { padding:6px 14px;border-radius:20px;border:1px solid var(--accent-dim);background:none;color:var(--accent);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.15s; }
@@ -106,7 +106,7 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 
 .beat-row {
   display:grid;
-  grid-template-columns: 36px 88px minmax(160px,1fr) minmax(220px,35%) auto;
+  grid-template-columns: 36px 110px minmax(180px, 1fr) minmax(260px, 40%) 80px;
   align-items:center;
   gap:0;
   padding:0;
@@ -114,7 +114,6 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
   cursor:pointer;
   transition:background 0.15s;
   min-width:0;
-  overflow:visible;
 }
 .beat-row:hover { background:var(--card); }
 .beat-row.is-playing { background:color-mix(in srgb,var(--accent) 5%,transparent); }
