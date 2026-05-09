@@ -1632,17 +1632,37 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
-  // ── PARALLAX HERO ───────────────────────────
+  // ── PARALLAX GLOBAL ─────────────────────────
+  let mouseX = 0.5, mouseY = 0.5;
+  let rafParallax = null;
+
   document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX / window.innerWidth;
+    mouseY = e.clientY / window.innerHeight;
+
+    // Hero image parallax
     const img = document.getElementById("hero-img");
-    if (!img) return;
-    const page = document.getElementById("home");
-    if (!page?.classList.contains("active")) return;
-    const cx = window.innerWidth  / 2;
-    const cy = window.innerHeight / 2;
-    const dx = (e.clientX - cx) / cx;
-    const dy = (e.clientY - cy) / cy;
-    img.style.transform = `scale(1.05) translate(${dx * -8}px, ${dy * -8}px)`;
+    if (img && document.getElementById("home")?.classList.contains("active")) {
+      const dx = (mouseX - 0.5) * -16;
+      const dy = (mouseY - 0.5) * -10;
+      img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
+    }
+
+    // BG gradient follows mouse on all pages
+    if (!rafParallax) {
+      rafParallax = requestAnimationFrame(() => {
+        const bg = document.querySelector(".bg-gradient");
+        if (bg) {
+          const x = (mouseX * 100).toFixed(1);
+          const y = (mouseY * 100).toFixed(1);
+          bg.style.background = `
+            radial-gradient(ellipse 55% 40% at ${x}% ${y}%, color-mix(in srgb, var(--accent) 7%, transparent) 0%, transparent 65%),
+            radial-gradient(ellipse 35% 25% at ${100-x}% ${100-y}%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 55%)
+          `;
+        }
+        rafParallax = null;
+      });
+    }
   }, { passive: true });
 
   // ── INIT ─────────────────────────────────────
