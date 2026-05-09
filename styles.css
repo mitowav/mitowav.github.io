@@ -85,14 +85,18 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
   width: 64px; z-index: 500;
   display: flex; flex-direction: column; align-items: center;
   padding: 28px 0;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--card-b);
   transition: width 0.3s cubic-bezier(.2,.8,.2,1);
   overflow: hidden;
+  /* Siempre encima, no empuja el contenido */
 }
 
-.side-nav:hover { width: 180px; }
+.side-nav:hover {
+  width: 190px;
+  box-shadow: 4px 0 32px rgba(0,0,0,0.4);
+}
 
 .side-logo {
   font-family: 'Instrument Serif', serif;
@@ -153,6 +157,7 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
   position: fixed;
   top: 0; left: 64px; right: 0; bottom: 0;
   z-index: 10;
+  /* Side nav flota encima, app siempre en 64px */
 }
 
 .page {
