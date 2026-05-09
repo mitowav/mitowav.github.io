@@ -1713,6 +1713,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let ambientPlaying = false;
 
   async function cargarAmbientTracks() {
+    if (ambientTracks.length) return; // ya cargado, no reiniciar
     const { data } = await db.from("ambient_tracks").select("*").order("orden").order("id");
     if (!data?.length) return;
     ambientTracks = data;
