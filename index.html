@@ -9,6 +9,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* critical — evita flash sin estilos */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0c0d0b;color:#e4e6d0;font-family:'Geist Mono',monospace;overflow:hidden}
+.side-nav{position:fixed;left:0;top:0;bottom:0;width:64px;z-index:500;background:rgba(12,13,11,0.92);border-right:1px solid rgba(255,255,255,0.065)}
+#app{position:fixed;top:0;left:64px;right:0;bottom:0;z-index:10}
+.page{position:absolute;inset:0;opacity:0;pointer-events:none}
+.page.active{opacity:1;pointer-events:all}
+.mobile-bottom-nav{display:none}
+.noise,.bg-gradient{position:fixed;inset:0;pointer-events:none}
+@media(max-width:768px){.side-nav{display:none}#app{left:0;bottom:58px}.mobile-bottom-nav{display:flex}}
+</style>
 </head>
 <body>
 
