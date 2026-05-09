@@ -1240,7 +1240,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!foroCategoria && cats?.length) foroCategoria = cats[0].id;
 
       let q = db.from("posts")
-        .select("*, perfiles(display_name, username, avatar_url), comentarios(id)")
+        .select("*, usuarios(display_name, username, avatar_url), comentarios(id)")
         .order("created_at", { ascending: false });
       if (foroCategoria !== "todos") q = q.eq("categoria_id", foroCategoria);
 
@@ -1273,10 +1273,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function crearPostCard(p) {
-    const autor = p.perfiles?.display_name || p.perfiles?.username || "Anónimo";
+    const autor = p.usuarios?.display_name || p.usuarios?.username || "Anónimo";
     const ini   = autor[0].toUpperCase();
     const avatar = p.usuarios?.avatar_url
-      ? `<img src="${p.perfiles.avatar_url}" class="feed-avatar" alt="">`
+      ? `<img src="${p.usuarios?.avatar_url}" class="feed-avatar" alt="">`
       : `<div class="feed-avatar-placeholder">${ini}</div>`;
     const imgHtml = p.imagen_url
       ? `<img src="${p.imagen_url}" class="feed-img" alt="" onclick="event.stopPropagation();abrirImgFeed('${p.imagen_url}')">`
@@ -1312,7 +1312,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cont.style.display = "block";
     cont.innerHTML = `<p class="loading-msg" style="padding:8px 0;font-size:10px">Cargando...</p>`;
     const { data: coms } = await db.from("comentarios")
-      .select("*, perfiles(display_name, username)")
+      .select("*, usuarios(display_name, username)")
       .eq("post_id", postId).order("created_at");
 
     const comsHtml = (coms||[]).map(c => {
@@ -1513,7 +1513,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!email || !email.includes("@")) { msg.textContent = "Pon un email válido"; msg.className = "auth-msg error"; return; }
     msg.textContent = "Buscando usuario..."; msg.className = "auth-msg";
     // Busca el perfil por email en auth (via perfiles si tiene email guardado, o por accesos)
-    const { data: perfil } = await db.from("perfiles")
+    const { data: perfil } = await db.from("usuarios")
       .select("id, username, rol")
       .eq("id", (await db.from("accesos_privados").select("id").eq("email", email).single())?.data?.id || "")
       .single();
@@ -1528,7 +1528,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     // Si ya tiene perfil, cambia su rol a banda
-    const { error } = await db.from("perfiles").update({ rol: "banda" }).eq("id", perfil.id);
+    const { error } = await db.from("usuarios").update({ rol: "banda" }).eq("id", perfil.id);
     if (error) { msg.textContent = "Error: " + error.message; msg.className = "auth-msg error"; }
     else {
       msg.textContent = "✓ Miembro añadido a la banda";
