@@ -202,17 +202,11 @@
           <p class="auth-msg" id="reset-msg"></p>
         </div>
         <div id="auth-register" class="auth-form hidden">
-          <div id="reg-step-1" style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:10px">
             <input type="email" id="reg-email" placeholder="Email" class="field">
             <input type="text" id="reg-username" placeholder="Nombre de usuario" class="field">
             <input type="password" id="reg-password" placeholder="Contraseña (mín. 6 caracteres)" class="field">
             <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
-          </div>
-          <div id="reg-step-2" style="display:none;flex-direction:column;gap:10px">
-            <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">📧 Te hemos enviado un código a tu email.<br>Introdúcelo aquí:</p>
-            <input type="text" id="reg-otp" placeholder="000000" class="field" maxlength="6" style="text-align:center;letter-spacing:6px;font-size:16px" onkeydown="if(event.key==='Enter')verificarOTP()">
-            <button class="btn-primary full" onclick="verificarOTP()">Verificar código</button>
-            <button onclick="volverRegStep1()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">← Volver</button>
           </div>
           <p class="auth-msg" id="reg-msg"></p>
         </div>
