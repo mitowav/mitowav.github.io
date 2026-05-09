@@ -220,45 +220,28 @@
 
   function initCursor() {
     if ("ontouchstart" in window) return;
-    const dot = document.createElement("div");
-    dot.id = "custom-cursor";
-    dot.style.cssText = `position:fixed;pointer-events:none;z-index:99999;
-      width:6px;height:6px;border-radius:50%;
-      background:rgba(240,192,64,0.9);
-      transform:translate(-50%,-50%);
-      transition:width 0.15s,height 0.15s,opacity 0.2s;
-      mix-blend-mode:screen;box-shadow:0 0 8px rgba(240,192,64,0.5);`;
-    const ring = document.createElement("div");
-    ring.id = "cursor-ring";
-    ring.style.cssText = `position:fixed;pointer-events:none;z-index:99998;
-      width:24px;height:24px;border-radius:50%;
-      border:1px solid rgba(240,192,64,0.3);
-      transform:translate(-50%,-50%);
-      transition:left 0.1s ease-out,top 0.1s ease-out,width 0.18s,height 0.18s,border-color 0.18s;`;
-    document.body.append(dot, ring);
+    const dot  = document.getElementById("mito-cursor");
+    const ring = document.getElementById("mito-cursor-ring");
+    if (!dot || !ring) return;
 
+    let mx = 0, my = 0;
     document.addEventListener("mousemove", (e) => {
-      dot.style.left = e.clientX + "px"; dot.style.top = e.clientY + "px";
-      ring.style.left = e.clientX + "px"; ring.style.top = e.clientY + "px";
+      mx = e.clientX; my = e.clientY;
+      dot.style.left  = mx + "px"; dot.style.top  = my + "px";
+      ring.style.left = mx + "px"; ring.style.top = my + "px";
     }, { passive: true });
 
     document.addEventListener("mouseover", (e) => {
-      if (e.target.closest("button,a,.beat-card,.galeria-item,.post-card,.categoria-card,.nav-logo,[onclick]")) {
-        dot.style.width = "10px"; dot.style.height = "10px";
-        ring.style.width = "36px"; ring.style.height = "36px";
-        ring.style.borderColor = "rgba(240,192,64,0.55)";
+      if (e.target.closest("button,a,.beat-card,.galeria-item,.post-card,.categoria-card,.side-logo,.side-btn,[onclick]")) {
+        document.body.classList.add("cursor-hover");
       }
     }, { passive: true });
-
     document.addEventListener("mouseout", (e) => {
-      if (e.target.closest("button,a,.beat-card,.galeria-item,.post-card,.categoria-card,.nav-logo,[onclick]")) {
-        dot.style.width = "6px"; dot.style.height = "6px";
-        ring.style.width = "24px"; ring.style.height = "24px";
-        ring.style.borderColor = "rgba(240,192,64,0.3)";
+      if (e.target.closest("button,a,.beat-card,.galeria-item,.post-card,.categoria-card,.side-logo,.side-btn,[onclick]")) {
+        document.body.classList.remove("cursor-hover");
       }
     }, { passive: true });
-
-    document.addEventListener("mousedown", () => { dot.style.transform = "translate(-50%,-50%) scale(0.6)"; }, { passive: true });
+    document.addEventListener("mousedown", () => { dot.style.transform = "translate(-50%,-50%) scale(0.5)"; }, { passive: true });
     document.addEventListener("mouseup",   () => { dot.style.transform = "translate(-50%,-50%) scale(1)"; },   { passive: true });
   }
 
@@ -364,12 +347,8 @@
   }, { passive: true });
 
   // ── CSS GLOBAL ────────────────────────────────
-
   const style = document.createElement("style");
-  style.textContent = `
-    @keyframes rippleAnim { to { transform:scale(55); opacity:0; } }
-    @media (hover:hover) { * { cursor:none !important; } }
-  `;
+  style.textContent = `@keyframes rippleAnim { to { transform:scale(55); opacity:0; } }`;
   document.head.appendChild(style);
 
   // ── INIT ─────────────────────────────────────
