@@ -238,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (id==="foro")    renderForo();
     if (id==="perfil")  renderPerfil();
     if (id==="letras")  cargarLetras();
-    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); cargarAmbientTracks(); cargarNotificaciones(); }
+    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); if(!ambientTracks.length) cargarAmbientTracks(); cargarNotificaciones(); }
   }
   window.go = go;
   window.toggleMenu = function() {}; // no-op, kept for compatibility
@@ -2114,6 +2114,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── INIT ─────────────────────────────────────
   go("home");
   // Carga ambient tracks en background
-  setTimeout(() => cargarAmbientTracks(), 1000);
+  setTimeout(() => { if(!ambientTracks.length) cargarAmbientTracks(); }, 1000);
 
 });
