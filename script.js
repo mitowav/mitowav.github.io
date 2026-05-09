@@ -405,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function abrirCrop(target) {
     cropTarget = target;
-    const isSquare = target === "cover" || target === "avatar";
+    const isSquare = target === "cover" || target === "avatar" || target === "letra-cover";
     const hint = document.getElementById("crop-hint");
     if (hint) hint.textContent = isSquare ? "arrastra para mover · recorte 1:1" : "arrastra para seleccionar el área · recorte libre";
     const input = document.createElement("input");
@@ -525,6 +525,15 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (cropTarget === "avatar") {
         cropBlob = blob;
         document.getElementById("avatar-label").textContent = "✓ avatar listo";
+      } else if (cropTarget === "letra-cover") {
+        window._letraCoverBlob = blob;
+        document.getElementById("letra-cover-label").textContent = "✓ portada lista";
+        // Crear un input file virtual para el upload
+        document.getElementById("letra-cover-file") || (() => {
+          const inp = document.createElement("input");
+          inp.type = "file"; inp.id = "letra-cover-file"; inp.style.display = "none";
+          document.body.appendChild(inp);
+        })();
       }
       cerrarCrop();
     }, "image/jpeg", 0.92);
@@ -1198,17 +1207,79 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   async function cargarSolicitudesAdmin() {
-    const cont=document.getElementById("solicitudes-admin"); if(!cont)return;
-    cont.innerHTML=`<p class="loading-msg">Cargando</p>`;
-    const{data}=await db.from("solicitudes").select("*").order("created_at",{ascending:false});
-    if(!data?.length){cont.innerHTML=`<p class="loading-msg no-spin">No hay solicitudes aún.</p>`;return;}
-    cont.innerHTML="";
-    data.forEach(s=>{
-      const card=document.createElement("div");card.className="solicitud-card";
-      card.innerHTML=`<div class="solicitud-card-info"><h4>${esc(s.nombre)} — ${esc(s.instrumento)}</h4><p>${s.redes?"🔗 "+esc(s.redes)+" · ":""} ${s.experiencia?esc(s.experiencia.substring(0,80))+"...":""}</p><p style="margin-top:4px;font-style:italic">"${esc((s.mensaje||"").substring(0,100))}${(s.mensaje||"").length>100?"...":""}"</p></div><span class="solicitud-estado ${s.estado}">${s.estado}</span>`;
+    const cont = document.getElementById("solicitudes-admin");
+    if (!cont) return;
+    cont.innerHTML = `<p class="loading-msg">cargando</p>`;
+    const { data } = await db.from("solicitudes").select("*").order("created_at", { ascending: false });
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg no-spin">no hay solicitudes aún.</p>`; return; }
+    cont.innerHTML = "";
+    data.forEach(s => {
+      const card = document.createElement("div");
+      card.className = "solicitud-card-full";
+      card.id = `solicitud-${s.id}`;
+      card.innerHTML = `
+        <div class="solicitud-card-header" onclick="toggleSolicitud(${s.id})">
+          <div class="solicitud-card-info">
+            <h4>${esc(s.nombre)} <span style="font-weight:300;color:var(--text-dim)">·</span> ${esc(s.instrumento)}</h4>
+            <p>${formatFecha(s.created_at)}</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="solicitud-estado ${s.estado}">${s.estado}</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:10px;color:var(--text-dim);transition:transform 0.2s" id="chev-${s.id}"></i>
+          </div>
+        </div>
+        <div class="solicitud-card-body" id="sol-body-${s.id}" style="display:none">
+          ${s.redes ? `<p style="font-size:11px;color:var(--accent);margin-bottom:8px">🔗 ${esc(s.redes)}</p>` : ""}
+          ${s.experiencia ? `<div class="solicitud-section"><span class="solicitud-section-label">experiencia</span><p>${esc(s.experiencia)}</p></div>` : ""}
+          ${s.mensaje ? `<div class="solicitud-section"><span class="solicitud-section-label">mensaje</span><p style="font-style:italic">"${esc(s.mensaje)}"</p></div>` : ""}
+          <div class="solicitud-section">
+            <span class="solicitud-section-label">respuesta</span>
+            <textarea id="resp-${s.id}" class="field textarea" rows="2" placeholder="escribe una respuesta (opcional)...">${esc(s.respuesta||"")}</textarea>
+          </div>
+          <div class="solicitud-actions">
+            <button class="btn-primary" style="background:#6bffb8;font-size:10px" onclick="cambiarEstadoSolicitud(${s.id},'aceptado')">
+              <i class="fa-solid fa-check"></i> aceptar
+            </button>
+            <button class="btn-secondary" style="font-size:10px" onclick="cambiarEstadoSolicitud(${s.id},'rechazado')">
+              <i class="fa-solid fa-xmark"></i> rechazar
+            </button>
+            <button class="btn-secondary" style="font-size:10px" onclick="cambiarEstadoSolicitud(${s.id},'pendiente')">
+              pendiente
+            </button>
+          </div>
+          <p class="auth-msg" id="sol-msg-${s.id}"></p>
+        </div>`;
       cont.appendChild(card);
     });
   }
+
+  window.toggleSolicitud = function(id) {
+    const body = document.getElementById(`sol-body-${id}`);
+    const chev = document.getElementById(`chev-${id}`);
+    if (!body) return;
+    const open = body.style.display === "block";
+    body.style.display = open ? "none" : "block";
+    if (chev) chev.style.transform = open ? "rotate(0deg)" : "rotate(180deg)";
+  };
+
+  window.cambiarEstadoSolicitud = async function(id, estado) {
+    const respuesta = document.getElementById(`resp-${id}`)?.value.trim();
+    const msg = document.getElementById(`sol-msg-${id}`);
+    if (msg) { msg.textContent = "guardando..."; msg.className = "auth-msg"; }
+    const { error } = await db.from("solicitudes")
+      .update({ estado, respuesta: respuesta || null })
+      .eq("id", id);
+    if (error) {
+      if (msg) { msg.textContent = "error: " + error.message; msg.className = "auth-msg error"; }
+    } else {
+      if (msg) { msg.textContent = "✓ guardado"; msg.className = "auth-msg success"; }
+      // Actualiza el badge de estado
+      const card = document.getElementById(`solicitud-${id}`);
+      const badge = card?.querySelector(".solicitud-estado");
+      if (badge) { badge.className = `solicitud-estado ${estado}`; badge.textContent = estado; }
+      window.sfx?.success();
+    }
+  };
 
   async function cargarAccesos() {
     const cont=document.getElementById("accesos-list"); if(!cont)return;
@@ -1592,18 +1663,53 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!ambientTracks.length) return;
     const player = document.getElementById("mini-player");
     if (player) player.style.display = "flex";
-    cargarTrack(0);
+    cargarTrack(0, true); // true = autoplay
   }
 
-  function cargarTrack(idx) {
+  function cargarTrack(idx, autoplay = false) {
     ambientIndex = idx;
     const track = ambientTracks[idx];
     if (!track) return;
     ambientAudio.src = track.audio_url;
-    ambientAudio.volume = 0.35;
-    document.getElementById("mp-title").textContent = track.titulo;
+    ambientAudio.volume = 0.05; // 5% de volumen inicial
+    ambientAudio.loop = false;
+    const titleEl = document.getElementById("mp-title");
+    if (titleEl) titleEl.textContent = track.titulo;
     ambientAudio.onended = () => mpNext();
-    if (ambientPlaying) ambientAudio.play().catch(()=>{});
+
+    if (autoplay) {
+      // Intenta reproducir — si el navegador lo bloquea, espera al primer click
+      ambientAudio.play().then(() => {
+        ambientPlaying = true;
+        const tog  = document.getElementById("mp-toggle");
+        const icon = document.getElementById("mp-play-btn");
+        if (tog)  tog.innerHTML  = '<i class="fa-solid fa-pause"></i>';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        // Actualiza el slider de volumen
+        const slider = document.querySelector(".mp-slider");
+        if (slider) slider.value = 0.05;
+      }).catch(() => {
+        // Navegador bloqueó el autoplay — espera primer gesto
+        ambientPlaying = false;
+        const tog  = document.getElementById("mp-toggle");
+        const icon = document.getElementById("mp-play-btn");
+        if (tog)  tog.innerHTML  = '<i class="fa-solid fa-play"></i>';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-music"></i>';
+        // Al primer click del usuario, arranca
+        document.addEventListener("click", function startAmbient() {
+          if (!ambientPlaying && ambientTracks.length) {
+            ambientAudio.play().then(() => {
+              ambientPlaying = true;
+              if (tog)  tog.innerHTML  = '<i class="fa-solid fa-pause"></i>';
+              if (icon) icon.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            }).catch(()=>{});
+          }
+          document.removeEventListener("click", startAmbient);
+        }, { once: true });
+      });
+    } else if (ambientPlaying) {
+      ambientAudio.play().catch(()=>{});
+    }
   }
 
   window.mpToggle = function() {
@@ -1621,12 +1727,12 @@ document.addEventListener("DOMContentLoaded", () => {
   window.mpVolume = function(val) {
     ambientAudio.volume = parseFloat(val);
     const icon = document.getElementById("mp-vol-icon");
-    if (icon) {
-      if (val == 0) icon.className = "fa-solid fa-volume-xmark";
-      else if (val < 0.4) icon.className = "fa-solid fa-volume-low";
-      else icon.className = "fa-solid fa-volume-high";
-    }
+    if (!icon) return;
+    if (val == 0) icon.className = "fa-solid fa-volume-xmark";
+    else if (val < 0.4) icon.className = "fa-solid fa-volume-low";
+    else icon.className = "fa-solid fa-volume-high";
   };
+
 
   window.mpNext = function() {
     const next = (ambientIndex + 1) % ambientTracks.length;
@@ -1807,13 +1913,21 @@ document.addEventListener("DOMContentLoaded", () => {
       cont.innerHTML = `<p class="loading-msg no-spin">aún no hay letras publicadas.</p>`; return;
     }
     cont.innerHTML = "";
+    cont.className = "letras-grid";
     data.forEach(l => {
       const card = document.createElement("div");
-      card.className = "letra-card";
+      card.className = "letra-cover-card";
+      card.onclick = () => abrirLetra(l.id);
       card.innerHTML = `
-        <div class="letra-card-title">${esc(l.titulo)}</div>
-        <div class="letra-card-preview">${esc(l.letra.substring(0, 120))}${l.letra.length > 120 ? "..." : ""}</div>
-        <button class="link-btn" onclick="abrirLetra(${l.id})" style="margin-top:8px">leer letra →</button>`;
+        <div class="letra-cover-img">
+          ${l.cover_url
+            ? `<img src="${l.cover_url}" alt="${esc(l.titulo)}">`
+            : `<div class="letra-cover-placeholder"><i class="fa-solid fa-music"></i></div>`}
+        </div>
+        <div class="letra-cover-info">
+          <div class="letra-cover-title">${esc(l.titulo)}</div>
+          <div class="letra-cover-artist">${esc(l.artista || "mitø")}</div>
+        </div>`;
       cont.appendChild(card);
     });
   }
@@ -1828,9 +1942,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const card = document.createElement("div");
       card.className = "solicitud-card";
       card.innerHTML = `
-        <div class="solicitud-card-info">
-          <h4>${esc(l.titulo)}</h4>
-          <p style="margin-top:4px">${esc(l.letra.substring(0,80))}...</p>
+        <div class="solicitud-card-info" style="display:flex;align-items:center;gap:10px">
+          ${l.cover_url ? `<img src="${l.cover_url}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ""}
+          <div>
+            <h4>${esc(l.titulo)}</h4>
+            <p style="margin-top:2px">${esc(l.artista||"mitø")} ${l.enlace?`· <a href="${esc(l.enlace)}" target="_blank" style="color:var(--accent);text-decoration:none">escuchar</a>`:"" }</p>
+          </div>
         </div>
         <button class="delete-btn" style="opacity:1" onclick="borrarLetra(${l.id},this)">
           <i class="fa-solid fa-trash"></i>
@@ -1840,19 +1957,40 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.subirLetra = async function() {
-    const titulo = document.getElementById("letra-titulo")?.value.trim();
-    const letra  = document.getElementById("letra-texto")?.value.trim();
-    const msg    = document.getElementById("letra-msg");
+    const titulo  = document.getElementById("letra-titulo")?.value.trim();
+    const letra   = document.getElementById("letra-texto")?.value.trim();
+    const enlace  = document.getElementById("letra-enlace")?.value.trim();
+    const artista = document.getElementById("letra-artista")?.value.trim() || "mitø";
+    const coverFile = window._letraCoverBlob || document.getElementById("letra-cover-file")?.files[0];
+    const msg     = document.getElementById("letra-msg");
     if (!titulo || !letra) { if(msg){msg.textContent="rellena título y letra";msg.className="auth-msg error";} return; }
     if (msg) { msg.textContent="publicando..."; msg.className="auth-msg"; }
-    const { error } = await db.from("letras").insert([{ titulo, letra }]);
-    if (error) { if(msg){msg.textContent="error: "+error.message;msg.className="auth-msg error";} }
-    else {
-      document.getElementById("letra-titulo").value = "";
-      document.getElementById("letra-texto").value  = "";
-      if (msg) { msg.textContent="¡publicada!"; msg.className="auth-msg success"; }
+
+    try {
+      let cover_url = null;
+      if (coverFile) {
+        const isBlob = coverFile instanceof Blob && !(coverFile instanceof File);
+        const cleanName = isBlob ? `portada-${Date.now()}.jpg` : coverFile.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+        const fileName  = isBlob ? cleanName : `letra-cover-${Date.now()}-${cleanName}`;
+        const { error: upErr } = await db.storage.from("covers").upload(fileName, coverFile);
+        if (upErr) throw upErr;
+        const { data: ud } = db.storage.from("covers").getPublicUrl(fileName);
+        cover_url = ud.publicUrl;
+      }
+
+      const { error } = await db.from("letras").insert([{ titulo, letra, enlace: enlace||null, artista, cover_url }]);
+      if (error) throw error;
+
+      ["letra-titulo","letra-texto","letra-enlace","letra-artista","letra-cover-file"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = "";
+      });
+      document.getElementById("letra-cover-label").textContent = "portada 1:1 — click para recortar";
+      window._letraCoverBlob = null;
+      if (msg) { msg.textContent = "¡publicada!"; msg.className = "auth-msg success"; }
       window.sfx?.success();
       cargarLetrasAdmin();
+    } catch(err) {
+      if (msg) { msg.textContent = "error: " + err.message; msg.className = "auth-msg error"; }
     }
   };
 
@@ -1868,17 +2006,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const cont    = document.getElementById("letra-content");
     if (!overlay || !cont) return;
     cont.innerHTML = `<p class="loading-msg">cargando</p>`;
-    overlay.style.opacity    = "1";
+    overlay.style.opacity       = "1";
     overlay.style.pointerEvents = "all";
     const { data } = await db.from("letras").select("*").eq("id", id).single();
     if (!data) { cont.innerHTML = `<p class="loading-msg no-spin">no encontrada</p>`; return; }
+
+    // Formatea letra verso a verso
+    const versos = data.letra.split("\n").map(v =>
+      v.trim() === ""
+        ? `<div class="verso-espaciado"></div>`
+        : `<div class="verso">${esc(v)}</div>`
+    ).join("");
+
     cont.innerHTML = `
-      <button onclick="cerrarLetraOverlay()" style="background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;margin-bottom:28px;display:flex;align-items:center;gap:6px">
+      <button onclick="cerrarLetraOverlay()" class="letra-back-btn">
         <i class="fa-solid fa-arrow-left"></i> volver
       </button>
-      <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(24px,5vw,40px);letter-spacing:-1px;color:var(--text);margin-bottom:6px">${esc(data.titulo)}</div>
-      <div style="font-size:11px;color:var(--accent);margin-bottom:32px;letter-spacing:1px">mitø</div>
-      <div style="font-size:14px;color:var(--text-mid);line-height:2;white-space:pre-wrap;font-weight:300">${esc(data.letra)}</div>`;
+      <div class="letra-detalle">
+        <div class="letra-detalle-izq">
+          <div class="letra-detalle-titulo">${esc(data.titulo)}</div>
+          <div class="letra-detalle-artista">${esc(data.artista || "mitø")}</div>
+          ${data.enlace ? `<a href="${esc(data.enlace)}" target="_blank" class="letra-escuchar">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> escuchar
+          </a>` : ""}
+          <div class="letra-versos">${versos}</div>
+        </div>
+        <div class="letra-detalle-der">
+          ${data.cover_url
+            ? `<img src="${data.cover_url}" class="letra-detalle-cover" alt="">`
+            : `<div class="letra-detalle-cover-placeholder"><i class="fa-solid fa-music"></i></div>`}
+        </div>
+      </div>`;
   };
 
   window.cerrarLetraOverlay = function(e) {
