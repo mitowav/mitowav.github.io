@@ -50,6 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (id === "accesos")         cargarAccesos();
     if (id === "solicitudes-priv") cargarSolicitudesAdmin();
     if (id === "todos-beats")      cargarBeats("admin-list", null);
+    if (id === "letras-priv")      cargarLetrasAdmin();
+    if (id === "galeria-admin")    cargarGaleriaAdmin();
   };
   // ── HELPERS ──────────────────────────────────
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -106,12 +108,18 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem(SESS_KEY);
   }
 
-  // Carga tema inmediatamente desde localStorage (antes de cargar usuario)
-  aplicarTema(
-    localStorage.getItem("mitø-tema") || "oscuro",
-    localStorage.getItem("mitø-acento"),
-    localStorage.getItem("mitø-fondo")
-  );
+  // Aplica colores INMEDIATAMENTE desde localStorage — antes de cualquier otra cosa
+  (function() {
+    const tema   = localStorage.getItem("mitø-tema") || "oscuro";
+    const acento = localStorage.getItem("mitø-acento");
+    const fondo  = localStorage.getItem("mitø-fondo");
+    document.body.classList.toggle("tema-claro", tema === "claro");
+    if (acento) {
+      document.documentElement.style.setProperty("--accent", acento);
+      document.documentElement.style.setProperty("--cursor-color", acento);
+    }
+    if (fondo) document.documentElement.style.setProperty("--bg", fondo);
+  })();
 
   window.toggleTheme = function() {
     const claro = document.body.classList.contains("tema-claro");
@@ -197,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── NAV ──────────────────────────────────────
   // Orden de páginas para animación de dirección
-  const PAGE_ORDER = ["home","beats","galeria","banda","foro","about","soporte","auth","perfil","privado"];
+  const PAGE_ORDER = ["home","beats","galeria","banda","foro","letras","about","soporte","auth","perfil","privado"];
   let currentPage = "home";
 
   function go(id, btnEl, closeMenu) {
@@ -229,6 +237,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (id==="banda")   { cargarBanda(); renderSolicitudForm(); }
     if (id==="foro")    renderForo();
     if (id==="perfil")  renderPerfil();
+    if (id==="letras")  cargarLetras();
+    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); cargarAmbientTracks(); cargarNotificaciones(); }
   }
   window.go = go;
   window.toggleMenu = function() {}; // no-op, kept for compatibility
@@ -1261,11 +1271,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
       cont.innerHTML = `
         <div class="feed-header">
-          <h2>FORO</h2>
+          <h2>foro</h2>
           ${newBtn}
         </div>
         <div class="cat-pills">${catsHtml}</div>
         <div class="feed-list">${postsHtml}</div>`;
+
+      // Carga likes en segundo plano
+      if (posts?.length) {
+        posts.forEach(async p => {
+          const { count, userLiked } = await getLikes("post", p.id);
+          const btn = document.getElementById(`like-post-${p.id}`);
+          if (btn) {
+            btn.querySelector(".like-count").textContent = count;
+            if (userLiked) btn.classList.add("liked");
+          }
+        });
+      }
 
     } catch(err) {
       cont.innerHTML = `<p class="loading-msg no-spin">⚠️ ${err.message==="TIMEOUT"?"Sin conexión":"Error al cargar"}</p>`;
@@ -1295,9 +1317,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="feed-card-text">${esc(p.contenido)}</div>
           ${imgHtml}
           <div class="feed-card-actions">
+            <button class="feed-action like-btn" id="like-post-${p.id}" onclick="toggleLike('post',${p.id},this)">
+              <i class="fa-regular fa-heart"></i> <span class="like-count">0</span>
+            </button>
             <button class="feed-action" onclick="toggleComentarios(${p.id})">
               <i class="fa-regular fa-comment"></i> ${numComs}
             </button>
+            ${currentUser?.id === p.autor_id || currentUser?.rol === "admin" ? `<button class="feed-action" onclick="eliminarPost(${p.id},this)" style="margin-left:auto;color:var(--text-dim)"><i class="fa-solid fa-trash" style="font-size:10px"></i></button>` : ""}
           </div>
           <div class="feed-comentarios" id="feed-coms-${p.id}" style="display:none"></div>
         </div>
@@ -1632,48 +1658,301 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
 
-  // ── PARALLAX GLOBAL — muy sutil ─────────────
+  // ── PARALLAX ─────────────────────────────────
   let mouseX = 0.5, mouseY = 0.5;
   let targetX = 0.5, targetY = 0.5;
-  let rafParallax = null;
 
   document.addEventListener("mousemove", (e) => {
     targetX = e.clientX / window.innerWidth;
     targetY = e.clientY / window.innerHeight;
   }, { passive: true });
 
-  // Lerp suave — el gradiente va MUY lento detrás del ratón
   function tickParallax() {
-    // Interpolación lenta — solo se mueve un 2% del camino cada frame
-    mouseX += (targetX - mouseX) * 0.02;
-    mouseY += (targetY - mouseY) * 0.02;
+    mouseX += (targetX - mouseX) * 0.035;
+    mouseY += (targetY - mouseY) * 0.035;
 
-    // Hero image — movimiento muy leve
-    const img = document.getElementById("hero-img");
-    if (img && document.getElementById("home")?.classList.contains("active")) {
-      const dx = (mouseX - 0.5) * -6;
-      const dy = (mouseY - 0.5) * -4;
-      img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
-    }
+    const onHome = document.getElementById("home")?.classList.contains("active");
 
-    // Fondo — se mueve poquísimo, solo 15% del rango total
-    const bg = document.querySelector(".bg-gradient");
-    if (bg) {
-      // Posición base + desplazamiento muy pequeño
-      const bx = (50 + (mouseX - 0.5) * 15).toFixed(2);
-      const by = (20 + (mouseY - 0.5) * 10).toFixed(2);
-      const bx2 = (100 - bx).toFixed(2);
-      const by2 = (100 - by).toFixed(2);
-      bg.style.background = `
-        radial-gradient(ellipse 55% 40% at ${bx}% ${by}%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 65%),
-        radial-gradient(ellipse 35% 25% at ${bx2}% ${by2}%, color-mix(in srgb, var(--accent) 3%, transparent) 0%, transparent 55%)
-      `;
+    if (onHome) {
+      // Hero: movimiento más notorio como antes
+      const img = document.getElementById("hero-img");
+      if (img) {
+        const dx = (mouseX - 0.5) * -14;
+        const dy = (mouseY - 0.5) * -8;
+        img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
+      }
+      // En home el bg no se mueve — la imagen ya da el efecto
+    } else {
+      // En el resto de páginas: solo el gradiente de fondo, muy sutil
+      const bg = document.querySelector(".bg-gradient");
+      if (bg) {
+        const bx  = (50 + (mouseX - 0.5) * 12).toFixed(2);
+        const by  = (20 + (mouseY - 0.5) * 8).toFixed(2);
+        const bx2 = (100 - bx).toFixed(2);
+        const by2 = (100 - by).toFixed(2);
+        bg.style.background = `
+          radial-gradient(ellipse 55% 40% at ${bx}% ${by}%, color-mix(in srgb, var(--accent) 6%, transparent) 0%, transparent 65%),
+          radial-gradient(ellipse 35% 25% at ${bx2}% ${by2}%, color-mix(in srgb, var(--accent) 3%, transparent) 0%, transparent 55%)
+        `;
+      }
     }
 
     requestAnimationFrame(tickParallax);
   }
   requestAnimationFrame(tickParallax);
 
+
+  // ── LIKES ────────────────────────────────────
+
+  async function toggleLike(tipo, id, btn) {
+    if (!currentUser) { go("auth"); return; }
+    const col     = tipo === "post" ? "post_id" : "beat_id";
+    const { data: existing } = await db.from("likes")
+      .select("id").eq("usuario_id", currentUser.id).eq(col, id).limit(1);
+
+    if (existing?.length) {
+      await db.from("likes").delete().eq("id", existing[0].id);
+      btn.classList.remove("liked");
+      const cnt = btn.querySelector(".like-count");
+      if (cnt) cnt.textContent = Math.max(0, parseInt(cnt.textContent||0) - 1);
+    } else {
+      await db.from("likes").insert([{ usuario_id: currentUser.id, [col]: id }]);
+      btn.classList.add("liked");
+      const cnt = btn.querySelector(".like-count");
+      if (cnt) cnt.textContent = parseInt(cnt.textContent||0) + 1;
+      // Notificación si es post
+      if (tipo === "post") crearNotificacion(currentUser.id, "like", `${currentUser.display_name||currentUser.username} le dio like a tu post`);
+    }
+    window.sfx?.click();
+  }
+  window.toggleLike = toggleLike;
+
+  async function getLikes(tipo, id) {
+    const col = tipo === "post" ? "post_id" : "beat_id";
+    const { data } = await db.from("likes").select("usuario_id").eq(col, id);
+    const count    = data?.length || 0;
+    const userLiked = currentUser ? data?.some(l => l.usuario_id === currentUser.id) : false;
+    return { count, userLiked };
+  }
+
+  // ── NOTIFICACIONES ────────────────────────────
+
+  async function crearNotificacion(userId, tipo, mensaje, url) {
+    if (!userId || userId === currentUser?.id) return;
+    await db.from("notificaciones").insert([{ usuario_id: userId, tipo, mensaje, url: url||null }]);
+  }
+
+  async function cargarNotificaciones() {
+    if (!currentUser) return;
+    const { data } = await db.from("notificaciones")
+      .select("*").eq("usuario_id", currentUser.id)
+      .order("created_at", { ascending: false }).limit(20);
+
+    const badge = document.getElementById("notif-badge");
+    const list  = document.getElementById("notif-list");
+    const noLeidas = data?.filter(n => !n.leida).length || 0;
+
+    if (badge) badge.style.display = noLeidas > 0 ? "block" : "none";
+    if (!list) return;
+
+    if (!data?.length) {
+      list.innerHTML = `<p style="padding:16px;font-size:11px;color:var(--text-dim);text-align:center">sin notificaciones</p>`;
+      return;
+    }
+
+    list.innerHTML = data.map(n => `
+      <div style="padding:12px 16px;border-bottom:1px solid var(--card-b);display:flex;gap:10px;align-items:flex-start;background:${n.leida?"transparent":"color-mix(in srgb,var(--accent) 4%,transparent)"}">
+        <i class="fa-solid ${n.tipo==="like"?"fa-heart":n.tipo==="comentario"?"fa-comment":"fa-bell"}" style="color:var(--accent);font-size:12px;margin-top:2px;flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+          <p style="font-size:11px;color:var(--text);line-height:1.5">${esc(n.mensaje)}</p>
+          <p style="font-size:9px;color:var(--text-dim);margin-top:3px">${formatFecha(n.created_at)}</p>
+        </div>
+      </div>`).join("");
+  }
+
+  window.toggleNotificaciones = function() {
+    const panel = document.getElementById("notif-panel");
+    if (!panel) return;
+    const visible = panel.style.display === "block";
+    panel.style.display = visible ? "none" : "block";
+    if (!visible) cargarNotificaciones();
+    // Close on outside click
+    if (!visible) {
+      setTimeout(() => {
+        document.addEventListener("click", function closeNotif(e) {
+          if (!panel.contains(e.target) && e.target.id !== "notif-btn") {
+            panel.style.display = "none";
+            document.removeEventListener("click", closeNotif);
+          }
+        });
+      }, 100);
+    }
+  };
+  window.toggleNotificaciones = window.toggleNotificaciones;
+
+  window.marcarTodasLeidas = async function() {
+    if (!currentUser) return;
+    await db.from("notificaciones").update({ leida: true }).eq("usuario_id", currentUser.id);
+    cargarNotificaciones();
+  };
+
+  // ── LETRAS ────────────────────────────────────
+
+  async function cargarLetras() {
+    const cont = document.getElementById("letras-list");
+    if (!cont) return;
+    cont.innerHTML = `<p class="loading-msg">cargando</p>`;
+    const { data, error } = await db.from("letras").select("*").order("created_at", { ascending: false });
+    if (error || !data?.length) {
+      cont.innerHTML = `<p class="loading-msg no-spin">aún no hay letras publicadas.</p>`; return;
+    }
+    cont.innerHTML = "";
+    data.forEach(l => {
+      const card = document.createElement("div");
+      card.className = "letra-card";
+      card.innerHTML = `
+        <div class="letra-card-title">${esc(l.titulo)}</div>
+        <div class="letra-card-preview">${esc(l.letra.substring(0, 120))}${l.letra.length > 120 ? "..." : ""}</div>
+        <button class="link-btn" onclick="abrirLetra(${l.id})" style="margin-top:8px">leer letra →</button>`;
+      cont.appendChild(card);
+    });
+  }
+
+  async function cargarLetrasAdmin() {
+    const cont = document.getElementById("letras-admin-list");
+    if (!cont) return;
+    const { data } = await db.from("letras").select("*").order("created_at", { ascending: false });
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg no-spin">no hay letras aún.</p>`; return; }
+    cont.innerHTML = "";
+    data.forEach(l => {
+      const card = document.createElement("div");
+      card.className = "solicitud-card";
+      card.innerHTML = `
+        <div class="solicitud-card-info">
+          <h4>${esc(l.titulo)}</h4>
+          <p style="margin-top:4px">${esc(l.letra.substring(0,80))}...</p>
+        </div>
+        <button class="delete-btn" style="opacity:1" onclick="borrarLetra(${l.id},this)">
+          <i class="fa-solid fa-trash"></i>
+        </button>`;
+      cont.appendChild(card);
+    });
+  }
+
+  window.subirLetra = async function() {
+    const titulo = document.getElementById("letra-titulo")?.value.trim();
+    const letra  = document.getElementById("letra-texto")?.value.trim();
+    const msg    = document.getElementById("letra-msg");
+    if (!titulo || !letra) { if(msg){msg.textContent="rellena título y letra";msg.className="auth-msg error";} return; }
+    if (msg) { msg.textContent="publicando..."; msg.className="auth-msg"; }
+    const { error } = await db.from("letras").insert([{ titulo, letra }]);
+    if (error) { if(msg){msg.textContent="error: "+error.message;msg.className="auth-msg error";} }
+    else {
+      document.getElementById("letra-titulo").value = "";
+      document.getElementById("letra-texto").value  = "";
+      if (msg) { msg.textContent="¡publicada!"; msg.className="auth-msg success"; }
+      window.sfx?.success();
+      cargarLetrasAdmin();
+    }
+  };
+
+  window.borrarLetra = async function(id, btn) {
+    if (!confirm("¿borrar esta letra?")) return;
+    btn.disabled = true;
+    await db.from("letras").delete().eq("id", id);
+    btn.closest(".solicitud-card").remove();
+  };
+
+  window.abrirLetra = async function(id) {
+    const overlay = document.getElementById("letra-overlay");
+    const cont    = document.getElementById("letra-content");
+    if (!overlay || !cont) return;
+    cont.innerHTML = `<p class="loading-msg">cargando</p>`;
+    overlay.style.opacity    = "1";
+    overlay.style.pointerEvents = "all";
+    const { data } = await db.from("letras").select("*").eq("id", id).single();
+    if (!data) { cont.innerHTML = `<p class="loading-msg no-spin">no encontrada</p>`; return; }
+    cont.innerHTML = `
+      <button onclick="cerrarLetraOverlay()" style="background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;margin-bottom:28px;display:flex;align-items:center;gap:6px">
+        <i class="fa-solid fa-arrow-left"></i> volver
+      </button>
+      <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(24px,5vw,40px);letter-spacing:-1px;color:var(--text);margin-bottom:6px">${esc(data.titulo)}</div>
+      <div style="font-size:11px;color:var(--accent);margin-bottom:32px;letter-spacing:1px">mitø</div>
+      <div style="font-size:14px;color:var(--text-mid);line-height:2;white-space:pre-wrap;font-weight:300">${esc(data.letra)}</div>`;
+  };
+
+  window.cerrarLetraOverlay = function(e) {
+    if (!e || e.target === document.getElementById("letra-overlay")) {
+      const overlay = document.getElementById("letra-overlay");
+      if (overlay) { overlay.style.opacity="0"; overlay.style.pointerEvents="none"; }
+    }
+  };
+
+
+  // ── GESTIÓN GALERÍA ──────────────────────────
+
+  async function cargarGaleriaAdmin() {
+    const cont = document.getElementById("galeria-admin-list");
+    if (!cont) return;
+    cont.innerHTML = `<p class="loading-msg">cargando</p>`;
+    const { data } = await db.from("galeria").select("*").order("id", { ascending: false });
+    if (!data?.length) { cont.innerHTML = `<p class="loading-msg no-spin">no hay fotos aún.</p>`; return; }
+    cont.innerHTML = "";
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "galeria-admin-card";
+      const esVideo = item.tipo === "video";
+      card.innerHTML = `
+        <div class="galeria-admin-thumb">
+          ${esVideo
+            ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover"></video>`
+            : `<img src="${item.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`}
+        </div>
+        <div class="galeria-admin-info">
+          <input type="text" class="field" value="${esc(item.caption||"")}"
+            id="caption-${item.id}" placeholder="descripción..." style="font-size:11px;padding:7px 10px">
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button class="btn-secondary" style="flex:1;font-size:10px" onclick="editarCaption(${item.id})">
+              <i class="fa-solid fa-save"></i> guardar
+            </button>
+            <button class="delete-btn" style="opacity:1;width:32px;height:32px" onclick="eliminarGaleria(${item.id},this)">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>`;
+      cont.appendChild(card);
+    });
+  }
+
+  window.editarCaption = async function(id) {
+    const val = document.getElementById(`caption-${id}`)?.value.trim();
+    const { error } = await db.from("galeria").update({ caption: val }).eq("id", id);
+    if (!error) window.sfx?.success();
+    else alert("error: " + error.message);
+  };
+
+  window.eliminarGaleria = async function(id, btn) {
+    if (!confirm("¿eliminar esta foto/vídeo?")) return;
+    btn.disabled = true;
+    const { error } = await db.from("galeria").delete().eq("id", id);
+    if (error) { alert("error: " + error.message); btn.disabled = false; return; }
+    btn.closest(".galeria-admin-card").style.opacity = "0";
+    btn.closest(".galeria-admin-card").style.transform = "scale(0.9)";
+    setTimeout(() => btn.closest(".galeria-admin-card").remove(), 300);
+    window.sfx?.delete();
+  };
+
+  // ── GESTIÓN FORO ─────────────────────────────
+
+  window.eliminarPost = async function(id, btn) {
+    if (!confirm("¿eliminar este post?")) return;
+    btn.disabled = true;
+    const { error } = await db.from("posts").delete().eq("id", id);
+    if (error) { alert("error: " + error.message); btn.disabled = false; return; }
+    const card = document.getElementById(`feed-card-${id}`);
+    if (card) { card.style.opacity = "0"; card.style.transform = "translateY(-8px)"; setTimeout(() => card.remove(), 300); }
+    window.sfx?.delete();
+  };
   // ── INIT ─────────────────────────────────────
   go("home");
   // Carga ambient tracks en background
