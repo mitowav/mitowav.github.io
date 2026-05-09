@@ -15,51 +15,58 @@
 <div class="noise"></div>
 <div class="bg-gradient"></div>
 
-<nav class="navbar">
-  <div class="nav-logo" onclick="go('home')">mit<span class="o">ø</span></div>
-  <div class="nav-links">
-    <button class="nav-btn active" onclick="go('home',this)">HOME</button>
-    <button class="nav-btn" onclick="go('beats',this)">BEATS</button>
-    <button class="nav-btn" onclick="go('galeria',this)">GALERÍA</button>
-    <button class="nav-btn" onclick="go('banda',this)">BANDA</button>
-    <button class="nav-btn" onclick="go('foro',this)">FORO</button>
-    <button class="nav-btn" onclick="go('about',this)">ABOUT</button>
-    <button class="nav-btn lock-btn" onclick="openLogin('privado')"><i class="fa-solid fa-lock"></i> PRIVADO</button>
+<!-- CUSTOM CURSOR -->
+<div id="mito-cursor"></div>
+<div id="mito-cursor-ring"></div>
+
+<!-- SIDE NAV (desktop) -->
+<nav class="side-nav">
+  <div class="side-logo" onclick="go('home')">mit<span class="o">ø</span></div>
+  <div class="side-links">
+    <button class="side-btn active" onclick="go('home',this)"><i class="fa-solid fa-house"></i><span class="btn-label">home</span></button>
+    <button class="side-btn" onclick="go('beats',this)"><i class="fa-solid fa-music"></i><span class="btn-label">beats</span></button>
+    <button class="side-btn" onclick="go('galeria',this)"><i class="fa-solid fa-images"></i><span class="btn-label">galería</span></button>
+    <button class="side-btn" onclick="go('banda',this)"><i class="fa-solid fa-users"></i><span class="btn-label">banda</span></button>
+    <button class="side-btn" onclick="go('foro',this)"><i class="fa-solid fa-comments"></i><span class="btn-label">foro</span></button>
+    <button class="side-btn" onclick="go('about',this)"><i class="fa-solid fa-user"></i><span class="btn-label">about</span></button>
+    <button class="side-btn" onclick="go('soporte',this)"><i class="fa-solid fa-circle-question"></i><span class="btn-label">soporte</span></button>
   </div>
-  <div class="nav-right">
-    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
-    <button class="nav-auth-btn" id="btn-auth" onclick="go('auth')"><i class="fa-solid fa-user"></i> ENTRAR</button>
-    <button class="nav-burger" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+  <div class="side-bottom">
+    <button class="side-btn lock-btn" id="side-lock-btn" onclick="openLogin('privado')"><i class="fa-solid fa-lock"></i><span class="btn-label">privado</span></button>
+    <button class="side-auth-btn" id="side-auth-btn" onclick="go('auth')"><i class="fa-solid fa-user"></i><span class="btn-label">entrar</span></button>
+    <button class="side-theme" onclick="toggleTheme()" title="cambiar tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
   </div>
 </nav>
 
-<div class="mobile-menu" id="mobile-menu">
-  <button onclick="go('home',null,true)">HOME</button>
-  <button onclick="go('beats',null,true)">BEATS</button>
-  <button onclick="go('galeria',null,true)">GALERÍA</button>
-  <button onclick="go('banda',null,true)">BANDA</button>
-  <button onclick="go('foro',null,true)">FORO</button>
-  <button onclick="go('about',null,true)">ABOUT</button>
-  <button onclick="openLogin('privado');toggleMenu()"><i class="fa-solid fa-lock"></i> PRIVADO</button>
-  <button id="mobile-auth-btn" onclick="go('auth',null,true)"><i class="fa-solid fa-user"></i> ENTRAR</button>
-</div>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-bottom-nav">
+  <button class="mob-nav-btn active" onclick="go('home',this)"><i class="fa-solid fa-house"></i><span>home</span></button>
+  <button class="mob-nav-btn" onclick="go('beats',this)"><i class="fa-solid fa-music"></i><span>beats</span></button>
+  <button class="mob-nav-btn" onclick="go('galeria',this)"><i class="fa-solid fa-images"></i><span>galería</span></button>
+  <button class="mob-nav-btn" onclick="go('foro',this)"><i class="fa-solid fa-comments"></i><span>foro</span></button>
+  <button class="mob-nav-btn" id="mob-auth-btn" onclick="go('auth',this)"><i class="fa-solid fa-user"></i><span>yo</span></button>
+</nav>
 
 <main id="app">
 
   <!-- HOME -->
-  <section id="home" class="page active">
+  <section id="home" class="page active slide-from-bottom">
     <div class="hero">
       <div class="hero-img-wrap">
-        <img src="./hero.jpg" alt="mitø" class="hero-img" onerror="this.style.display='none'">
+        <img src="./hero.jpg" alt="mitø" class="hero-img" id="hero-img" onerror="this.style.display='none'">
         <div class="hero-img-overlay"></div>
+        <div class="hero-img-overlay2"></div>
       </div>
       <div class="hero-text">
-        <p class="hero-sub">ARTISTA INDEPENDIENTE · TOLEDO</p>
+        <div class="hero-eyebrow">
+          <div class="hero-eyebrow-line"></div>
+          <span>artista independiente · toledo</span>
+        </div>
         <h1 class="hero-title">mit<span class="o">ø</span></h1>
-        <p class="hero-desc">Beats experimentales.</p>
+        <p class="hero-desc">beats experimentales. sonido propio.</p>
         <div class="hero-btns">
-          <button class="btn-primary" onclick="go('beats',document.querySelector('.nav-btn:nth-child(2)'))">
-            <i class="fa-solid fa-play"></i> ESCUCHAR BEATS
+          <button class="btn-primary" onclick="go('beats',document.querySelector('.side-btn:nth-child(2)'))">
+            <i class="fa-solid fa-play"></i> escuchar beats
           </button>
           <div class="social-row">
             <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV?si=Ir0VnaPrSZ6O6NuJvikxMw" target="_blank"><i class="fa-brands fa-spotify"></i></a>
@@ -71,83 +78,71 @@
     </div>
     <div class="home-section">
       <div class="section-header">
-        <h2>ÚLTIMOS BEATS</h2>
-        <button class="link-btn" onclick="go('beats',document.querySelector('.nav-btn:nth-child(2)'))">Ver todos →</button>
+        <h2>últimos beats</h2>
+        <button class="link-btn" onclick="go('beats',document.querySelector('.side-btn:nth-child(2)'))">ver todos →</button>
       </div>
       <div id="home-beats" class="beats-grid"></div>
     </div>
   </section>
 
   <!-- BEATS -->
-  <section id="beats" class="page">
+  <section id="beats" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>BEATS</h2><p class="section-sub">Producciones disponibles</p></div>
-
-      <!-- FILTROS -->
+      <div class="section-header"><h2>beats</h2><p class="section-sub">producciones disponibles</p></div>
       <div class="beats-filters">
         <div class="filter-search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="filter-nombre" placeholder="Buscar por nombre..." class="filter-input" oninput="filtrarBeats()">
+          <input type="text" id="filter-nombre" placeholder="buscar..." class="filter-input" oninput="filtrarBeats()">
         </div>
         <div class="filter-row">
           <div class="filter-group">
-            <label class="filter-label">BPM</label>
+            <label class="filter-label">bpm</label>
             <div class="filter-range-row">
-              <input type="number" id="filter-bpm-min" placeholder="Min" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
+              <input type="number" id="filter-bpm-min" placeholder="min" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
               <span class="filter-sep">—</span>
-              <input type="number" id="filter-bpm-max" placeholder="Max" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
+              <input type="number" id="filter-bpm-max" placeholder="max" class="filter-input filter-num" min="40" max="300" oninput="filtrarBeats()">
             </div>
           </div>
           <div class="filter-group">
-            <label class="filter-label">TONO</label>
+            <label class="filter-label">tono</label>
             <select id="filter-tono" class="filter-input filter-select" onchange="filtrarBeats()">
-              <option value="">Todos</option>
-              <option>Am</option><option>A</option>
-              <option>Bm</option><option>B</option>
-              <option>Cm</option><option>C</option>
-              <option>Dm</option><option>D</option>
-              <option>Em</option><option>E</option>
-              <option>Fm</option><option>F</option>
-              <option>Gm</option><option>G</option>
-              <option>C#m</option><option>C#</option>
-              <option>F#m</option><option>F#</option>
-              <option>G#m</option><option>G#</option>
-              <option>A#m</option><option>A#</option>
-              <option>D#m</option><option>D#</option>
+              <option value="">todos</option>
+              <option>Am</option><option>A</option><option>Bm</option><option>B</option>
+              <option>Cm</option><option>C</option><option>Dm</option><option>D</option>
+              <option>Em</option><option>E</option><option>Fm</option><option>F</option>
+              <option>Gm</option><option>G</option><option>C#m</option><option>C#</option>
+              <option>F#m</option><option>F#</option><option>G#m</option><option>G#</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">GÉNERO</label>
-            <input type="text" id="filter-genero" placeholder="Trap, lo-fi..." class="filter-input" oninput="filtrarBeats()">
+            <label class="filter-label">género</label>
+            <input type="text" id="filter-genero" placeholder="trap, lo-fi..." class="filter-input" oninput="filtrarBeats()">
           </div>
-          <button class="filter-reset" onclick="resetFiltros()" title="Limpiar filtros">
-            <i class="fa-solid fa-xmark"></i> Limpiar
-          </button>
+          <button class="filter-reset" onclick="resetFiltros()"><i class="fa-solid fa-xmark"></i> limpiar</button>
         </div>
         <p class="filter-results" id="filter-results"></p>
       </div>
-
       <div id="beats-list" class="beats-grid"></div>
     </div>
   </section>
 
   <!-- GALERÍA -->
-  <section id="galeria" class="page">
+  <section id="galeria" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>GALERÍA</h2><p class="section-sub">Fotos y momentos</p></div>
+      <div class="section-header"><h2>galería</h2><p class="section-sub">fotos y momentos</p></div>
       <div id="galeria-grid" class="galeria-grid"></div>
     </div>
   </section>
 
   <!-- BANDA -->
-  <section id="banda" class="page">
+  <section id="banda" class="page slide-from-right">
     <div class="page-wrap">
-      <div class="section-header"><h2>LA BANDA</h2><p class="section-sub">El equipo detrás del sonido</p></div>
+      <div class="section-header"><h2>la banda</h2><p class="section-sub">el equipo detrás del sonido</p></div>
       <div id="banda-grid" class="banda-grid"></div>
-      <div class="solicitud-box" id="solicitud-box">
+      <div class="solicitud-box">
         <div class="solicitud-header">
-          <h3><i class="fa-solid fa-guitar"></i> ÚNETE A LA BANDA</h3>
-          <p>¿Crees que encajas? Mándanos tu solicitud</p>
+          <h3>únete a la banda</h3>
+          <p>¿crees que encajas? mándanos tu solicitud</p>
         </div>
         <div id="solicitud-content"></div>
       </div>
@@ -155,18 +150,18 @@
   </section>
 
   <!-- FORO -->
-  <section id="foro" class="page">
+  <section id="foro" class="page slide-from-right">
     <div class="page-wrap"><div id="foro-content"></div></div>
   </section>
 
   <!-- ABOUT -->
-  <section id="about" class="page">
+  <section id="about" class="page slide-from-right">
     <div class="about-wrap">
       <div class="about-img-col">
         <img src="./hero.jpg" alt="mitø" class="about-img" onerror="this.style.display='none'">
       </div>
       <div class="about-text-col">
-        <p class="hero-sub">SOBRE MÍ</p>
+        <p style="font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:lowercase">sobre mí</p>
         <h2 class="about-title">mit<span class="o">ø</span></h2>
         <p class="about-bio">Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>Hago música personal que normalmente trata de tener un significado profundo detrás. Priorizo hablar de cosas personales y no inventadas, buscando expresarme y sentirme conectado con la gente que me escuche.</p>
         <div class="social-row">
@@ -178,36 +173,68 @@
     </div>
   </section>
 
+  <!-- SOPORTE -->
+  <section id="soporte" class="page slide-from-right">
+    <div class="page-wrap">
+      <div class="soporte-wrap">
+        <div class="soporte-hero">
+          <h2>soporte</h2>
+          <p>¿algo no funciona? ¿tienes una sugerencia?<br>escríbeme y lo miramos.</p>
+        </div>
+        <div class="soporte-card">
+          <a href="mailto:adrianguijarrogarcia10@gmail.com?subject=mitø web — soporte" class="soporte-option">
+            <div class="soporte-option-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="soporte-option-text">
+              <h4>email directo</h4>
+              <p>adrianguijarrogarcia10@gmail.com</p>
+            </div>
+          </a>
+          <a href="https://www.instagram.com/mit0.wav" target="_blank" class="soporte-option">
+            <div class="soporte-option-icon"><i class="fa-brands fa-instagram"></i></div>
+            <div class="soporte-option-text">
+              <h4>instagram</h4>
+              <p>@mit0.wav — dm directo</p>
+            </div>
+          </a>
+        </div>
+        <p style="font-size:11px;color:var(--text-dim);text-align:center;line-height:1.7">
+          también puedes reportar bugs o sugerir cosas en el foro.<br>
+          intento responder en menos de 24h.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- AUTH -->
-  <section id="auth" class="page">
+  <section id="auth" class="page slide-from-bottom">
     <div class="auth-wrap">
       <div class="auth-box">
         <div class="auth-logo">mit<span class="o">ø</span></div>
         <p class="auth-sub">comunidad · únete</p>
         <div class="auth-tabs">
-          <button class="auth-tab active" onclick="switchAuthTab('login',this)">ENTRAR</button>
-          <button class="auth-tab" onclick="switchAuthTab('register',this)">REGISTRARSE</button>
+          <button class="auth-tab active" onclick="switchAuthTab('login',this)">entrar</button>
+          <button class="auth-tab" onclick="switchAuthTab('register',this)">registrarse</button>
         </div>
         <div id="auth-login" class="auth-form">
-          <input type="text" id="login-email" placeholder="Email o nombre de usuario" class="field" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
-          <input type="password" id="login-password" placeholder="Contraseña" class="field" onkeydown="if(event.key==='Enter')doLogin()">
-          <button class="btn-primary full" onclick="doLogin()">Entrar</button>
-          <button onclick="abrirOlvidePass()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px;transition:color 0.2s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">¿Olvidaste tu contraseña?</button>
+          <input type="text" id="login-email" placeholder="email o usuario" class="field" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+          <input type="password" id="login-password" placeholder="contraseña" class="field" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="btn-primary full" onclick="doLogin()">entrar</button>
+          <button onclick="abrirOlvidePass()" style="background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;transition:color 0.15s" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">¿olvidaste tu contraseña?</button>
           <p class="auth-msg" id="login-msg"></p>
         </div>
         <div id="auth-reset" class="auth-form" style="display:none;flex-direction:column;gap:10px">
-          <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;text-align:center;line-height:1.8">Introduce tu email y te mandamos un enlace para restablecer tu contraseña.</p>
-          <input type="email" id="reset-email" placeholder="Tu email" class="field" onkeydown="if(event.key==='Enter')doReset()">
-          <button class="btn-primary full" onclick="doReset()">Enviar enlace</button>
-          <button onclick="cerrarReset()" style="background:none;border:none;color:var(--text-dim);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:1px">← Volver</button>
+          <p style="font-size:11px;color:var(--text-dim);text-align:center;line-height:1.7">introduce tu email y te mandamos un enlace.</p>
+          <input type="email" id="reset-email" placeholder="tu email" class="field" onkeydown="if(event.key==='Enter')doReset()">
+          <button class="btn-primary full" onclick="doReset()">enviar enlace</button>
+          <button onclick="cerrarReset()" style="background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">← volver</button>
           <p class="auth-msg" id="reset-msg"></p>
         </div>
         <div id="auth-register" class="auth-form hidden">
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <input type="email" id="reg-email" placeholder="Email" class="field">
-            <input type="text" id="reg-username" placeholder="Nombre de usuario" class="field">
-            <input type="password" id="reg-password" placeholder="Contraseña (mín. 6 caracteres)" class="field">
-            <button class="btn-primary full" onclick="doRegister()">Crear cuenta</button>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <input type="email" id="reg-email" placeholder="email" class="field">
+            <input type="text" id="reg-username" placeholder="nombre de usuario" class="field">
+            <input type="password" id="reg-password" placeholder="contraseña (mín. 6)" class="field">
+            <button class="btn-primary full" onclick="doRegister()">crear cuenta</button>
           </div>
           <p class="auth-msg" id="reg-msg"></p>
         </div>
@@ -216,108 +243,127 @@
   </section>
 
   <!-- PERFIL -->
-  <section id="perfil" class="page">
+  <section id="perfil" class="page slide-from-right">
     <div class="page-wrap"><div id="perfil-content"></div></div>
   </section>
 
   <!-- PRIVADO -->
-  <section id="privado" class="page">
+  <section id="privado" class="page slide-from-right">
     <div class="page-wrap">
       <div class="section-header">
-        <h2>ZONA PRIVADA <span class="badge">BAND ONLY</span></h2>
-        <p class="section-sub">Solo para la banda</p>
+        <h2>zona privada <span class="badge">band only</span></h2>
+        <p class="section-sub">solo para la banda</p>
       </div>
+
       <div class="upload-box">
-        <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> SUBIR BEAT</h3>
+        <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> subir beat</h3>
         <div class="upload-form">
           <div class="field-row">
-            <input type="text" id="beat-title" placeholder="Nombre del beat" class="field">
-            <input type="text" id="beat-genre" placeholder="Género / vibe" class="field">
+            <input type="text" id="beat-title" placeholder="nombre del beat" class="field">
+            <input type="text" id="beat-genre" placeholder="género" class="field">
           </div>
           <div class="field-row">
-            <input type="number" id="beat-bpm" placeholder="BPM" class="field field-sm" min="40" max="300">
-            <input type="text" id="beat-tono" placeholder="Tono (ej: Am)" class="field field-sm">
+            <input type="number" id="beat-bpm" placeholder="bpm" class="field field-sm" min="40" max="300">
+            <input type="text" id="beat-tono" placeholder="tono (ej: Am)" class="field field-sm">
           </div>
-          <!-- INSPIRACIONES -->
           <div class="insps-wrap">
             <div class="insps-tags" id="insps-tags"></div>
             <div class="insps-input-row">
-              <input type="text" id="insp-input" placeholder="Añadir inspiración (ej: d4vd, jvke...)" class="field"
-                onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();añadirInsp()}">
+              <input type="text" id="insp-input" placeholder="añadir inspiración (ej: d4vd)..." class="field" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();añadirInsp()}">
               <button class="btn-secondary" onclick="añadirInsp()"><i class="fa-solid fa-plus"></i></button>
             </div>
           </div>
           <label class="file-label" onclick="abrirCrop('cover')">
             <i class="fa-solid fa-image"></i>
-            <span id="cover-name-label">Cover / imagen (click para recortar)</span>
+            <span id="cover-name-label">cover (1:1 — click para recortar)</span>
           </label>
           <label class="file-label">
             <i class="fa-solid fa-file-audio"></i>
-            <span id="file-name-label">Elige un archivo de audio</span>
+            <span id="file-name-label">elige un archivo de audio</span>
             <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
           </label>
           <div class="visibility-toggle">
-            <span class="vis-label">Visibilidad:</span>
+            <span class="vis-label">visibilidad:</span>
             <div class="vis-options">
-              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)"><i class="fa-solid fa-globe"></i> PÚBLICO</button>
-              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)"><i class="fa-solid fa-lock"></i> PRIVADO</button>
+              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)"><i class="fa-solid fa-globe"></i> público</button>
+              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)"><i class="fa-solid fa-lock"></i> privado</button>
             </div>
           </div>
-          <button class="btn-primary" onclick="subirBeat()">Subir beat 🔥</button>
+          <button class="btn-primary" onclick="subirBeat()">subir beat 🔥</button>
         </div>
       </div>
 
-      <div class="upload-box" style="margin-top:12px">
-        <h3 class="upload-title"><i class="fa-solid fa-images"></i> SUBIR FOTO A GALERÍA</h3>
+      <!-- AMBIENT TRACKS -->
+      <div class="upload-box" style="margin-top:10px">
+        <h3 class="upload-title"><i class="fa-solid fa-headphones"></i> música de fondo</h3>
         <div class="upload-form">
-          <label class="file-label" onclick="abrirCrop('galeria')">
-            <i class="fa-solid fa-image"></i>
-            <span id="galeria-file-label">Elige una foto (click para recortar)</span>
+          <input type="text" id="ambient-title" placeholder="título de la canción" class="field">
+          <label class="file-label">
+            <i class="fa-solid fa-file-audio"></i>
+            <span id="ambient-file-label">elige un audio</span>
+            <input type="file" id="ambient-file" accept="audio/*" onchange="this.nextElementSibling&&(document.getElementById('ambient-file-label').textContent=this.files[0]?.name||'elige un audio')">
           </label>
-          <input type="text" id="galeria-caption" placeholder="Descripción (opcional)" class="field">
-          <button class="btn-primary" onclick="subirFotoGaleria()">Subir foto</button>
+          <button class="btn-primary" onclick="subirAmbient()">subir canción de fondo</button>
+        </div>
+      </div>
+
+      <div class="upload-box" style="margin-top:10px">
+        <h3 class="upload-title"><i class="fa-solid fa-images"></i> subir a galería</h3>
+        <div class="upload-form">
+          <div class="vis-options" style="margin-bottom:4px">
+            <button class="vis-btn active" id="galeria-tipo-foto" onclick="setGaleriaTipo('foto')"><i class="fa-solid fa-image"></i> foto</button>
+            <button class="vis-btn" id="galeria-tipo-video" onclick="setGaleriaTipo('video')"><i class="fa-solid fa-video"></i> vídeo</button>
+          </div>
+          <div id="galeria-foto-input">
+            <label class="file-label" onclick="abrirCrop('galeria')">
+              <i class="fa-solid fa-image"></i>
+              <span id="galeria-file-label">elige una foto (recorte libre)</span>
+            </label>
+          </div>
+          <div id="galeria-video-input" style="display:none">
+            <label class="file-label">
+              <i class="fa-solid fa-video"></i>
+              <span id="galeria-video-label">elige un vídeo</span>
+              <input type="file" id="galeria-video" accept="video/*" onchange="document.getElementById('galeria-video-label').textContent=this.files[0]?.name||'elige un vídeo'">
+            </label>
+          </div>
+          <input type="text" id="galeria-caption" placeholder="descripción (opcional)" class="field">
+          <button class="btn-primary" onclick="subirGaleria()">subir</button>
         </div>
       </div>
 
       <div class="section-header" style="margin-top:32px">
-        <h3>ACCESOS PRIVADOS</h3>
+        <h3>accesos privados</h3>
       </div>
       <div class="upload-box">
         <div class="upload-form">
           <div class="field-row">
             <input type="email" id="nuevo-acceso-email" placeholder="email@ejemplo.com" class="field">
-            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap"><i class="fa-solid fa-plus"></i> Añadir</button>
+            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap"><i class="fa-solid fa-plus"></i> añadir</button>
           </div>
           <p class="auth-msg" id="acceso-msg"></p>
         </div>
       </div>
       <div id="accesos-list" class="solicitudes-list"></div>
 
-      <div class="section-header" style="margin-top:32px"><h3>SOLICITUDES DE BANDA</h3></div>
-      <div id="solicitudes-admin" class="solicitudes-list"></div>
-
-      <div class="section-header" style="margin-top:32px"><h3>MIEMBROS DE LA BANDA</h3></div>
-      <p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-bottom:10px">
-        Para añadir a alguien a la banda, añade primero su email en Accesos Privados. 
-        Cuando inicie sesión, su rol cambiará a "banda" automáticamente y aparecerá aquí.
-        También puedes añadirlo manualmente:
-      </p>
+      <div class="section-header" style="margin-top:28px"><h3>miembros de la banda</h3></div>
       <div class="upload-box">
         <div class="upload-form">
           <div class="field-row">
-            <input type="email" id="banda-email" placeholder="Email del miembro" class="field">
-            <button class="btn-primary" onclick="añadirMiembroBanda()" style="white-space:nowrap">
-              <i class="fa-solid fa-user-plus"></i> Añadir
-            </button>
+            <input type="email" id="banda-email" placeholder="email del miembro" class="field">
+            <button class="btn-primary" onclick="añadirMiembroBanda()" style="white-space:nowrap"><i class="fa-solid fa-user-plus"></i> añadir</button>
           </div>
           <p class="auth-msg" id="banda-msg"></p>
         </div>
       </div>
 
-      <div class="section-header" style="margin-top:32px"><h3>TODOS LOS BEATS</h3></div>
+      <div class="section-header" style="margin-top:28px"><h3>solicitudes</h3></div>
+      <div id="solicitudes-admin" class="solicitudes-list"></div>
+
+      <div class="section-header" style="margin-top:28px"><h3>todos los beats</h3></div>
       <div id="admin-list" class="beats-grid"></div>
 
-      <button class="btn-secondary" onclick="go('home')" style="margin-top:20px">← Volver al inicio</button>
+      <button class="btn-secondary" onclick="go('home')" style="margin-top:20px">← volver al inicio</button>
     </div>
   </section>
 
@@ -328,10 +374,10 @@
   <div id="login-box">
     <button class="close-btn" onclick="cerrarLogin()">✕</button>
     <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
-    <h2>ACCESO PRIVADO</h2>
-    <p class="login-sub">Solo para la banda</p>
-    <input type="password" id="clave-input" placeholder="Clave secreta" class="field" onkeydown="if(event.key==='Enter')comprobarClave()">
-    <button class="btn-primary" onclick="comprobarClave()">Entrar</button>
+    <h2>acceso privado</h2>
+    <p class="login-sub">solo para la banda</p>
+    <input type="password" id="clave-input" placeholder="clave secreta" class="field" onkeydown="if(event.key==='Enter')comprobarClave()">
+    <button class="btn-primary" onclick="comprobarClave()">entrar</button>
     <p id="error-msg"></p>
   </div>
 </div>
@@ -340,6 +386,7 @@
 <div id="lightbox" onclick="cerrarLightbox()">
   <button class="lightbox-close" onclick="cerrarLightbox()">✕</button>
   <img id="lightbox-img" src="" alt="">
+  <video id="lightbox-video" controls></video>
   <p id="lightbox-caption"></p>
 </div>
 
@@ -350,34 +397,50 @@
 
 <!-- CROP OVERLAY -->
 <div id="crop-overlay">
-  <p class="crop-hint">Arrastra para seleccionar el área · Cuadrado 1:1</p>
+  <p class="crop-hint" id="crop-hint">arrastra para seleccionar el área</p>
   <div class="crop-container">
     <canvas id="crop-canvas"></canvas>
     <div class="crop-selection" id="crop-selection" style="display:none"></div>
   </div>
   <div class="crop-actions">
-    <button class="btn-primary" onclick="confirmarCrop()"><i class="fa-solid fa-crop"></i> Recortar</button>
-    <button class="btn-secondary" onclick="cerrarCrop()">Cancelar</button>
+    <button class="btn-primary" onclick="confirmarCrop()"><i class="fa-solid fa-crop"></i> recortar</button>
+    <button class="btn-secondary" onclick="cerrarCrop()">cancelar</button>
   </div>
 </div>
 
-<!-- FORO POST OVERLAY -->
+<!-- POST OVERLAY -->
 <div id="post-overlay" onclick="cerrarPostOverlay(event)">
   <div class="post-box">
     <button class="close-btn" onclick="cerrarPostOverlay()">✕</button>
-    <h2 class="upload-title">NUEVA PUBLICACIÓN</h2>
+    <h2 class="upload-title">nueva publicación</h2>
     <div class="upload-form">
       <select id="post-categoria" class="field"></select>
-      <input type="text" id="post-titulo" placeholder="Título (opcional)" class="field">
-      <textarea id="post-contenido" placeholder="¿Qué quieres compartir?" class="field textarea" rows="4"></textarea>
-      <div id="post-img-preview" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <input type="text" id="post-titulo" placeholder="título (opcional)" class="field">
+      <textarea id="post-contenido" placeholder="¿qué quieres compartir?" class="field textarea" rows="4"></textarea>
+      <div id="post-img-preview"></div>
       <label class="file-label">
         <i class="fa-solid fa-image"></i>
-        <span>Añadir imagen (opcional)</span>
+        <span>añadir imagen (opcional)</span>
         <input type="file" id="post-img-file" accept="image/*" onchange="previewPostImg(this)">
       </label>
-      <button class="btn-primary" onclick="crearPost()"><i class="fa-solid fa-paper-plane"></i> Publicar</button>
+      <button class="btn-primary" onclick="crearPost()"><i class="fa-solid fa-paper-plane"></i> publicar</button>
       <p class="auth-msg" id="post-msg"></p>
+    </div>
+  </div>
+</div>
+
+<!-- MINI PLAYER -->
+<div id="mini-player" style="display:none">
+  <div class="mp-icon" id="mp-play-btn" onclick="mpToggle()"><i class="fa-solid fa-music"></i></div>
+  <div class="mp-content">
+    <div class="mp-info">
+      <div class="mp-title" id="mp-title">—</div>
+      <div class="mp-sub">música de fondo</div>
+    </div>
+    <div class="mp-controls">
+      <button class="mp-btn" onclick="mpPrev()" title="anterior"><i class="fa-solid fa-backward-step"></i></button>
+      <button class="mp-btn active" id="mp-toggle" onclick="mpToggle()"><i class="fa-solid fa-pause"></i></button>
+      <button class="mp-btn" onclick="mpNext()" title="siguiente"><i class="fa-solid fa-forward-step"></i></button>
     </div>
   </div>
 </div>
