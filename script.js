@@ -38,6 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("galeria-foto-input").style.display = tipo === "foto" ? "block" : "none";
     document.getElementById("galeria-video-input").style.display = tipo === "video" ? "block" : "none";
   };
+
+  // ── ZONA PRIVADA PANELS ──────────────────────
+  window.switchPrivado = function(id, btn) {
+    document.querySelectorAll(".privado-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".privado-nav-btn").forEach(b => b.classList.remove("active"));
+    const panel = document.getElementById("panel-" + id);
+    if (panel) panel.classList.add("active");
+    if (btn) btn.classList.add("active");
+    // Load data for specific panels
+    if (id === "accesos")         cargarAccesos();
+    if (id === "solicitudes-priv") cargarSolicitudesAdmin();
+    if (id === "todos-beats")      cargarBeats("admin-list", null);
+  };
   // ── HELPERS ──────────────────────────────────
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function fmt(s) { if(!s||isNaN(s)) return "0:00"; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`; }
@@ -52,11 +65,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── TEMA ─────────────────────────────────────
   function aplicarTema(tema, acento, fondo) {
     document.body.classList.toggle("tema-claro", tema === "claro");
-    if (acento) document.documentElement.style.setProperty("--accent", acento);
-    if (fondo)  document.documentElement.style.setProperty("--bg", fondo);
+    if (acento) {
+      document.documentElement.style.setProperty("--accent", acento);
+      document.documentElement.style.setProperty("--cursor-color", acento);
+      localStorage.setItem("mitø-acento", acento);
+    }
+    if (fondo) {
+      document.documentElement.style.setProperty("--bg", fondo);
+      localStorage.setItem("mitø-fondo", fondo);
+    }
     localStorage.setItem("mitø-tema", tema || "oscuro");
-    if (acento) localStorage.setItem("mitø-acento", acento);
-    if (fondo)  localStorage.setItem("mitø-fondo", fondo);
   }
 
   // ── SESIÓN LOCAL ─────────────────────────────
@@ -98,7 +116,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.toggleTheme = function() {
     const claro = document.body.classList.contains("tema-claro");
     const nuevoTema = claro ? "oscuro" : "claro";
-    aplicarTema(nuevoTema, null, null);
+    const acento = currentUser?.color_acento || localStorage.getItem("mitø-acento");
+    const fondo  = currentUser?.color_fondo  || localStorage.getItem("mitø-fondo");
+    aplicarTema(nuevoTema, acento, fondo);
     if (currentUser) {
       currentUser.tema = nuevoTema;
       guardarSesionLocal(currentUser);
@@ -508,93 +528,147 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── BEAT DETAIL ───────────────────────────────
   function abrirBeatDetalle(beat) {
-    const cont = document.getElementById("beat-detail-content");
-    const bars  = generateBars(beat, 0);
+    const cont     = document.getElementById("beat-detail-content");
     const inspsArr = beat.inspiraciones ? beat.inspiraciones.split(",").map(s=>s.trim()).filter(Boolean) : [];
-    const inspsHtml = inspsArr.length
-      ? `<div class="beat-detail-insps">
-           <span class="beat-detail-insps-label">Inspiraciones</span>
-           ${inspsArr.map(i=>`<span class="beat-insp-tag-big">${esc(i)}</span>`).join("")}
-         </div>` : "";
 
     cont.innerHTML = `
-      <button class="beat-detail-close" onclick="cerrarBeatOverlay()">✕</button>
-      <div class="beat-detail-top">
-        ${beat.cover_url
-          ? `<img src="${beat.cover_url}" class="beat-detail-cover" alt="">`
-          : `<div class="beat-detail-cover-placeholder"><i class="fa-solid fa-music"></i></div>`}
-        <div class="beat-detail-info">
+      <button class="beat-detail-close" onclick="cerrarBeatOverlay()">
+        <i class="fa-solid fa-arrow-left"></i> volver
+      </button>
+      <div class="beat-detail-card">
+        <div class="beat-detail-cover-wrap">
+          ${beat.cover_url
+            ? `<img src="${beat.cover_url}" class="beat-detail-cover" alt="">`
+            : `<div class="beat-detail-cover-placeholder"><i class="fa-solid fa-music"></i></div>`}
+        </div>
+        <div class="beat-detail-meta">
           <div class="beat-detail-title">${esc(beat.title)}</div>
           <div class="beat-detail-artist">mitø</div>
-          <div class="beat-detail-tags">
+          <div class="beat-detail-tags" style="margin-top:10px">
             ${beat.genre ? `<span class="beat-meta-tag">${esc(beat.genre)}</span>` : ""}
-            ${beat.bpm   ? `<span class="beat-meta-tag bpm"><i class="fa-solid fa-drum"></i> ${beat.bpm} BPM</span>` : ""}
-            ${beat.tono  ? `<span class="beat-meta-tag"><i class="fa-solid fa-music"></i> ${esc(beat.tono)}</span>` : ""}
+            ${beat.bpm   ? `<span class="beat-meta-tag bpm">${beat.bpm} bpm</span>` : ""}
+            ${beat.tono  ? `<span class="beat-meta-tag">${esc(beat.tono)}</span>` : ""}
           </div>
-          ${inspsHtml}
+          ${inspsArr.length ? `
+          <div class="beat-detail-insps" style="margin-top:10px">
+            <span class="beat-detail-insps-label">inspirado en</span>
+            ${inspsArr.map(i=>`<span class="beat-insp-tag-big">${esc(i)}</span>`).join("")}
+          </div>` : ""}
         </div>
       </div>
-      <div class="beat-detail-waveform">
-        <div class="custom-player">
-          <button class="play-btn" id="detail-play-btn"><i class="fa-solid fa-play"></i></button>
-          <div class="player-right">
-            <div class="waveform-wrap" id="detail-wave-wrap">
-              <div class="waveform">${bars}</div>
-              <div class="waveform-progress" id="detail-prog">
-                <div class="waveform-filled">${bars}</div>
-              </div>
-              <div class="waveform-cursor" id="detail-cursor"></div>
-            </div>
-            <div class="player-meta">
-              <span id="detail-cur">0:00</span>
-              <span id="detail-tot">—</span>
-            </div>
-          </div>
+
+      <div class="beat-detail-player">
+        <canvas class="viz-canvas" id="detail-canvas" style="width:100%;height:64px;border-radius:8px;cursor:pointer"></canvas>
+        <div class="player-meta" style="margin-top:6px">
+          <span id="detail-cur">0:00</span>
+          <span id="detail-tot">—</span>
+        </div>
+        <div class="beat-detail-controls">
+          <button class="play-btn" id="detail-play-btn" style="width:48px;height:48px;font-size:16px">
+            <i class="fa-solid fa-play"></i>
+          </button>
         </div>
       </div>`;
 
-    requestAnimationFrame(() => {
-      const wrap = document.getElementById("detail-wave-wrap");
-      const filled = cont.querySelector(".waveform-filled");
-      if (wrap && filled) filled.style.width = wrap.offsetWidth + "px";
-    });
-
-    // Init player en detalle
+    // Init canvas visualizer
+    const canvas  = document.getElementById("detail-canvas");
     const playBtn = document.getElementById("detail-play-btn");
-    const prog    = document.getElementById("detail-prog");
-    const cursor  = document.getElementById("detail-cursor");
-    const wrap    = document.getElementById("detail-wave-wrap");
     const timeCur = document.getElementById("detail-cur");
     const timeTot = document.getElementById("detail-tot");
     let audio = null, playing = false;
+    let dAudioCtx = null, dAnalyser = null, dSource = null, dRaf = null;
 
-    function getA() {
+    function getAccent() { return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0"; }
+
+    function drawDetailStatic(prog01 = 0) {
+      if (!canvas) return;
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight || 64;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      const accent = getAccent();
+      let bars;
+      try { bars = beat.waveform ? (typeof beat.waveform==="string"?JSON.parse(beat.waveform):beat.waveform) : null; } catch(e) { bars=null; }
+      if (!bars) {
+        let s = ((beat.id||0)*1664525+1013904223)&0xffffffff;
+        bars = Array.from({length:80},()=>{ s=(s*1664525+1013904223)&0xffffffff; return 15+((s>>>0)/0xffffffff)*68; });
+      }
+      const progX = prog01 * W;
+      ctx.clearRect(0,0,W,H);
+      bars.forEach((h,i) => {
+        const x  = (i/bars.length)*W;
+        const bw = Math.max((W/bars.length)-1,1);
+        const bh = Math.max((h/100)*H,2);
+        ctx.fillStyle = x < progX ? accent : "rgba(255,255,255,0.13)";
+        ctx.beginPath(); ctx.roundRect(x,H-bh,bw,bh,2); ctx.fill();
+      });
+    }
+
+    function drawDetailFreq() {
+      if (!dAnalyser || !canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      const buf = new Uint8Array(dAnalyser.frequencyBinCount);
+      dAnalyser.getByteFrequencyData(buf);
+      ctx.clearRect(0,0,W,H);
+      const accent = getAccent();
+      const n = 80, slice = Math.floor(buf.length/n);
+      const progX = audio?.duration ? (audio.currentTime/audio.duration)*W : 0;
+      for (let i=0;i<n;i++) {
+        let s=0; for(let j=0;j<slice;j++) s+=buf[i*slice+j];
+        const avg=s/slice, x=(i/n)*W, bw=Math.max((W/n)-1,1), bh=Math.max((avg/255)*H,2);
+        ctx.fillStyle = x<progX ? accent : `rgba(255,255,255,${0.08+(avg/255)*0.3})`;
+        ctx.beginPath(); ctx.roundRect(x,H-bh,bw,bh,2); ctx.fill();
+      }
+      if (audio) {
+        timeCur.textContent = fmt(audio.currentTime);
+        if (audio.duration) timeTot.textContent = fmt(audio.duration);
+      }
+      dRaf = requestAnimationFrame(drawDetailFreq);
+    }
+
+    function getDetailAudio() {
       if (audio) return audio;
       audio = new Audio(beat.audio_url);
+      audio.crossOrigin = "anonymous";
       audio.addEventListener("loadedmetadata", () => timeTot.textContent = fmt(audio.duration));
-      audio.addEventListener("timeupdate", () => {
-        if (!audio.duration) return;
-        const p = (audio.currentTime / audio.duration) * 100;
-        prog.style.width = p+"%"; cursor.style.left = p+"%"; timeCur.textContent = fmt(audio.currentTime);
-      });
-      audio.addEventListener("ended", () => { playing=false; playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`; prog.style.width="0%"; cursor.style.left="0%"; timeCur.textContent="0:00"; });
+      audio.addEventListener("timeupdate", () => { if(!playing && audio.duration) drawDetailStatic(audio.currentTime/audio.duration); timeCur.textContent=fmt(audio.currentTime); });
+      audio.addEventListener("ended", () => { playing=false; playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`; cancelAnimationFrame(dRaf); drawDetailStatic(0); timeCur.textContent="0:00"; });
       return audio;
     }
 
     playBtn.addEventListener("click", () => {
-      const a = getA();
-      if (activeAudio && activeAudio !== a) { activeAudio.pause(); if(activeCard){activeCard.classList.remove("is-playing"); activeCard.querySelector(".play-btn").innerHTML=`<i class="fa-solid fa-play"></i>`;} }
-      if (playing) { a.pause(); playing=false; playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`; activeAudio=null; }
-      else { a.play(); playing=true; playBtn.innerHTML=`<i class="fa-solid fa-pause"></i>`; activeAudio=a; activeCard=null; window.sfx?.play(); }
+      const a = getDetailAudio();
+      // Stop card players
+      if (activeAudio && activeAudio!==a) { activeAudio.pause(); activeCard?.classList.remove("is-playing"); activeCard?.querySelector(".play-btn")&&(activeCard.querySelector(".play-btn").innerHTML=`<i class="fa-solid fa-play"></i>`); activeCard?._stopViz?.(); }
+      if (playing) {
+        a.pause(); playing=false; playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`;
+        cancelAnimationFrame(dRaf); drawDetailStatic(a.duration?a.currentTime/a.duration:0);
+        activeAudio=null; window.sfx?.pause();
+      } else {
+        if (!dAudioCtx) {
+          try { dAudioCtx=new(window.AudioContext||window.webkitAudioContext)(); dAnalyser=dAudioCtx.createAnalyser(); dAnalyser.fftSize=512; dSource=dAudioCtx.createMediaElementSource(a); dSource.connect(dAnalyser); dAnalyser.connect(dAudioCtx.destination); } catch(e){}
+        }
+        if (dAudioCtx?.state==="suspended") dAudioCtx.resume();
+        if (ambientPlaying) { ambientAudio.pause(); }
+        a.play().catch(()=>{}); playing=true;
+        playBtn.innerHTML=`<i class="fa-solid fa-pause"></i>`;
+        activeAudio=a; activeCard=null;
+        cancelAnimationFrame(dRaf); drawDetailFreq();
+        window.sfx?.play();
+      }
     });
 
-    wrap.addEventListener("click", e => {
-      const a = getA(); if (!a.duration) return;
-      const r = wrap.getBoundingClientRect();
-      const p = Math.max(0, Math.min(1, (e.clientX-r.left)/r.width));
-      a.currentTime = p * a.duration; prog.style.width=(p*100)+"%"; cursor.style.left=(p*100)+"%";
+    // Seek on canvas click
+    canvas.addEventListener("click", e => {
+      const a = getDetailAudio(); if (!a.duration) return;
+      const r = canvas.getBoundingClientRect();
+      const p = Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      a.currentTime = p*a.duration; timeCur.textContent=fmt(a.currentTime);
+      if (!playing) drawDetailStatic(p);
     });
 
+    requestAnimationFrame(() => { canvas.width=canvas.offsetWidth; canvas.height=64; drawDetailStatic(0); });
     document.getElementById("beat-overlay").classList.add("visible");
   }
 
@@ -752,26 +826,43 @@ document.addEventListener("DOMContentLoaded", () => {
     let audio = null, isPlaying = false;
     let audioCtx = null, analyser = null, source = null, vizRaf = null;
 
-    // Draw static waveform bars from stored data
-    function drawStatic() {
-      if (!canvas) return;
+    function getAccent() {
+      return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0";
+    }
+
+    function drawStatic(progress01 = 0) {
+      if (!canvas || canvas.offsetWidth === 0) return;
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
       const ctx = canvas.getContext("2d");
-      const W = canvas.offsetWidth, H = canvas.offsetHeight;
-      canvas.width = W; canvas.height = H;
-      const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0";
-      const data = beat.waveform ? (typeof beat.waveform === "string" ? JSON.parse(beat.waveform) : beat.waveform) : null;
-      const bars = data || Array.from({length: 55}, (_,i) => { let s=((beat.id||i)*1664525+1013904223)&0xffffffff; return 15+((s>>>0)/0xffffffff)*68; });
-      ctx.clearRect(0,0,W,H);
+      const W = canvas.width, H = canvas.height;
+      const accent = getAccent();
+      let bars;
+      try {
+        bars = beat.waveform
+          ? (typeof beat.waveform === "string" ? JSON.parse(beat.waveform) : beat.waveform)
+          : null;
+      } catch(e) { bars = null; }
+      if (!bars) {
+        let s = ((beat.id || index) * 1664525 + 1013904223) & 0xffffffff;
+        bars = Array.from({length: 55}, () => {
+          s = (s * 1664525 + 1013904223) & 0xffffffff;
+          return 15 + ((s >>> 0) / 0xffffffff) * 68;
+        });
+      }
+      ctx.clearRect(0, 0, W, H);
+      const progX = progress01 * W;
       bars.forEach((h, i) => {
-        const x = (i / bars.length) * W;
-        const bw = (W / bars.length) - 1;
-        const bh = (h/100) * H;
-        ctx.fillStyle = "rgba(255,255,255,0.12)";
-        ctx.beginPath(); ctx.roundRect(x, H-bh, Math.max(bw,1), bh, 2); ctx.fill();
+        const x  = (i / bars.length) * W;
+        const bw = Math.max((W / bars.length) - 1.5, 1);
+        const bh = Math.max((h / 100) * H, 2);
+        ctx.fillStyle = x < progX ? accent : "rgba(255,255,255,0.13)";
+        ctx.beginPath();
+        ctx.roundRect(x, H - bh, bw, bh, 2);
+        ctx.fill();
       });
     }
 
-    // Draw live frequency visualizer
     function drawFreq() {
       if (!analyser || !canvas) return;
       const ctx = canvas.getContext("2d");
@@ -779,50 +870,59 @@ document.addEventListener("DOMContentLoaded", () => {
       const bufLen = analyser.frequencyBinCount;
       const dataArr = new Uint8Array(bufLen);
       analyser.getByteFrequencyData(dataArr);
-      ctx.clearRect(0,0,W,H);
-      const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0";
-      const bars = 55;
-      const slice = Math.floor(bufLen / bars);
-      for (let i = 0; i < bars; i++) {
+      ctx.clearRect(0, 0, W, H);
+      const accent = getAccent();
+      const numBars = 55;
+      const slice   = Math.floor(bufLen / numBars);
+      const progX   = audio?.duration ? (audio.currentTime / audio.duration) * W : 0;
+      for (let i = 0; i < numBars; i++) {
         let sum = 0;
         for (let j = 0; j < slice; j++) sum += dataArr[i * slice + j];
         const avg = sum / slice;
-        const x   = (i / bars) * W;
-        const bw  = (W / bars) - 1;
-        const bh  = Math.max(2, (avg / 255) * H);
-        // Progress split
-        const progress = audio ? (audio.currentTime / audio.duration) * W : 0;
-        ctx.fillStyle = x < progress ? accent : "rgba(255,255,255,0.15)";
-        ctx.beginPath(); ctx.roundRect(x, H - bh, Math.max(bw, 1), bh, 2); ctx.fill();
+        const x   = (i / numBars) * W;
+        const bw  = Math.max((W / numBars) - 1.5, 1);
+        const bh  = Math.max((avg / 255) * H, 2);
+        ctx.fillStyle = x < progX ? accent : `rgba(255,255,255,${0.1 + (avg/255)*0.25})`;
+        ctx.beginPath();
+        ctx.roundRect(x, H - bh, bw, bh, 2);
+        ctx.fill();
       }
-      vizRaf = requestAnimationFrame(drawFreq);
       if (audio) {
         timeCur.textContent = fmt(audio.currentTime);
-        if (audio.duration) timeTot.textContent = fmt(audio.duration);
+        if (audio.duration && timeTot.textContent === "—") timeTot.textContent = fmt(audio.duration);
       }
+      vizRaf = requestAnimationFrame(drawFreq);
     }
 
     function initAudioCtx() {
       if (audioCtx) return;
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 512;
-      source = audioCtx.createMediaElementSource(audio);
-      source.connect(analyser);
-      analyser.connect(audioCtx.destination);
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser  = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source    = audioCtx.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+      } catch(e) { console.warn("AudioCtx:", e); }
     }
 
     function getAudio() {
       if (audio) return audio;
       audio = new Audio(beat.audio_url);
       audio.crossOrigin = "anonymous";
-      audio.addEventListener("loadedmetadata", () => timeTot.textContent = fmt(audio.duration));
+      audio.addEventListener("loadedmetadata", () => {
+        timeTot.textContent = fmt(audio.duration);
+      });
+      audio.addEventListener("timeupdate", () => {
+        if (audio.duration) drawStatic(audio.currentTime / audio.duration);
+      });
       audio.addEventListener("ended", () => {
         isPlaying = false;
         playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
         card.classList.remove("is-playing");
         cancelAnimationFrame(vizRaf);
-        drawStatic();
+        drawStatic(0);
+        timeCur.textContent = "0:00";
         activeAudio = null; activeCard = null;
       });
       return audio;
@@ -834,13 +934,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeCard) {
           activeCard.classList.remove("is-playing");
           activeCard.querySelector(".play-btn").innerHTML = `<i class="fa-solid fa-play"></i>`;
-          // Stop their visualizer
           activeCard._stopViz?.();
         }
       }
     }
 
-    card._stopViz = () => { cancelAnimationFrame(vizRaf); drawStatic(); };
+    card._stopViz = () => {
+      cancelAnimationFrame(vizRaf);
+      if (audio) drawStatic(audio.duration ? audio.currentTime / audio.duration : 0);
+    };
 
     playBtn.addEventListener("click", e => {
       e.stopPropagation();
@@ -849,23 +951,48 @@ document.addEventListener("DOMContentLoaded", () => {
         a.pause(); isPlaying = false;
         playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
         card.classList.remove("is-playing");
-        cancelAnimationFrame(vizRaf); drawStatic();
+        cancelAnimationFrame(vizRaf);
+        drawStatic(a.duration ? a.currentTime / a.duration : 0);
         activeAudio = null; activeCard = null; window.sfx?.pause();
+        // Reanuda música de fondo
+        if (ambientTracks.length && !ambientPlaying) {
+          ambientAudio.play().catch(()=>{}); ambientPlaying = true;
+          const mpToggle = document.getElementById("mp-toggle");
+          const mpIcon   = document.getElementById("mp-play-btn");
+          if (mpToggle) mpToggle.innerHTML = '<i class="fa-solid fa-pause"></i>';
+          if (mpIcon)   mpIcon.innerHTML   = '<i class="fa-solid fa-pause"></i>';
+        }
       } else {
         stopOthers();
-        try { initAudioCtx(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch(e2) {}
+        // Pausa música de fondo al reproducir un beat
+        if (ambientPlaying) { ambientAudio.pause(); }
+        initAudioCtx();
+        if (audioCtx?.state === "suspended") audioCtx.resume();
         a.play().catch(()=>{});
         isPlaying = true;
         playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
         card.classList.add("is-playing");
         activeAudio = a; activeCard = card;
-        cancelAnimationFrame(vizRaf); drawFreq();
+        cancelAnimationFrame(vizRaf);
+        drawFreq();
         window.sfx?.play();
       }
     });
 
-    // Init static display
-    requestAnimationFrame(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; drawStatic(); });
+    // Seek al hacer click en el canvas
+    canvas.addEventListener("click", e => {
+      e.stopPropagation();
+      const a = getAudio();
+      if (!a.duration) { a.load(); return; }
+      const rect = canvas.getBoundingClientRect();
+      const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      a.currentTime = pct * a.duration;
+      timeCur.textContent = fmt(a.currentTime);
+      if (!isPlaying) drawStatic(pct);
+    });
+
+    // Init static on mount
+    requestAnimationFrame(() => drawStatic(0));
 
     if(admin){
       const delBtn=card.querySelector(".delete-btn");
@@ -1349,15 +1476,18 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.guardarColoresCustom = function() {
-    const acento = document.getElementById("custom-acento").value;
-    const fondo  = document.getElementById("custom-fondo").value;
-    const tema   = document.body.classList.contains("tema-claro") ? "claro" : "oscuro";
+    const acento = document.getElementById("custom-acento")?.value;
+    const fondo  = document.getElementById("custom-fondo")?.value;
+    if (!acento) return;
+    const tema = document.body.classList.contains("tema-claro") ? "claro" : "oscuro";
     aplicarTema(tema, acento, fondo);
-    // Update cursor color
     document.documentElement.style.setProperty("--cursor-color", acento);
+    // Always save to localStorage even without account
+    localStorage.setItem("mitø-acento", acento);
+    if (fondo) localStorage.setItem("mitø-fondo", fondo);
     if (currentUser) {
       currentUser.color_acento = acento;
-      currentUser.color_fondo  = fondo;
+      currentUser.color_fondo  = fondo || currentUser.color_fondo;
       guardarSesionLocal(currentUser);
       db.from("usuarios").update({ color_acento: acento, color_fondo: fondo }).eq("id", currentUser.id).catch(()=>{});
     }
@@ -1459,6 +1589,16 @@ document.addEventListener("DOMContentLoaded", () => {
       ambientAudio.play().catch(()=>{}); ambientPlaying = true;
       document.getElementById("mp-toggle").innerHTML = '<i class="fa-solid fa-pause"></i>';
       document.getElementById("mp-play-btn").innerHTML = '<i class="fa-solid fa-pause"></i>';
+    }
+  };
+
+  window.mpVolume = function(val) {
+    ambientAudio.volume = parseFloat(val);
+    const icon = document.getElementById("mp-vol-icon");
+    if (icon) {
+      if (val == 0) icon.className = "fa-solid fa-volume-xmark";
+      else if (val < 0.4) icon.className = "fa-solid fa-volume-low";
+      else icon.className = "fa-solid fa-volume-high";
     }
   };
 
