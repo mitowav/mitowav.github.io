@@ -1865,7 +1865,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ambientAudio.play().then(() => {
         ambientPlaying = true;
         const tog  = document.getElementById("mp-toggle");
-        const icon = document.getElementById("mp-play-btn");
+        const icon = document.getElementById("mp-icon-wrap");
         if (tog)  tog.innerHTML  = '<i class="fa-solid fa-pause"></i>';
         if (icon) icon.innerHTML = '<i class="fa-solid fa-pause"></i>';
         // Actualiza el slider de volumen
@@ -1875,7 +1875,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Navegador bloqueó el autoplay — espera primer gesto
         ambientPlaying = false;
         const tog  = document.getElementById("mp-toggle");
-        const icon = document.getElementById("mp-play-btn");
+        const icon = document.getElementById("mp-icon-wrap");
         if (tog)  tog.innerHTML  = '<i class="fa-solid fa-play"></i>';
         if (icon) icon.innerHTML = '<i class="fa-solid fa-music"></i>';
         // Al primer click del usuario, arranca
@@ -1899,11 +1899,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ambientPlaying) {
       ambientAudio.pause(); ambientPlaying = false;
       document.getElementById("mp-toggle").innerHTML = '<i class="fa-solid fa-play"></i>';
-      document.getElementById("mp-play-btn").innerHTML = '<i class="fa-solid fa-music"></i>';
+      const _mpw = document.getElementById("mp-icon-wrap"); if(_mpw) _mpw.innerHTML = '<i class="fa-solid fa-music"></i>';
     } else {
       ambientAudio.play().catch(()=>{}); ambientPlaying = true;
       document.getElementById("mp-toggle").innerHTML = '<i class="fa-solid fa-pause"></i>';
-      document.getElementById("mp-play-btn").innerHTML = '<i class="fa-solid fa-pause"></i>';
+      const _mpw2 = document.getElementById("mp-icon-wrap"); if(_mpw2) _mpw2.innerHTML = '<i class="fa-solid fa-pause"></i>';
     }
   };
 
