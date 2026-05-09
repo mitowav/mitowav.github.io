@@ -21,6 +21,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let cropTarget = null; // 'cover' | 'galeria' | 'avatar'
   let cropBlob = null, galeriaBlob = null, coverBlob = null;
 
+
+  // ── SHA256 para passwords ────────────────────
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
   // ── HELPERS ──────────────────────────────────
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function fmt(s) { if(!s||isNaN(s)) return "0:00"; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`; }
@@ -53,13 +61,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const claro = document.body.classList.contains("tema-claro");
     const nuevoTema = claro ? "oscuro" : "claro";
     aplicarTema(nuevoTema, null, null);
-    if (currentUser) guardarPrefsServer({ tema: nuevoTema });
+    if (currentUser) if(currentUser) db.from("usuarios").update({tema:nuevoTema}).eq("id",currentUser.id).then(()=>{if(currentUser){currentUser.tema=nuevoTema;guardarSesionLocal(currentUser);}});
   };
 
-  async function guardarPrefsServer(prefs) {
-    if (!currentUser) return;
-    await db.from("perfiles").update(prefs).eq("id", currentUser.id);
-  }
+
 
   // ── AUTH STATE ────────────────────────────────
   // Recupera sesión guardada en localStorage
@@ -79,24 +84,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initSession();
 
-  db.auth.onAuthStateChange(async (event, session) => {
-    currentUser = session?.user || null;
-    if (currentUser) {
-      const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
-      currentPerfil = data;
-      if (data?.tema)         aplicarTema(data.tema, data.color_acento, data.color_fondo);
-      if (data?.color_acento) document.documentElement.style.setProperty("--accent", data.color_acento);
-      if (data?.color_fondo)  document.documentElement.style.setProperty("--bg", data.color_fondo);
-      await comprobarAccesoPrivado();
-    } else { currentPerfil = null; tieneAccesoPrivado = false; }
-    updateNavUser();
-  });
+  // Supabase Auth reemplazado por sistema propio
+  // onAuthStateChange ya no se usa
 
   function updateNavUser() {
-    const btn = document.getElementById("btn-auth");
+    const btn  = document.getElementById("btn-auth");
     const mBtn = document.getElementById("mobile-auth-btn");
-    if (currentUser && currentPerfil) {
-      const name = esc(currentPerfil.display_name || currentPerfil.username);
+    if (!btn) return;
+    if (currentUser) {
+      const name = esc(currentUser.display_name || currentUser.username || currentUser.email);
       btn.innerHTML = `<i class="fa-solid fa-user"></i> ${name}`;
       btn.className = "nav-auth-btn logged"; btn.onclick = () => go("perfil");
       if (mBtn) { mBtn.innerHTML = `<i class="fa-solid fa-user"></i> ${name}`; mBtn.onclick = () => go("perfil",null,true); }
@@ -109,36 +105,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function comprobarAccesoPrivado() {
     if (!currentUser) { tieneAccesoPrivado = false; return; }
-    try {
-      // Usamos select sin .single() para evitar 406 cuando no hay resultado
-      const { data, error } = await db
-        .from("accesos_privados")
-        .select("id")
-        .eq("email", currentUser.email)
-        .limit(1);
+    tieneAccesoPrivado = currentUser.rol === "banda" || currentUser.rol === "admin";
+    updateNavPrivado();
+  }
 
-      tieneAccesoPrivado = !error && data && data.length > 0;
-
-      if (tieneAccesoPrivado && currentPerfil?.rol === "fan") {
-        await db.from("perfiles").update({ rol: "banda" }).eq("id", currentUser.id);
-        if (currentPerfil) currentPerfil.rol = "banda";
-      }
-    } catch(e) {
-      console.warn("comprobarAccesoPrivado:", e.message);
-      tieneAccesoPrivado = false;
-    }
-
+  function updateNavPrivado() {
     const lockBtn = document.querySelector(".lock-btn");
-    if (lockBtn) {
-      if (tieneAccesoPrivado) {
-        lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> PRIVADO`;
-        lockBtn.onclick = () => go("privado");
-        lockBtn.style.cssText = "border-color:rgba(107,255,184,0.4)!important;color:#6bffb8!important";
-      } else {
-        lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
-        lockBtn.onclick = () => openLogin("privado");
-        lockBtn.style.cssText = "";
-      }
+    if (!lockBtn) return;
+    if (tieneAccesoPrivado) {
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> PRIVADO`;
+      lockBtn.onclick = () => go("privado");
+      lockBtn.style.cssText = "border-color:rgba(107,255,184,0.4)!important;color:#6bffb8!important";
+    } else {
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
+      lockBtn.onclick = () => openLogin("privado");
+      lockBtn.style.cssText = "";
     }
   }
 
@@ -196,32 +177,56 @@ document.addEventListener("DOMContentLoaded", () => {
   window.switchAuthTab = switchAuthTab;
 
   window.doLogin = async function() {
-    let identifier = document.getElementById("login-email").value.trim();
-    const pass = document.getElementById("login-password").value;
-    const msg  = document.getElementById("login-msg");
-    if (!identifier||!pass) { msg.textContent="Rellena usuario/email y contraseña"; msg.className="auth-msg error"; return; }
-    msg.textContent="Entrando..."; msg.className="auth-msg";
+    const identifier = document.getElementById("login-email").value.trim();
+    const pass       = document.getElementById("login-password").value;
+    const msg        = document.getElementById("login-msg");
+    const btn        = document.querySelector("#auth-login .btn-primary");
+
+    if (!identifier || !pass) { msg.textContent="Rellena usuario/email y contraseña"; msg.className="auth-msg error"; return; }
+
+    msg.textContent = "Entrando..."; msg.className = "auth-msg";
+    if (btn) btn.disabled = true;
+
     try {
-      let email = identifier;
-      if (!identifier.includes("@")) {
-        const { data: p } = await withTimeout(db.from("perfiles").select("id").eq("username", identifier.toLowerCase()).single(), 10000);
-        if (!p) { msg.textContent="Usuario no encontrado — prueba con tu email"; msg.className="auth-msg error"; window.sfx?.error(); return; }
-        msg.textContent="Usuario encontrado — introduce tu email completo"; msg.className="auth-msg error"; window.sfx?.error(); return;
-      }
-      const result = await withTimeout(db.auth.signInWithPassword({ email, password: pass }), 10000);
-      if (result.error) {
-        const m = {"Invalid login credentials":"Email o contraseña incorrectos","Email not confirmed":"Confirma tu email — revisa también el spam","Too many requests":"Demasiados intentos, espera un momento"};
-        msg.textContent = m[result.error.message]||"Error al entrar — revisa tu conexión"; msg.className="auth-msg error"; window.sfx?.error();
+      const passHash = await sha256(pass);
+
+      // Busca por email o username
+      let query = db.from("usuarios").select("*");
+      if (identifier.includes("@")) {
+        query = query.eq("email", identifier.toLowerCase());
       } else {
-        msg.textContent="¡Bienvenido! 👋"; msg.className="auth-msg success"; window.sfx?.login();
-        // Guarda sesión manual para recuperarla al recargar
-        if (result.data?.user) {
-          const { data: p } = await db.from("perfiles").select("*").eq("id", result.data.user.id).single();
-          guardarSesionLocal(result.data.user, p);
-        }
-        setTimeout(()=>go("home"),800);
+        query = query.eq("username", identifier.toLowerCase());
       }
-    } catch(e) { msg.textContent=e.message==="TIMEOUT"?"Sin respuesta — comprueba tu conexión":"Error inesperado"; msg.className="auth-msg error"; window.sfx?.error(); }
+      const { data: usuarios } = await query.limit(1);
+      const usuario = usuarios?.[0];
+
+      if (!usuario || usuario.password_hash !== passHash) {
+        msg.textContent = "Usuario o contraseña incorrectos";
+        msg.className = "auth-msg error"; window.sfx?.error();
+        return;
+      }
+
+      // Login correcto
+      currentUser   = usuario;
+      currentPerfil = usuario;
+      guardarSesionLocal(usuario);
+      tieneAccesoPrivado = usuario.rol === "banda" || usuario.rol === "admin";
+      updateNavUser();
+      updateNavPrivado();
+      if (usuario.tema)         aplicarTema(usuario.tema, usuario.color_acento, usuario.color_fondo);
+      if (usuario.color_acento) document.documentElement.style.setProperty("--accent", usuario.color_acento);
+
+      msg.textContent = "¡Bienvenido! 👋"; msg.className = "auth-msg success";
+      window.sfx?.login();
+      setTimeout(() => go("home"), 800);
+
+    } catch(e) {
+      console.error(e);
+      msg.textContent = "Error de conexión — inténtalo de nuevo";
+      msg.className = "auth-msg error"; window.sfx?.error();
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   };
 
   function abrirOlvidePass() { document.getElementById("auth-login").style.display="none"; document.getElementById("auth-reset").style.display="flex"; const v=document.getElementById("login-email").value; if(v.includes("@")) document.getElementById("reset-email").value=v; }
@@ -240,41 +245,49 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.doRegister = async function() {
-    const email=document.getElementById("reg-email").value.trim();
-    const username=document.getElementById("reg-username").value.trim();
-    const pass=document.getElementById("reg-password").value;
-    const msg=document.getElementById("reg-msg");
+    const email    = document.getElementById("reg-email").value.trim().toLowerCase();
+    const username = document.getElementById("reg-username").value.trim().toLowerCase();
+    const pass     = document.getElementById("reg-password").value;
+    const msg      = document.getElementById("reg-msg");
+    const btn      = document.querySelector("#reg-step-1 .btn-primary");
+
     if (!email||!email.includes("@")) { msg.textContent="Pon un email válido"; msg.className="auth-msg error"; return; }
     if (!username) { msg.textContent="Pon un nombre de usuario"; msg.className="auth-msg error"; return; }
     if (pass.length<6) { msg.textContent="La contraseña debe tener al menos 6 caracteres"; msg.className="auth-msg error"; return; }
+
     msg.textContent="Creando cuenta..."; msg.className="auth-msg";
+    if (btn) btn.disabled = true;
+
     try {
-      const r = await withTimeout(db.auth.signUp({email,password:pass,options:{data:{username},emailRedirectTo:null}}),5000);
-      if (r.error) {
-        const m={"User already registered":"Este email ya tiene una cuenta"};
-        msg.textContent=m[r.error.message]||"Error: "+r.error.message; msg.className="auth-msg error"; window.sfx?.error();
+      const passHash = await sha256(pass);
+
+      const { data, error } = await db.from("usuarios").insert([{
+        email, username, password_hash: passHash,
+        display_name: username, rol: "fan"
+      }]).select().single();
+
+      if (error) {
+        const m = {
+          '23505': "Ese email o usuario ya existe"
+        };
+        msg.textContent = m[error.code] || "Error: " + error.message;
+        msg.className = "auth-msg error"; window.sfx?.error();
       } else {
-        window._regEmail=email;
-        document.getElementById("reg-step-1").style.display="none";
-        document.getElementById("reg-step-2").style.display="flex";
-        msg.textContent="📧 Código enviado a "+email; msg.className="auth-msg success";
-        setTimeout(()=>document.getElementById("reg-otp").focus(),100);
+        // Login automático tras registro
+        currentUser = data; currentPerfil = data;
+        guardarSesionLocal(data);
+        tieneAccesoPrivado = false;
+        updateNavUser(); updateNavPrivado();
+        msg.textContent = "¡Cuenta creada! 🎉"; msg.className = "auth-msg success";
+        window.sfx?.success();
+        setTimeout(() => go("home"), 800);
       }
-    } catch(e) { msg.textContent=e.message==="TIMEOUT"?"Sin respuesta — revisa tu conexión":"Error inesperado"; msg.className="auth-msg error"; window.sfx?.error(); }
-  };
-
-  window.volverRegStep1 = function() { document.getElementById("reg-step-1").style.display="flex"; document.getElementById("reg-step-2").style.display="none"; document.getElementById("reg-msg").textContent=""; document.getElementById("reg-otp").value=""; };
-
-  window.verificarOTP = async function() {
-    const otp=document.getElementById("reg-otp").value.trim(); const msg=document.getElementById("reg-msg"); const email=window._regEmail;
-    if (!otp||otp.length<6) { msg.textContent="El código tiene 6 dígitos"; msg.className="auth-msg error"; return; }
-    if (!email) { msg.textContent="Algo fue mal — vuelve a registrarte"; msg.className="auth-msg error"; window.volverRegStep1(); return; }
-    msg.textContent="Verificando..."; msg.className="auth-msg";
-    try {
-      const r = await withTimeout(db.auth.verifyOtp({email,token:otp,type:"signup"}),5000);
-      if (r.error) { msg.textContent="Código incorrecto o caducado"; msg.className="auth-msg error"; window.sfx?.error(); document.getElementById("reg-otp").value=""; document.getElementById("reg-otp").focus(); }
-      else { msg.textContent="¡Cuenta verificada! 🎉"; msg.className="auth-msg success"; window.sfx?.success(); setTimeout(()=>go("home"),1000); }
-    } catch(e) { msg.textContent=e.message==="TIMEOUT"?"Sin respuesta":"Error al verificar"; msg.className="auth-msg error"; window.sfx?.error(); }
+    } catch(e) {
+      msg.textContent = "Error de conexión — inténtalo de nuevo";
+      msg.className = "auth-msg error"; window.sfx?.error();
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   };
 
   // ── CROP ─────────────────────────────────────
@@ -755,7 +768,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function cargarBanda() {
     const grid=document.getElementById("banda-grid"); grid.innerHTML=`<p class="loading-msg">Cargando</p>`;
     try {
-      const{data,error}=await withTimeout(db.from("perfiles").select("*").eq("rol","banda").order("created_at"),5000);
+      const{data,error}=await withTimeout(db.from("usuarios").select("*").in("rol",["banda","admin"]).order("created_at"),5000);
       if(error) throw error;
       if(!data?.length){grid.innerHTML=`<p class="loading-msg no-spin">La banda se está formando... 🎸</p>`;return;}
       grid.innerHTML="";
@@ -773,7 +786,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!currentUser){cont.innerHTML=`<div class="solicitud-login"><p>Inicia sesión para enviar una solicitud</p><br><button class="btn-primary" onclick="go('auth')">Entrar</button></div>`;return;}
     const{data:solData}=await db.from("solicitudes").select("*").eq("user_id",currentUser.id).limit(1); const data=solData?.[0]||null;
     if(data){cont.innerHTML=`<div class="solicitud-enviada"><div style="font-size:32px;margin-bottom:10px">✅</div><p>Tu solicitud está <strong>${data.estado}</strong>.<br>Te avisaremos pronto.</p></div>`;return;}
-    cont.innerHTML=`<div class="solicitud-form"><input type="text" id="sol-nombre" placeholder="Tu nombre" class="field" value="${esc(currentPerfil?.display_name||"")}"><input type="text" id="sol-instrumento" placeholder="Instrumento / rol" class="field"><input type="text" id="sol-redes" placeholder="Tu Instagram u otras redes" class="field"><textarea id="sol-experiencia" placeholder="¿Qué experiencia tienes?" class="field textarea" rows="3"></textarea><textarea id="sol-mensaje" placeholder="¿Por qué quieres unirte?" class="field textarea" rows="3"></textarea><button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud</button><p class="auth-msg" id="sol-msg"></p></div>`;
+    cont.innerHTML=`<div class="solicitud-form"><input type="text" id="sol-nombre" placeholder="Tu nombre" class="field" value="${esc(currentUser?.display_name||currentUser?.username||"")}"><input type="text" id="sol-instrumento" placeholder="Instrumento / rol" class="field"><input type="text" id="sol-redes" placeholder="Tu Instagram u otras redes" class="field"><textarea id="sol-experiencia" placeholder="¿Qué experiencia tienes?" class="field textarea" rows="3"></textarea><textarea id="sol-mensaje" placeholder="¿Por qué quieres unirte?" class="field textarea" rows="3"></textarea><button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud</button><p class="auth-msg" id="sol-msg"></p></div>`;
   }
 
   window.enviarSolicitud = async function() {
@@ -878,7 +891,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function crearPostCard(p) {
     const autor = p.perfiles?.display_name || p.perfiles?.username || "Anónimo";
     const ini   = autor[0].toUpperCase();
-    const avatar = p.perfiles?.avatar_url
+    const avatar = p.usuarios?.avatar_url
       ? `<img src="${p.perfiles.avatar_url}" class="feed-avatar" alt="">`
       : `<div class="feed-avatar-placeholder">${ini}</div>`;
     const imgHtml = p.imagen_url
@@ -919,7 +932,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .eq("post_id", postId).order("created_at");
 
     const comsHtml = (coms||[]).map(c => {
-      const ca = c.perfiles?.display_name||c.perfiles?.username||"Anónimo";
+      const ca = c.usuarios?.display_name||c.usuarios?.username||"Anónimo";
       return `<div class="comentario-card"><div class="comentario-autor">${esc(ca)} · ${formatFecha(c.created_at)}</div><div class="comentario-texto">${esc(c.contenido)}</div></div>`;
     }).join("") || `<p style="font-size:11px;color:var(--text-dim);padding:8px 0;letter-spacing:1px">Aún no hay comentarios.</p>`;
 
@@ -1069,7 +1082,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.aplicarPreset = function(i) {
     const c=COLORES_PRESET[i];
     aplicarTema(document.body.classList.contains("tema-claro")?"claro":"oscuro", c.acento, c.fondo);
-    guardarPrefsServer({color_acento:c.acento, color_fondo:c.fondo});
+    if(currentUser) db.from("usuarios").update({color_acento:c.acento,color_fondo:c.fondo}).eq("id",currentUser.id).then(()=>{if(currentUser){currentUser.color_acento=c.acento;currentUser.color_fondo=c.fondo;guardarSesionLocal(currentUser);}});
     document.querySelectorAll(".color-preset").forEach((el,j)=>el.classList.toggle("active",j===i));
   };
 
@@ -1082,7 +1095,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const acento=document.getElementById("custom-acento").value;
     const fondo=document.getElementById("custom-fondo").value;
     aplicarTema(document.body.classList.contains("tema-claro")?"claro":"oscuro", acento, fondo);
-    guardarPrefsServer({color_acento:acento, color_fondo:fondo});
+    if(currentUser) db.from("usuarios").update({color_acento:acento,color_fondo:fondo}).eq("id",currentUser.id);
   };
 
   window.guardarPerfil = async function() {
@@ -1094,9 +1107,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const{data:ud}=db.storage.from("avatars").getPublicUrl(fileName);
       updates.avatar_url=ud.publicUrl+"?t="+Date.now(); cropBlob=null;
     }
-    const{error}=await db.from("perfiles").update(updates).eq("id",currentUser.id);
+    const{error}=await db.from("usuarios").update(updates).eq("id",currentUser.id);
     if(error){msg.textContent="Error: "+error.message;msg.className="auth-msg error";}
-    else{const{data}=await db.from("perfiles").select("*").eq("id",currentUser.id).single();currentPerfil=data;guardarSesionLocal(currentUser,data);msg.textContent="¡Guardado!";msg.className="auth-msg success";window.sfx?.success();updateNavUser();setTimeout(()=>renderPerfil(),600);}
+    else{const{data}=await db.from("usuarios").select("*").eq("id",currentUser.id).single();currentPerfil=data;currentUser=data;guardarSesionLocal(data);msg.textContent="¡Guardado!";msg.className="auth-msg success";window.sfx?.success();updateNavUser();setTimeout(()=>renderPerfil(),600);}
   };
 
   window.añadirMiembroBanda = async function() {
@@ -1131,10 +1144,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.doLogout = async function() {
-    await db.auth.signOut();
     borrarSesionLocal();
     currentUser=null; currentPerfil=null; tieneAccesoPrivado=false;
-    updateNavUser(); go("home");
+    updateNavUser();
+    const lockBtn = document.querySelector(".lock-btn");
+    if (lockBtn) { lockBtn.innerHTML=`<i class="fa-solid fa-lock"></i> PRIVADO`; lockBtn.onclick=()=>openLogin("privado"); lockBtn.style.cssText=""; }
+    go("home");
   };
 
   // ── INIT ─────────────────────────────────────
