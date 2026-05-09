@@ -29,6 +29,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
+
+  let galeriaTipo = 'foto';
+  window.setGaleriaTipo = function(tipo) {
+    galeriaTipo = tipo;
+    document.getElementById("galeria-tipo-foto").classList.toggle("active", tipo === "foto");
+    document.getElementById("galeria-tipo-video").classList.toggle("active", tipo === "video");
+    document.getElementById("galeria-foto-input").style.display = tipo === "foto" ? "block" : "none";
+    document.getElementById("galeria-video-input").style.display = tipo === "video" ? "block" : "none";
+  };
   // ── HELPERS ──────────────────────────────────
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function fmt(s) { if(!s||isNaN(s)) return "0:00"; return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`; }
@@ -132,18 +141,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // onAuthStateChange ya no se usa
 
   function updateNavUser() {
-    const btn  = document.getElementById("btn-auth");
-    const mBtn = document.getElementById("mobile-auth-btn");
-    if (!btn) return;
+    const sideBtn = document.getElementById("side-auth-btn");
+    const mobBtn  = document.getElementById("mob-auth-btn");
     if (currentUser) {
-      const name = esc(currentUser.display_name || currentUser.username || currentUser.email);
-      btn.innerHTML = `<i class="fa-solid fa-user"></i> ${name}`;
-      btn.className = "nav-auth-btn logged"; btn.onclick = () => go("perfil");
-      if (mBtn) { mBtn.innerHTML = `<i class="fa-solid fa-user"></i> ${name}`; mBtn.onclick = () => go("perfil",null,true); }
+      const name = esc(currentUser.display_name || currentUser.username || "perfil");
+      if (sideBtn) { sideBtn.innerHTML = `<i class="fa-solid fa-user"></i><span class="btn-label">${name}</span>`; sideBtn.onclick = () => go("perfil"); sideBtn.className = "side-auth-btn"; }
+      if (mobBtn)  { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>yo</span>`; mobBtn.onclick = () => go("perfil", mobBtn); }
     } else {
-      btn.innerHTML = `<i class="fa-solid fa-user"></i> ENTRAR`;
-      btn.className = "nav-auth-btn"; btn.onclick = () => go("auth");
-      if (mBtn) { mBtn.innerHTML = `<i class="fa-solid fa-user"></i> ENTRAR`; mBtn.onclick = () => go("auth",null,true); }
+      if (sideBtn) { sideBtn.innerHTML = `<i class="fa-solid fa-user"></i><span class="btn-label">entrar</span>`; sideBtn.onclick = () => go("auth"); }
+      if (mobBtn)  { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>yo</span>`; mobBtn.onclick = () => go("auth", mobBtn); }
     }
   }
 
@@ -154,42 +160,58 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateNavPrivado() {
-    const lockBtn = document.querySelector(".lock-btn");
+    const lockBtn = document.getElementById("side-lock-btn");
     if (!lockBtn) return;
     if (tieneAccesoPrivado) {
-      lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i> PRIVADO`;
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i><span class="btn-label">privado</span>`;
       lockBtn.onclick = () => go("privado");
-      lockBtn.style.cssText = "border-color:rgba(107,255,184,0.4)!important;color:#6bffb8!important";
+      lockBtn.style.color = "#6bffb8";
+      lockBtn.style.borderColor = "rgba(107,255,184,0.3)";
     } else {
-      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i><span class="btn-label">privado</span>`;
       lockBtn.onclick = () => openLogin("privado");
-      lockBtn.style.cssText = "";
+      lockBtn.style.color = "";
+      lockBtn.style.borderColor = "";
     }
   }
 
   // ── NAV ──────────────────────────────────────
+  // Orden de páginas para animación de dirección
+  const PAGE_ORDER = ["home","beats","galeria","banda","foro","about","soporte","auth","perfil","privado"];
+  let currentPage = "home";
+
   function go(id, btnEl, closeMenu) {
+    if (id === currentPage) return;
+    const oldIdx = PAGE_ORDER.indexOf(currentPage);
+    const newIdx = PAGE_ORDER.indexOf(id);
+    const dir    = newIdx >= oldIdx ? "slide-from-right" : "slide-from-left";
+
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     const target = document.getElementById(id);
-    if (target) target.classList.add("active");
-    if (btnEl) { document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active")); btnEl.classList.add("active"); }
-    if (closeMenu) toggleMenu(true);
+    if (target) {
+      target.classList.remove("slide-from-right","slide-from-left","slide-from-bottom");
+      target.classList.add(dir);
+      // Force reflow
+      void target.offsetWidth;
+      target.classList.add("active");
+    }
+
+    // Update side nav
+    document.querySelectorAll(".side-btn, .mob-nav-btn").forEach(b => b.classList.remove("active"));
+    if (btnEl) btnEl.classList.add("active");
+
+    currentPage = id;
+
     if (id==="beats")   cargarBeats("beats-list", false);
     if (id==="home")    cargarBeats("home-beats", false, 3);
-    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); }
+    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); cargarAmbientTracks(); }
     if (id==="galeria") cargarGaleria();
     if (id==="banda")   { cargarBanda(); renderSolicitudForm(); }
     if (id==="foro")    renderForo();
     if (id==="perfil")  renderPerfil();
   }
   window.go = go;
-
-  function toggleMenu(forceClose) {
-    const m = document.getElementById("mobile-menu");
-    if (forceClose) { m.classList.remove("open"); return; }
-    m.classList.toggle("open");
-  }
-  window.toggleMenu = toggleMenu;
+  window.toggleMenu = function() {}; // no-op, kept for compatibility
 
   // ── LOGIN PRIVADO ─────────────────────────────
   function openLogin(destino) {
@@ -348,10 +370,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── CROP ─────────────────────────────────────
   let cropImg = null, cropScale = 1;
-  let cropX=0, cropY=0, cropSize=0, cropDragging=false, cropStartX=0, cropStartY=0;
+  let cropX=0, cropY=0, cropW=0, cropH=0;
+  let cropDragging=false, cropStartX=0, cropStartY=0, cropMode="move";
 
   function abrirCrop(target) {
     cropTarget = target;
+    const isSquare = target === "cover" || target === "avatar";
+    const hint = document.getElementById("crop-hint");
+    if (hint) hint.textContent = isSquare ? "arrastra para mover · recorte 1:1" : "arrastra para seleccionar el área · recorte libre";
     const input = document.createElement("input");
     input.type = "file"; input.accept = "image/*";
     input.onchange = e => {
@@ -362,8 +388,8 @@ document.addEventListener("DOMContentLoaded", () => {
         cropImg = img;
         const canvas = document.getElementById("crop-canvas");
         const container = document.querySelector(".crop-container");
-        const maxW = Math.min(400, window.innerWidth - 48);
-        const maxH = Math.min(400, window.innerHeight * 0.6);
+        const maxW = Math.min(420, window.innerWidth - 48);
+        const maxH = Math.min(420, window.innerHeight * 0.55);
         cropScale = Math.min(maxW / img.width, maxH / img.height, 1);
         canvas.width  = img.width  * cropScale;
         canvas.height = img.height * cropScale;
@@ -371,10 +397,17 @@ document.addEventListener("DOMContentLoaded", () => {
         container.style.height = canvas.height + "px";
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        // Selección inicial centrada
-        cropSize = Math.min(canvas.width, canvas.height) * 0.8;
-        cropX = (canvas.width  - cropSize) / 2;
-        cropY = (canvas.height - cropSize) / 2;
+        if (isSquare) {
+          // 1:1 centered
+          const s = Math.min(canvas.width, canvas.height) * 0.82;
+          cropW = s; cropH = s;
+          cropX = (canvas.width  - s) / 2;
+          cropY = (canvas.height - s) / 2;
+        } else {
+          // Free — start with full image
+          cropX = 0; cropY = 0;
+          cropW = canvas.width; cropH = canvas.height;
+        }
         renderCropSelection();
         document.getElementById("crop-overlay").classList.add("visible");
       };
@@ -389,54 +422,79 @@ document.addEventListener("DOMContentLoaded", () => {
     sel.style.display = "block";
     sel.style.left   = cropX + "px";
     sel.style.top    = cropY + "px";
-    sel.style.width  = cropSize + "px";
-    sel.style.height = cropSize + "px";
+    sel.style.width  = cropW + "px";
+    sel.style.height = cropH + "px";
   }
 
   const canvas = document.getElementById("crop-canvas");
-  canvas.addEventListener("mousedown", e => {
+  const cropCanvas = document.getElementById("crop-canvas");
+  const isSquareCrop = () => cropTarget === "cover" || cropTarget === "avatar";
+
+  cropCanvas.addEventListener("mousedown", e => {
     cropDragging = true;
-    const r = canvas.getBoundingClientRect();
-    cropStartX = e.clientX - r.left - cropX;
-    cropStartY = e.clientY - r.top  - cropY;
+    const r = cropCanvas.getBoundingClientRect();
+    cropStartX = e.clientX - r.left;
+    cropStartY = e.clientY - r.top;
+    if (!isSquareCrop()) { cropX = cropStartX; cropY = cropStartY; cropW = 0; cropH = 0; }
   });
-  canvas.addEventListener("touchstart", e => {
+  cropCanvas.addEventListener("touchstart", e => {
     cropDragging = true;
-    const r = canvas.getBoundingClientRect();
+    const r = cropCanvas.getBoundingClientRect();
     const t = e.touches[0];
-    cropStartX = t.clientX - r.left - cropX;
-    cropStartY = t.clientY - r.top  - cropY;
+    cropStartX = t.clientX - r.left;
+    cropStartY = t.clientY - r.top;
+    if (!isSquareCrop()) { cropX = cropStartX; cropY = cropStartY; cropW = 0; cropH = 0; }
   }, { passive: true });
 
   function onCropMove(clientX, clientY) {
-    if (!cropDragging) return;
-    const r = canvas.getBoundingClientRect();
-    cropX = Math.max(0, Math.min(clientX - r.left - cropStartX, canvas.width  - cropSize));
-    cropY = Math.max(0, Math.min(clientY - r.top  - cropStartY, canvas.height - cropSize));
+    if (!cropDragging || !cropCanvas) return;
+    const r = cropCanvas.getBoundingClientRect();
+    const mx = clientX - r.left;
+    const my = clientY - r.top;
+    if (isSquareCrop()) {
+      // Move existing square selection
+      cropX = Math.max(0, Math.min(mx - cropW/2, cropCanvas.width  - cropW));
+      cropY = Math.max(0, Math.min(my - cropH/2, cropCanvas.height - cropH));
+    } else {
+      // Draw free selection
+      cropX = Math.min(cropStartX, mx);
+      cropY = Math.min(cropStartY, my);
+      cropW = Math.abs(mx - cropStartX);
+      cropH = Math.abs(my - cropStartY);
+      cropX = Math.max(0, cropX);
+      cropY = Math.max(0, cropY);
+      cropW = Math.min(cropW, cropCanvas.width  - cropX);
+      cropH = Math.min(cropH, cropCanvas.height - cropY);
+    }
     renderCropSelection();
   }
-  document.addEventListener("mousemove",  e => onCropMove(e.clientX, e.clientY));
-  document.addEventListener("touchmove",  e => onCropMove(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+  document.addEventListener("mousemove",  e => { if(cropDragging) onCropMove(e.clientX, e.clientY); });
+  document.addEventListener("touchmove",  e => { if(cropDragging) onCropMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
   document.addEventListener("mouseup",    () => cropDragging = false);
   document.addEventListener("touchend",   () => cropDragging = false);
 
   window.confirmarCrop = function() {
     const out = document.createElement("canvas");
-    const realX = cropX / cropScale, realY = cropY / cropScale, realSize = cropSize / cropScale;
-    out.width = out.height = 400;
+    const isSquare = cropTarget === "cover" || cropTarget === "avatar";
+    const realX = cropX / cropScale;
+    const realY = cropY / cropScale;
+    const realW = cropW / cropScale;
+    const realH = cropH / cropScale;
+    out.width  = isSquare ? 400 : Math.round(realW);
+    out.height = isSquare ? 400 : Math.round(realH);
     const ctx = out.getContext("2d");
-    ctx.drawImage(cropImg, realX, realY, realSize, realSize, 0, 0, 400, 400);
+    ctx.drawImage(cropImg, realX, realY, realW, realH, 0, 0, out.width, out.height);
     out.toBlob(blob => {
       if (!blob) return;
       if (cropTarget === "cover") {
         coverBlob = blob;
-        document.getElementById("cover-name-label").textContent = "✓ Cover recortada lista";
+        document.getElementById("cover-name-label").textContent = "✓ cover lista";
       } else if (cropTarget === "galeria") {
         galeriaBlob = blob;
-        document.getElementById("galeria-file-label").textContent = "✓ Foto recortada lista";
+        document.getElementById("galeria-file-label").textContent = "✓ foto lista";
       } else if (cropTarget === "avatar") {
         cropBlob = blob;
-        document.getElementById("avatar-label").textContent = "✓ Foto recortada lista";
+        document.getElementById("avatar-label").textContent = "✓ avatar listo";
       }
       cerrarCrop();
     }, "image/jpeg", 0.92);
@@ -667,7 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <h3>${esc(beat.title)}</h3>
         <div class="beat-info-genre">${esc(beat.genre)}</div>
         <div class="beat-meta-tags">
-          ${beat.bpm  ? `<span class="beat-meta-tag bpm">${beat.bpm} BPM</span>` : ""}
+          ${beat.bpm  ? `<span class="beat-meta-tag bpm">${beat.bpm} bpm</span>` : ""}
           ${beat.tono ? `<span class="beat-meta-tag">${esc(beat.tono)}</span>` : ""}
         </div>
         ${inspsArr.length ? `<div class="beat-insps">${inspsArr.map(i=>`<span class="beat-insp-tag">${esc(i)}</span>`).join("")}</div>` : ""}
@@ -676,43 +734,138 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="custom-player">
         <button class="play-btn"><i class="fa-solid fa-play"></i></button>
         <div class="player-right">
-          <div class="waveform-wrap">
-            <div class="waveform">${bars}</div>
-            <div class="waveform-progress"><div class="waveform-filled">${bars}</div></div>
-            <div class="waveform-cursor"></div>
-          </div>
+          <canvas class="viz-canvas" id="viz-${beat.id||index}"></canvas>
           <div class="player-meta"><span class="time-cur">0:00</span><span class="time-tot">—</span></div>
         </div>
       </div>
-      ${admin ? `<button class="delete-btn" title="Borrar"><i class="fa-solid fa-trash"></i></button>` : ""}`;
+      ${admin ? `<button class="delete-btn" title="borrar"><i class="fa-solid fa-trash"></i></button>` : ""}`;
 
-    requestAnimationFrame(() => {
-      const w=card.querySelector(".waveform-wrap"), f=card.querySelector(".waveform-filled");
-      if(w&&f) f.style.width=w.offsetWidth+"px";
-    });
-
-    // Click en la card para abrir detalle (no en player ni delete)
     card.addEventListener("click", e => {
       if (e.target.closest(".custom-player,.delete-btn")) return;
       abrirBeatDetalle(beat);
     });
 
-    const playBtn=card.querySelector(".play-btn"), waveWrap=card.querySelector(".waveform-wrap");
-    const prog=card.querySelector(".waveform-progress"), cursor=card.querySelector(".waveform-cursor");
-    const timeCur=card.querySelector(".time-cur"), timeTot=card.querySelector(".time-tot");
-    let audio=null, isPlaying=false;
+    const playBtn = card.querySelector(".play-btn");
+    const canvas  = card.querySelector(".viz-canvas");
+    const timeCur = card.querySelector(".time-cur");
+    const timeTot = card.querySelector(".time-tot");
+    let audio = null, isPlaying = false;
+    let audioCtx = null, analyser = null, source = null, vizRaf = null;
+
+    // Draw static waveform bars from stored data
+    function drawStatic() {
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.offsetWidth, H = canvas.offsetHeight;
+      canvas.width = W; canvas.height = H;
+      const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0";
+      const data = beat.waveform ? (typeof beat.waveform === "string" ? JSON.parse(beat.waveform) : beat.waveform) : null;
+      const bars = data || Array.from({length: 55}, (_,i) => { let s=((beat.id||i)*1664525+1013904223)&0xffffffff; return 15+((s>>>0)/0xffffffff)*68; });
+      ctx.clearRect(0,0,W,H);
+      bars.forEach((h, i) => {
+        const x = (i / bars.length) * W;
+        const bw = (W / bars.length) - 1;
+        const bh = (h/100) * H;
+        ctx.fillStyle = "rgba(255,255,255,0.12)";
+        ctx.beginPath(); ctx.roundRect(x, H-bh, Math.max(bw,1), bh, 2); ctx.fill();
+      });
+    }
+
+    // Draw live frequency visualizer
+    function drawFreq() {
+      if (!analyser || !canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      const bufLen = analyser.frequencyBinCount;
+      const dataArr = new Uint8Array(bufLen);
+      analyser.getByteFrequencyData(dataArr);
+      ctx.clearRect(0,0,W,H);
+      const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c8f0a0";
+      const bars = 55;
+      const slice = Math.floor(bufLen / bars);
+      for (let i = 0; i < bars; i++) {
+        let sum = 0;
+        for (let j = 0; j < slice; j++) sum += dataArr[i * slice + j];
+        const avg = sum / slice;
+        const x   = (i / bars) * W;
+        const bw  = (W / bars) - 1;
+        const bh  = Math.max(2, (avg / 255) * H);
+        // Progress split
+        const progress = audio ? (audio.currentTime / audio.duration) * W : 0;
+        ctx.fillStyle = x < progress ? accent : "rgba(255,255,255,0.15)";
+        ctx.beginPath(); ctx.roundRect(x, H - bh, Math.max(bw, 1), bh, 2); ctx.fill();
+      }
+      vizRaf = requestAnimationFrame(drawFreq);
+      if (audio) {
+        timeCur.textContent = fmt(audio.currentTime);
+        if (audio.duration) timeTot.textContent = fmt(audio.duration);
+      }
+    }
+
+    function initAudioCtx() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 512;
+      source = audioCtx.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
 
     function getAudio() {
-      if(audio) return audio;
-      audio=new Audio(beat.audio_url);
-      audio.addEventListener("loadedmetadata",()=>timeTot.textContent=fmt(audio.duration));
-      audio.addEventListener("timeupdate",()=>{if(!audio.duration)return;const p=(audio.currentTime/audio.duration)*100;prog.style.width=p+"%";cursor.style.left=p+"%";timeCur.textContent=fmt(audio.currentTime);});
-      audio.addEventListener("ended",()=>{isPlaying=false;playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`;card.classList.remove("is-playing");prog.style.width="0%";cursor.style.left="0%";timeCur.textContent="0:00";activeAudio=null;activeCard=null;});
+      if (audio) return audio;
+      audio = new Audio(beat.audio_url);
+      audio.crossOrigin = "anonymous";
+      audio.addEventListener("loadedmetadata", () => timeTot.textContent = fmt(audio.duration));
+      audio.addEventListener("ended", () => {
+        isPlaying = false;
+        playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+        card.classList.remove("is-playing");
+        cancelAnimationFrame(vizRaf);
+        drawStatic();
+        activeAudio = null; activeCard = null;
+      });
       return audio;
     }
-    function stopOthers(){if(activeAudio&&activeAudio!==audio){activeAudio.pause();if(activeCard){activeCard.classList.remove("is-playing");activeCard.querySelector(".play-btn").innerHTML=`<i class="fa-solid fa-play"></i>`;activeCard.querySelector(".waveform-progress").style.width="0%";activeCard.querySelector(".waveform-cursor").style.left="0%";activeCard.querySelector(".time-cur").textContent="0:00";}}}
-    playBtn.addEventListener("click",e=>{e.stopPropagation();const a=getAudio();if(isPlaying){a.pause();isPlaying=false;playBtn.innerHTML=`<i class="fa-solid fa-play"></i>`;card.classList.remove("is-playing");activeAudio=null;activeCard=null;window.sfx?.pause();}else{stopOthers();a.play();isPlaying=true;playBtn.innerHTML=`<i class="fa-solid fa-pause"></i>`;card.classList.add("is-playing");activeAudio=a;activeCard=card;window.sfx?.play();}});
-    waveWrap.addEventListener("click",e=>{e.stopPropagation();const a=getAudio();if(!a.duration)return;const r=waveWrap.getBoundingClientRect();const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));a.currentTime=p*a.duration;prog.style.width=(p*100)+"%";cursor.style.left=(p*100)+"%";});
+
+    function stopOthers() {
+      if (activeAudio && activeAudio !== audio) {
+        activeAudio.pause();
+        if (activeCard) {
+          activeCard.classList.remove("is-playing");
+          activeCard.querySelector(".play-btn").innerHTML = `<i class="fa-solid fa-play"></i>`;
+          // Stop their visualizer
+          activeCard._stopViz?.();
+        }
+      }
+    }
+
+    card._stopViz = () => { cancelAnimationFrame(vizRaf); drawStatic(); };
+
+    playBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const a = getAudio();
+      if (isPlaying) {
+        a.pause(); isPlaying = false;
+        playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+        card.classList.remove("is-playing");
+        cancelAnimationFrame(vizRaf); drawStatic();
+        activeAudio = null; activeCard = null; window.sfx?.pause();
+      } else {
+        stopOthers();
+        try { initAudioCtx(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch(e2) {}
+        a.play().catch(()=>{});
+        isPlaying = true;
+        playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+        card.classList.add("is-playing");
+        activeAudio = a; activeCard = card;
+        cancelAnimationFrame(vizRaf); drawFreq();
+        window.sfx?.play();
+      }
+    });
+
+    // Init static display
+    requestAnimationFrame(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; drawStatic(); });
 
     if(admin){
       const delBtn=card.querySelector(".delete-btn");
@@ -791,33 +944,81 @@ document.addEventListener("DOMContentLoaded", () => {
       if(!data?.length){grid.innerHTML=`<p class="loading-msg no-spin">La galería está vacía por ahora.</p>`;return;}
       grid.innerHTML="";
       data.forEach(foto=>{
-        const item=document.createElement("div"); item.className="galeria-item";
-        item.innerHTML=`<img src="${foto.url}" alt="${esc(foto.caption||"")}" loading="lazy"><div class="galeria-item-overlay">${foto.caption?`<p class="galeria-caption">${esc(foto.caption)}</p>`:""}</div>`;
-        item.addEventListener("click",()=>{document.getElementById("lightbox-img").src=foto.url;document.getElementById("lightbox-caption").textContent=foto.caption||"";document.getElementById("lightbox").classList.add("visible");});
+        const esVideo = foto.tipo === "video";
+        const item = document.createElement("div");
+        item.className = "galeria-item" + (esVideo ? " video-item" : "");
+        if (esVideo) {
+          item.innerHTML = `<video src="${foto.url}" muted preload="metadata" loading="lazy"></video><div class="galeria-video-icon"><i class="fa-solid fa-play"></i></div><div class="galeria-item-overlay">${foto.caption?`<p class="galeria-caption">${esc(foto.caption)}</p>`:""}</div>`;
+          item.addEventListener("click", () => {
+            const lb = document.getElementById("lightbox");
+            const lbImg = document.getElementById("lightbox-img");
+            const lbVid = document.getElementById("lightbox-video");
+            lbImg.style.display = "none"; lbVid.style.display = "block";
+            lbVid.src = foto.url; lbVid.play();
+            document.getElementById("lightbox-caption").textContent = foto.caption || "";
+            lb.classList.add("visible");
+          });
+        } else {
+          item.innerHTML = `<img src="${foto.url}" alt="${esc(foto.caption||"")}" loading="lazy"><div class="galeria-item-overlay">${foto.caption?`<p class="galeria-caption">${esc(foto.caption)}</p>`:""}</div>`;
+          item.addEventListener("click", () => {
+            const lb = document.getElementById("lightbox");
+            const lbImg = document.getElementById("lightbox-img");
+            const lbVid = document.getElementById("lightbox-video");
+            lbImg.style.display = "block"; lbVid.style.display = "none"; lbVid.pause();
+            lbImg.src = foto.url;
+            document.getElementById("lightbox-caption").textContent = foto.caption || "";
+            lb.classList.add("visible");
+          });
+        }
         grid.appendChild(item);
       });
     } catch(err){grid.innerHTML=`<p class="loading-msg no-spin">⚠️ ${err.message==="TIMEOUT"?"Sin conexión":"Error al cargar"}</p>`;}
   }
 
-  function cerrarLightbox(){document.getElementById("lightbox").classList.remove("visible");}
-  window.cerrarLightbox=cerrarLightbox;
+  function cerrarLightbox() {
+    document.getElementById("lightbox").classList.remove("visible");
+    const vid = document.getElementById("lightbox-video");
+    if (vid) { vid.pause(); vid.src = ""; }
+  }
+  window.cerrarLightbox = cerrarLightbox;
 
-  window.subirFotoGaleria = async function() {
-    if (!galeriaBlob) { alert("Elige y recorta una foto primero"); return; }
-    const caption=document.getElementById("galeria-caption").value.trim();
-    const btn=document.querySelector("#privado .upload-box:nth-child(2) .btn-primary");
-    btn.textContent="Subiendo..."; btn.disabled=true;
+  window.subirGaleria = async function() {
+    const caption = document.getElementById("galeria-caption").value.trim();
+    const tipo    = typeof galeriaTipo !== "undefined" ? galeriaTipo : "foto";
+
+    if (tipo === "foto" && !galeriaBlob) { alert("elige y recorta una foto primero"); return; }
+    if (tipo === "video" && !document.getElementById("galeria-video")?.files[0]) { alert("elige un vídeo primero"); return; }
+
+    const btns = document.querySelectorAll("#privado .upload-box .btn-primary");
+    const btn  = btns[1] || btns[0];
+    if (btn) { btn.textContent = "subiendo..."; btn.disabled = true; }
+
     try {
-      const fileName=`${Date.now()}-galeria.jpg`;
-      const{error:upErr}=await db.storage.from("galeria").upload(fileName,galeriaBlob,{contentType:"image/jpeg"});
-      if(upErr) throw upErr;
-      const{data:urlData}=db.storage.from("galeria").getPublicUrl(fileName);
-      await db.from("galeria").insert([{url:urlData.publicUrl,caption}]);
-      document.getElementById("galeria-caption").value="";
-      document.getElementById("galeria-file-label").textContent="Elige una foto (click para recortar)";
-      galeriaBlob=null; btn.textContent="¡Subida! 🔥"; window.sfx?.upload();
-      setTimeout(()=>{btn.textContent="Subir foto";btn.disabled=false;},2000);
-    } catch(err){alert("Error: "+err.message);btn.textContent="Subir foto";btn.disabled=false;}
+      if (tipo === "foto") {
+        const fileName = `${Date.now()}-galeria.jpg`;
+        const { error: upErr } = await db.storage.from("galeria").upload(fileName, galeriaBlob, { contentType: "image/jpeg" });
+        if (upErr) throw upErr;
+        const { data: urlData } = db.storage.from("galeria").getPublicUrl(fileName);
+        await db.from("galeria").insert([{ url: urlData.publicUrl, caption, tipo: "foto" }]);
+        document.getElementById("galeria-file-label").textContent = "elige una foto (recorte libre)";
+        galeriaBlob = null;
+      } else {
+        const videoFile = document.getElementById("galeria-video").files[0];
+        const cleanName = videoFile.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+        const fileName = `${Date.now()}-${cleanName}`;
+        const { error: upErr } = await db.storage.from("videos").upload(fileName, videoFile);
+        if (upErr) throw upErr;
+        const { data: urlData } = db.storage.from("videos").getPublicUrl(fileName);
+        await db.from("galeria").insert([{ url: urlData.publicUrl, caption, tipo: "video", video_url: urlData.publicUrl }]);
+        document.getElementById("galeria-video").value = "";
+        document.getElementById("galeria-video-label").textContent = "elige un vídeo";
+      }
+      document.getElementById("galeria-caption").value = "";
+      if (btn) { btn.textContent = "¡subido! 🔥"; window.sfx?.upload(); setTimeout(() => { btn.textContent = "subir"; btn.disabled = false; }, 2000); }
+    } catch(err) {
+      alert("error: " + err.message);
+      if (btn) { btn.textContent = "subir"; btn.disabled = false; }
+    }
   };
 
   // ── BANDA ─────────────────────────────────────
@@ -1148,10 +1349,18 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.guardarColoresCustom = function() {
-    const acento=document.getElementById("custom-acento").value;
-    const fondo=document.getElementById("custom-fondo").value;
-    aplicarTema(document.body.classList.contains("tema-claro")?"claro":"oscuro", acento, fondo);
-    if(currentUser) db.from("usuarios").update({color_acento:acento,color_fondo:fondo}).eq("id",currentUser.id);
+    const acento = document.getElementById("custom-acento").value;
+    const fondo  = document.getElementById("custom-fondo").value;
+    const tema   = document.body.classList.contains("tema-claro") ? "claro" : "oscuro";
+    aplicarTema(tema, acento, fondo);
+    // Update cursor color
+    document.documentElement.style.setProperty("--cursor-color", acento);
+    if (currentUser) {
+      currentUser.color_acento = acento;
+      currentUser.color_fondo  = fondo;
+      guardarSesionLocal(currentUser);
+      db.from("usuarios").update({ color_acento: acento, color_fondo: fondo }).eq("id", currentUser.id).catch(()=>{});
+    }
   };
 
   window.guardarPerfil = async function() {
@@ -1209,7 +1418,96 @@ document.addEventListener("DOMContentLoaded", () => {
     go("home");
   };
 
+
+  // ── MINI PLAYER / AMBIENT TRACKS ─────────────
+  let ambientTracks = [];
+  let ambientIndex  = 0;
+  let ambientAudio  = new Audio();
+  let ambientPlaying = false;
+
+  async function cargarAmbientTracks() {
+    const { data } = await db.from("ambient_tracks").select("*").order("orden").order("id");
+    if (!data?.length) return;
+    ambientTracks = data;
+    initMiniPlayer();
+  }
+
+  function initMiniPlayer() {
+    if (!ambientTracks.length) return;
+    const player = document.getElementById("mini-player");
+    if (player) player.style.display = "flex";
+    cargarTrack(0);
+  }
+
+  function cargarTrack(idx) {
+    ambientIndex = idx;
+    const track = ambientTracks[idx];
+    if (!track) return;
+    ambientAudio.src = track.audio_url;
+    ambientAudio.volume = 0.35;
+    document.getElementById("mp-title").textContent = track.titulo;
+    ambientAudio.onended = () => mpNext();
+    if (ambientPlaying) ambientAudio.play().catch(()=>{});
+  }
+
+  window.mpToggle = function() {
+    if (ambientPlaying) {
+      ambientAudio.pause(); ambientPlaying = false;
+      document.getElementById("mp-toggle").innerHTML = '<i class="fa-solid fa-play"></i>';
+      document.getElementById("mp-play-btn").innerHTML = '<i class="fa-solid fa-music"></i>';
+    } else {
+      ambientAudio.play().catch(()=>{}); ambientPlaying = true;
+      document.getElementById("mp-toggle").innerHTML = '<i class="fa-solid fa-pause"></i>';
+      document.getElementById("mp-play-btn").innerHTML = '<i class="fa-solid fa-pause"></i>';
+    }
+  };
+
+  window.mpNext = function() {
+    const next = (ambientIndex + 1) % ambientTracks.length;
+    cargarTrack(next);
+    if (ambientPlaying) ambientAudio.play().catch(()=>{});
+  };
+
+  window.mpPrev = function() {
+    const prev = (ambientIndex - 1 + ambientTracks.length) % ambientTracks.length;
+    cargarTrack(prev);
+    if (ambientPlaying) ambientAudio.play().catch(()=>{});
+  };
+
+  window.subirAmbient = async function() {
+    const titulo = document.getElementById("ambient-title").value.trim();
+    const file   = document.getElementById("ambient-file").files[0];
+    if (!titulo || !file) { alert("pon un título y elige un audio"); return; }
+    const cleanName = file.name.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-zA-Z0-9._-]/g,"_");
+    const fileName = `ambient-${Date.now()}-${cleanName}`;
+    const { error: upErr } = await db.storage.from("beats").upload(fileName, file);
+    if (upErr) { alert("error: " + upErr.message); return; }
+    const { data: urlData } = db.storage.from("beats").getPublicUrl(fileName);
+    await db.from("ambient_tracks").insert([{ titulo, audio_url: urlData.publicUrl }]);
+    document.getElementById("ambient-title").value = "";
+    document.getElementById("ambient-file").value = "";
+    document.getElementById("ambient-file-label").textContent = "elige un audio";
+    alert("¡canción de fondo añadida!");
+    cargarAmbientTracks();
+  };
+
+
+  // ── PARALLAX HERO ───────────────────────────
+  document.addEventListener("mousemove", (e) => {
+    const img = document.getElementById("hero-img");
+    if (!img) return;
+    const page = document.getElementById("home");
+    if (!page?.classList.contains("active")) return;
+    const cx = window.innerWidth  / 2;
+    const cy = window.innerHeight / 2;
+    const dx = (e.clientX - cx) / cx;
+    const dy = (e.clientY - cy) / cy;
+    img.style.transform = `scale(1.05) translate(${dx * -8}px, ${dy * -8}px)`;
+  }, { passive: true });
+
   // ── INIT ─────────────────────────────────────
   go("home");
+  // Carga ambient tracks en background
+  setTimeout(() => cargarAmbientTracks(), 1000);
 
 });
