@@ -61,7 +61,7 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .nav-links-right { display:flex;align-items:center;gap:2px;margin-right:12px; }
 .nav-link { background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.3px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all 0.15s;white-space:nowrap; }
 .nav-link:hover { color:var(--text);background:var(--card); }
-.nav-link.active { color:var(--accent); }
+.nav-link.active { color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:5px; }
 .nav-icon-btn { width:34px;height:34px;border-radius:50%;border:1px solid var(--card-b);background:none;color:var(--text-dim);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
 .nav-icon-btn:hover { color:var(--accent);border-color:var(--accent-dim); }
 .nav-lock-btn { padding:6px 14px;border-radius:20px;border:1px solid var(--accent-dim);background:none;color:var(--accent);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.15s; }
@@ -95,11 +95,11 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .hero-overlay2 { position:absolute;inset:0;background:linear-gradient(to top,var(--bg) 0%,transparent 50%); }
 .hero-content { position:relative;z-index:2;max-width:680px;width:100%; }
 .hero-tag { font-size:10px;letter-spacing:3px;color:var(--accent);opacity:0.8;margin-bottom:18px; }
-.hero-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(80px,16vw,160px);line-height:0.88;letter-spacing:-4px;color:var(--text);margin-bottom:20px; }
+.hero-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(100px,18vw,180px);line-height:0.85;letter-spacing:-6px;color:var(--text);margin-bottom:24px; }
 .hero-title .o { color:var(--accent); }
 .hero-sub { font-size:14px;color:var(--text-dim);margin-bottom:36px;line-height:1.8;font-weight:300;max-width:380px; }
 .hero-btns { display:flex;align-items:center;gap:16px;flex-wrap:wrap; }
-.home-beats-section { padding:64px 72px 80px; }
+.home-beats-section { padding:64px 80px 80px; }
 
 /* BEATS LIST — BeatStars style */
 .beats-list { display:flex;flex-direction:column; }
@@ -121,12 +121,12 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 
 .beat-row-num { padding:0 0 0 20px;font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums;width:36px; }
 
-.beat-row-cover { padding:12px 16px 12px 0; }
+.beat-row-cover { padding:14px 18px 14px 0; }
 .beat-row-cover img,.beat-row-cover-ph { width:88px;height:88px;border-radius:10px;object-fit:cover;border:1px solid var(--card-b);display:block; }
 .beat-row-cover-ph { background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:28px; }
 
-.beat-row-info { padding:16px 20px 16px 0;min-width:0; }
-.beat-row-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:20px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.3px; }
+.beat-row-info { padding:20px 24px 20px 0;min-width:0; }
+.beat-row-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:22px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.5px; }
 .beat-row-genre { font-size:11px;color:var(--text-dim);margin-top:3px; }
 .beat-row-tags { display:flex;gap:5px;margin-top:7px;flex-wrap:wrap; }
 .beat-tag { font-size:9px;padding:2px 9px;border:1px solid var(--card-b);border-radius:100px;color:var(--text-dim);white-space:nowrap; }
@@ -229,9 +229,9 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .feed-coms { display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--card-b); }
 .feed-coms.open { display:block; }
 .coms-list { display:flex;flex-direction:column;gap:6px;margin-bottom:10px; }
-.com-card { background:var(--card);border:1px solid var(--card-b);border-radius:10px;padding:10px 13px; }
-.com-autor { font-size:10px;color:var(--accent);margin-bottom:3px; }
-.com-texto { font-size:12px;color:var(--text-mid);line-height:1.6;font-weight:300; }
+.com-card { padding:10px 0;border-bottom:1px solid var(--card-b); }
+.com-autor { font-size:11px;font-weight:500;color:var(--text);margin-bottom:3px; }
+.com-texto { font-size:13px;color:var(--text-mid);line-height:1.6;font-weight:300; }
 .com-form { display:flex;flex-direction:column;gap:8px;margin-top:8px; }
 .com-empty { font-size:11px;color:var(--text-dim);padding:8px 0; }
 
@@ -255,7 +255,7 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .perf-avatar-ph { width:72px;height:72px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;color:var(--accent);font-family:'Instrument Serif',serif;font-style:italic;font-size:26px;flex-shrink:0; }
 .perf-name { font-family:'Instrument Serif',serif;font-style:italic;font-size:24px;letter-spacing:-0.5px;color:var(--text); }
 .perf-rol { font-size:10px;color:var(--accent);margin-top:3px; }
-.card { background:var(--card);border:1px solid var(--card-b);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:12px; }
+.card { background:var(--card);border:1px solid var(--card-b);border-radius:var(--r-lg);padding:24px 28px;margin-bottom:14px; }
 .card-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:18px;font-weight:400;color:var(--text);margin-bottom:14px; }
 .logout-btn { width:100%;padding:11px;background:rgba(255,80,80,0.05);border:1px solid rgba(255,80,80,0.15);border-radius:10px;color:rgba(255,100,100,0.7);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.2s; }
 .logout-btn:hover { background:rgba(255,80,80,0.1);color:#ff6b6b; }
@@ -433,8 +433,8 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 
 /* SECTION */
 .section-row { display:flex;align-items:center;justify-content:space-between;gap:12px; }
-.section-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:26px;letter-spacing:-0.5px;font-weight:400;color:var(--text); }
-.page-wrap { max-width:900px;margin:0 auto;padding:52px 64px 100px; }
+.section-title { font-family:'Instrument Serif',serif;font-style:italic;font-size:32px;letter-spacing:-0.5px;font-weight:400;color:var(--text); }
+.page-wrap { max-width:1100px;margin:0 auto;padding:52px 64px 100px; }
 
 /* FILTERS */
 .filters-bar { background:var(--card);border:1px solid var(--card-b);border-radius:var(--r);padding:18px 20px;margin-bottom:24px; }
@@ -503,3 +503,53 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
   .beat-row { grid-template-columns:64px 1fr auto;padding:10px 12px; }
   .beat-row-num { display:none; }
 }
+
+/* ── COMENTARIOS TWITTER/TIKTOK STYLE ── */
+.feed-coms { display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--card-b); }
+.feed-coms.open { display:block; }
+
+.com-row {
+  display:flex; gap:10px;
+  padding:12px 0;
+  border-bottom:1px solid var(--card-b);
+}
+.com-row:last-of-type { border-bottom:none; }
+
+.com-avatar {
+  width:32px; height:32px; border-radius:50%; flex-shrink:0;
+  background:var(--accent-dim); color:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Instrument Serif',serif; font-style:italic; font-size:13px;
+  overflow:hidden;
+}
+
+.com-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; }
+.com-meta { display:flex; align-items:baseline; gap:7px; }
+.com-autor { font-size:12px; font-weight:500; color:var(--text); }
+.com-fecha { font-size:10px; color:var(--text-dim); }
+.com-texto { font-size:13px; color:var(--text-mid); line-height:1.6; font-weight:300; }
+.com-reply-btn {
+  background:none; border:none; color:var(--text-dim);
+  font-family:'Geist Mono',monospace; font-size:10px;
+  cursor:pointer; padding:0; margin-top:4px;
+  transition:color 0.15s; display:flex; align-items:center; gap:4px;
+}
+.com-reply-btn:hover { color:var(--accent); }
+
+.com-form {
+  display:flex; gap:10px; align-items:flex-start;
+  margin-top:12px; padding-top:12px;
+  border-top:1px solid var(--card-b);
+}
+.com-input {
+  width:100%; min-height:38px; max-height:120px;
+  padding:9px 14px; background:var(--bg3);
+  border:1px solid var(--card-b); border-radius:20px;
+  color:var(--text); font-family:'Geist Mono',monospace;
+  font-size:12px; outline:none; resize:none;
+  transition:border-color 0.2s; overflow:hidden;
+  line-height:1.5;
+}
+.com-input:focus { border-color:var(--accent-dim); }
+.com-input::placeholder { color:var(--text-dim); }
+.com-empty { font-size:11px; color:var(--text-dim); padding:8px 0; }
