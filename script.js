@@ -2264,11 +2264,13 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>`;
 
-    overlay.classList.add("visible");
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "all";
   };
 
   window.cerrarMiembro = function() {
-    document.getElementById("miembro-overlay")?.classList.remove("visible");
+    const ov = document.getElementById("miembro-overlay");
+    if (ov) { ov.style.opacity = "0"; ov.style.pointerEvents = "none"; }
   };
 
   // ── DMs ──────────────────────────────────────
@@ -2283,7 +2285,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const cont    = document.getElementById("dm-messages");
     if (!overlay) return;
     if (title) title.textContent = paraNombre;
-    overlay.classList.add("visible");
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "all";
     await cargarDMs(paraId);
   };
 
