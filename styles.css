@@ -61,7 +61,7 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .nav-links-right { display:flex;align-items:center;gap:2px;margin-right:12px; }
 .nav-link { background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.3px;padding:7px 13px;border-radius:8px;cursor:pointer;transition:all 0.15s;white-space:nowrap; }
 .nav-link:hover { color:var(--text);background:var(--card); }
-.nav-link.active { color:var(--accent); background:var(--accent-dim); }
+.nav-link.active { color:var(--accent) !important; background:none !important; border:none !important; }
 .nav-icon-btn { width:34px;height:34px;border-radius:50%;border:1px solid var(--card-b);background:none;color:var(--text-dim);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s; }
 .nav-icon-btn:hover { color:var(--accent);border-color:var(--accent-dim); }
 .nav-lock-btn { padding:6px 14px;border-radius:20px;border:1px solid var(--accent-dim);background:none;color:var(--accent);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.15s; }
@@ -552,3 +552,15 @@ body.cursor-hover #mito-cursor-ring { width:48px;height:48px; }
 .com-input:focus { border-color:var(--accent-dim); }
 .com-input::placeholder { color:var(--text-dim); }
 .com-empty { font-size:11px; color:var(--text-dim); padding:8px 0; }
+
+/* Beat num col and viz row */
+.beat-num-col { display:flex;align-items:center;justify-content:center;width:40px; }
+.beat-cover-col { display:flex;align-items:center;justify-content:center;padding:0 6px; }
+.beat-viz-row {
+  grid-column: 1 / -1;
+  display:flex; align-items:center; gap:14px;
+  padding:4px 20px 14px;
+}
+.beat-viz-row .viz-canvas { flex:1;height:48px;border-radius:6px;cursor:pointer;display:block; }
+.beat-viz-row .player-meta { font-size:10px;color:var(--text-dim);flex-shrink:0;white-space:nowrap; }
+.beat-row { flex-wrap:wrap; }
