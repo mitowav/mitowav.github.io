@@ -1190,3 +1190,107 @@ button, a, [onclick] {
   .letra-detalle-cover, .letra-detalle-cover-placeholder { width: 100%; height: auto; aspect-ratio: 1; }
   .letras-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 }
+
+/* ── RELOAD BTN ── */
+.reload-btn {
+  background: none; border: 1px solid var(--card-b);
+  border-radius: 8px; color: var(--text-dim);
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 12px; transition: all 0.2s;
+  flex-shrink: 0;
+}
+.reload-btn:hover { color: var(--accent); border-color: var(--accent-dim); }
+.reload-btn:active i { animation: spin 0.4s linear; }
+
+/* ── MOBILE: 6 botones en bottom nav ── */
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+  }
+  .mob-nav-btn {
+    font-size: 7px;
+    padding: 3px 4px;
+    min-width: 0;
+  }
+  .mob-nav-btn i { font-size: 14px; }
+}
+
+/* ── MIEMBRO OVERLAY ── */
+#miembro-overlay.visible { opacity: 1 !important; pointer-events: all !important; }
+
+.miembro-detalle {
+  display: flex; gap: 28px; align-items: flex-start;
+}
+.miembro-avatar-wrap { flex-shrink: 0; }
+.miembro-avatar-big {
+  width: 120px; height: 120px; border-radius: 50%;
+  object-fit: cover; border: 2px solid var(--accent-dim);
+}
+.miembro-avatar-big-placeholder {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--accent-dim); border: 2px solid var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 40px;
+}
+.miembro-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.miembro-nombre {
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 28px; letter-spacing: -0.5px; color: var(--text);
+}
+.miembro-rol { font-size: 11px; color: var(--accent); }
+.miembro-bio { font-size: 13px; color: var(--text-dim); line-height: 1.7; font-weight: 300; }
+.miembro-redes { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.miembro-red {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-mid); text-decoration: none;
+  transition: color 0.15s;
+}
+.miembro-red:hover { color: var(--accent); }
+.miembro-red i { width: 16px; text-align: center; color: var(--accent); }
+
+@media (max-width: 480px) {
+  .miembro-detalle { flex-direction: column; gap: 16px; }
+}
+
+/* ── DMs ── */
+#dm-overlay.visible { opacity: 1 !important; pointer-events: all !important; }
+
+.dm-box {
+  width: 100%; max-width: 480px; height: min(600px, 85vh);
+  background: var(--bg2); border: 1px solid var(--card-b);
+  border-radius: var(--r-lg); display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.dm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-bottom: 1px solid var(--card-b);
+  flex-shrink: 0;
+}
+.dm-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  scrollbar-width: thin; scrollbar-color: var(--card-b) transparent;
+}
+.dm-msg { display: flex; flex-direction: column; gap: 2px; }
+.dm-mio { align-items: flex-end; }
+.dm-suyo { align-items: flex-start; }
+.dm-bubble {
+  max-width: 75%; padding: 9px 13px; border-radius: 16px;
+  font-size: 13px; line-height: 1.5; word-break: break-word;
+}
+.dm-mio .dm-bubble {
+  background: var(--accent); color: #0c0d0b;
+  border-radius: 16px 16px 4px 16px;
+}
+.dm-suyo .dm-bubble {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--card-b);
+  border-radius: 16px 16px 16px 4px;
+}
+.dm-time { font-size: 9px; color: var(--text-dim); padding: 0 4px; }
+.dm-input-row {
+  display: flex; gap: 8px; padding: 12px 14px;
+  border-top: 1px solid var(--card-b); flex-shrink: 0;
+}
