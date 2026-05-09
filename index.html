@@ -249,121 +249,160 @@
 
   <!-- PRIVADO -->
   <section id="privado" class="page slide-from-right">
-    <div class="page-wrap">
-      <div class="section-header">
-        <h2>zona privada <span class="badge">band only</span></h2>
-        <p class="section-sub">solo para la banda</p>
-      </div>
+    <div class="privado-layout">
 
-      <div class="upload-box">
-        <h3 class="upload-title"><i class="fa-solid fa-cloud-arrow-up"></i> subir beat</h3>
-        <div class="upload-form">
-          <div class="field-row">
-            <input type="text" id="beat-title" placeholder="nombre del beat" class="field">
-            <input type="text" id="beat-genre" placeholder="género" class="field">
-          </div>
-          <div class="field-row">
-            <input type="number" id="beat-bpm" placeholder="bpm" class="field field-sm" min="40" max="300">
-            <input type="text" id="beat-tono" placeholder="tono (ej: Am)" class="field field-sm">
-          </div>
-          <div class="insps-wrap">
-            <div class="insps-tags" id="insps-tags"></div>
-            <div class="insps-input-row">
-              <input type="text" id="insp-input" placeholder="añadir inspiración (ej: d4vd)..." class="field" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();añadirInsp()}">
-              <button class="btn-secondary" onclick="añadirInsp()"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-          <label class="file-label" onclick="abrirCrop('cover')">
-            <i class="fa-solid fa-image"></i>
-            <span id="cover-name-label">cover (1:1 — click para recortar)</span>
-          </label>
-          <label class="file-label">
-            <i class="fa-solid fa-file-audio"></i>
-            <span id="file-name-label">elige un archivo de audio</span>
-            <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
-          </label>
-          <div class="visibility-toggle">
-            <span class="vis-label">visibilidad:</span>
-            <div class="vis-options">
-              <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)"><i class="fa-solid fa-globe"></i> público</button>
-              <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)"><i class="fa-solid fa-lock"></i> privado</button>
-            </div>
-          </div>
-          <button class="btn-primary" onclick="subirBeat()">subir beat 🔥</button>
+      <!-- SIDEBAR IZQUIERDA -->
+      <div class="privado-sidebar">
+        <div class="privado-logo">
+          <i class="fa-solid fa-lock-open"></i>
+          <span>zona privada</span>
         </div>
+        <nav class="privado-nav">
+          <button class="privado-nav-btn active" onclick="switchPrivado('beats', this)">
+            <i class="fa-solid fa-music"></i> beats
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('galeria-priv', this)">
+            <i class="fa-solid fa-images"></i> galería
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('ambient', this)">
+            <i class="fa-solid fa-headphones"></i> música fondo
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('accesos', this)">
+            <i class="fa-solid fa-key"></i> accesos
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('banda-priv', this)">
+            <i class="fa-solid fa-users"></i> banda
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('solicitudes-priv', this)">
+            <i class="fa-solid fa-inbox"></i> solicitudes
+          </button>
+          <button class="privado-nav-btn" onclick="switchPrivado('todos-beats', this)">
+            <i class="fa-solid fa-list"></i> todos los beats
+          </button>
+        </nav>
+        <button class="btn-secondary" onclick="go('home')" style="margin-top:auto;width:100%">← salir</button>
       </div>
 
-      <!-- AMBIENT TRACKS -->
-      <div class="upload-box" style="margin-top:10px">
-        <h3 class="upload-title"><i class="fa-solid fa-headphones"></i> música de fondo</h3>
-        <div class="upload-form">
-          <input type="text" id="ambient-title" placeholder="título de la canción" class="field">
-          <label class="file-label">
-            <i class="fa-solid fa-file-audio"></i>
-            <span id="ambient-file-label">elige un audio</span>
-            <input type="file" id="ambient-file" accept="audio/*" onchange="this.nextElementSibling&&(document.getElementById('ambient-file-label').textContent=this.files[0]?.name||'elige un audio')">
-          </label>
-          <button class="btn-primary" onclick="subirAmbient()">subir canción de fondo</button>
-        </div>
-      </div>
+      <!-- CONTENIDO DERECHA -->
+      <div class="privado-content">
 
-      <div class="upload-box" style="margin-top:10px">
-        <h3 class="upload-title"><i class="fa-solid fa-images"></i> subir a galería</h3>
-        <div class="upload-form">
-          <div class="vis-options" style="margin-bottom:4px">
-            <button class="vis-btn active" id="galeria-tipo-foto" onclick="setGaleriaTipo('foto')"><i class="fa-solid fa-image"></i> foto</button>
-            <button class="vis-btn" id="galeria-tipo-video" onclick="setGaleriaTipo('video')"><i class="fa-solid fa-video"></i> vídeo</button>
-          </div>
-          <div id="galeria-foto-input">
-            <label class="file-label" onclick="abrirCrop('galeria')">
+        <!-- SUBIR BEAT -->
+        <div class="privado-panel active" id="panel-beats">
+          <h2 class="privado-title">subir beat</h2>
+          <div class="upload-form">
+            <div class="field-row">
+              <input type="text" id="beat-title" placeholder="nombre del beat" class="field">
+              <input type="text" id="beat-genre" placeholder="género" class="field">
+            </div>
+            <div class="field-row">
+              <input type="number" id="beat-bpm" placeholder="bpm" class="field field-sm" min="40" max="300">
+              <input type="text" id="beat-tono" placeholder="tono (ej: Am)" class="field field-sm">
+            </div>
+            <div class="insps-wrap">
+              <div class="insps-tags" id="insps-tags"></div>
+              <div class="insps-input-row">
+                <input type="text" id="insp-input" placeholder="añadir inspiración (ej: d4vd)..." class="field" onkeydown="if(event.key==='Enter'||event.key===','){event.preventDefault();añadirInsp()}">
+                <button class="btn-secondary" onclick="añadirInsp()"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+            <label class="file-label" onclick="abrirCrop('cover')">
               <i class="fa-solid fa-image"></i>
-              <span id="galeria-file-label">elige una foto (recorte libre)</span>
+              <span id="cover-name-label">cover 1:1 — click para recortar</span>
             </label>
-          </div>
-          <div id="galeria-video-input" style="display:none">
             <label class="file-label">
-              <i class="fa-solid fa-video"></i>
-              <span id="galeria-video-label">elige un vídeo</span>
-              <input type="file" id="galeria-video" accept="video/*" onchange="document.getElementById('galeria-video-label').textContent=this.files[0]?.name||'elige un vídeo'">
+              <i class="fa-solid fa-file-audio"></i>
+              <span id="file-name-label">elige un archivo de audio</span>
+              <input type="file" id="audio-file" accept="audio/*" onchange="updateFileName(this)">
             </label>
+            <div class="visibility-toggle">
+              <span class="vis-label">visibilidad:</span>
+              <div class="vis-options">
+                <button class="vis-btn active" id="vis-publico" onclick="setVisibilidad(false)"><i class="fa-solid fa-globe"></i> público</button>
+                <button class="vis-btn" id="vis-privado" onclick="setVisibilidad(true)"><i class="fa-solid fa-lock"></i> privado</button>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="subirBeat()">subir beat 🔥</button>
           </div>
-          <input type="text" id="galeria-caption" placeholder="descripción (opcional)" class="field">
-          <button class="btn-primary" onclick="subirGaleria()">subir</button>
         </div>
-      </div>
 
-      <div class="section-header" style="margin-top:32px">
-        <h3>accesos privados</h3>
-      </div>
-      <div class="upload-box">
-        <div class="upload-form">
-          <div class="field-row">
-            <input type="email" id="nuevo-acceso-email" placeholder="email@ejemplo.com" class="field">
-            <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap"><i class="fa-solid fa-plus"></i> añadir</button>
+        <!-- GALERÍA -->
+        <div class="privado-panel" id="panel-galeria-priv">
+          <h2 class="privado-title">subir a galería</h2>
+          <div class="upload-form">
+            <div class="vis-options">
+              <button class="vis-btn active" id="galeria-tipo-foto" onclick="setGaleriaTipo('foto')"><i class="fa-solid fa-image"></i> foto</button>
+              <button class="vis-btn" id="galeria-tipo-video" onclick="setGaleriaTipo('video')"><i class="fa-solid fa-video"></i> vídeo</button>
+            </div>
+            <div id="galeria-foto-input">
+              <label class="file-label" onclick="abrirCrop('galeria')">
+                <i class="fa-solid fa-image"></i>
+                <span id="galeria-file-label">elige una foto — recorte libre</span>
+              </label>
+            </div>
+            <div id="galeria-video-input" style="display:none">
+              <label class="file-label">
+                <i class="fa-solid fa-video"></i>
+                <span id="galeria-video-label">elige un vídeo</span>
+                <input type="file" id="galeria-video" accept="video/*" onchange="document.getElementById('galeria-video-label').textContent=this.files[0]?.name||'elige un vídeo'">
+              </label>
+            </div>
+            <input type="text" id="galeria-caption" placeholder="descripción (opcional)" class="field">
+            <button class="btn-primary" onclick="subirGaleria()">subir</button>
           </div>
-          <p class="auth-msg" id="acceso-msg"></p>
         </div>
-      </div>
-      <div id="accesos-list" class="solicitudes-list"></div>
 
-      <div class="section-header" style="margin-top:28px"><h3>miembros de la banda</h3></div>
-      <div class="upload-box">
-        <div class="upload-form">
-          <div class="field-row">
-            <input type="email" id="banda-email" placeholder="email del miembro" class="field">
-            <button class="btn-primary" onclick="añadirMiembroBanda()" style="white-space:nowrap"><i class="fa-solid fa-user-plus"></i> añadir</button>
+        <!-- MÚSICA FONDO -->
+        <div class="privado-panel" id="panel-ambient">
+          <h2 class="privado-title">música de fondo</h2>
+          <div class="upload-form">
+            <input type="text" id="ambient-title" placeholder="título de la canción" class="field">
+            <label class="file-label">
+              <i class="fa-solid fa-file-audio"></i>
+              <span id="ambient-file-label">elige un audio</span>
+              <input type="file" id="ambient-file" accept="audio/*" onchange="document.getElementById('ambient-file-label').textContent=this.files[0]?.name||'elige un audio'">
+            </label>
+            <button class="btn-primary" onclick="subirAmbient()">añadir canción</button>
           </div>
-          <p class="auth-msg" id="banda-msg"></p>
         </div>
+
+        <!-- ACCESOS -->
+        <div class="privado-panel" id="panel-accesos">
+          <h2 class="privado-title">accesos privados</h2>
+          <div class="upload-form" style="margin-bottom:16px">
+            <div class="field-row">
+              <input type="email" id="nuevo-acceso-email" placeholder="email@ejemplo.com" class="field">
+              <button class="btn-primary" onclick="añadirAcceso()" style="white-space:nowrap"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <p class="auth-msg" id="acceso-msg"></p>
+          </div>
+          <div id="accesos-list" class="solicitudes-list"></div>
+        </div>
+
+        <!-- BANDA -->
+        <div class="privado-panel" id="panel-banda-priv">
+          <h2 class="privado-title">miembros de la banda</h2>
+          <div class="upload-form" style="margin-bottom:16px">
+            <div class="field-row">
+              <input type="email" id="banda-email" placeholder="email del miembro" class="field">
+              <button class="btn-primary" onclick="añadirMiembroBanda()" style="white-space:nowrap"><i class="fa-solid fa-user-plus"></i></button>
+            </div>
+            <p class="auth-msg" id="banda-msg"></p>
+          </div>
+        </div>
+
+        <!-- SOLICITUDES -->
+        <div class="privado-panel" id="panel-solicitudes-priv">
+          <h2 class="privado-title">solicitudes de banda</h2>
+          <div id="solicitudes-admin" class="solicitudes-list"></div>
+        </div>
+
+        <!-- TODOS LOS BEATS -->
+        <div class="privado-panel" id="panel-todos-beats">
+          <h2 class="privado-title">todos los beats</h2>
+          <div id="admin-list" class="beats-grid"></div>
+        </div>
+
       </div>
-
-      <div class="section-header" style="margin-top:28px"><h3>solicitudes</h3></div>
-      <div id="solicitudes-admin" class="solicitudes-list"></div>
-
-      <div class="section-header" style="margin-top:28px"><h3>todos los beats</h3></div>
-      <div id="admin-list" class="beats-grid"></div>
-
-      <button class="btn-secondary" onclick="go('home')" style="margin-top:20px">← volver al inicio</button>
     </div>
   </section>
 
