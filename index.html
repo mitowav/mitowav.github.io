@@ -31,15 +31,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b0c0a;font-family:
 <!-- TOP NAV -->
 <nav class="top-nav">
   <div class="nav-logo" onclick="go('home')">mit<span class="o">ø</span></div>
-  <div class="nav-links">
-    <button class="nav-link" onclick="go('home',this)">home</button>
-    <button class="nav-link" onclick="go('beats',this)">beats</button>
-    <button class="nav-link" onclick="go('galeria',this)">galería</button>
-    <button class="nav-link" onclick="go('banda',this)">banda</button>
-    <button class="nav-link" onclick="go('foro',this)">foro</button>
-    <button class="nav-link" onclick="go('letras',this)">letras</button>
-    <button class="nav-link" onclick="go('about',this)">about</button>
-  </div>
   <div class="nav-right">
     <div id="online-dot" style="display:none" title="usuarios en línea">
       <span class="online-pulse"></span>
@@ -51,6 +42,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b0c0a;font-family:
       <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)"></span>
     </button>
     <button class="nav-lock-btn" id="nav-lock-btn" onclick="openLogin('privado')"><i class="fa-solid fa-lock"></i></button>
+    <div class="nav-links-right">
+      <button class="nav-link" onclick="go('home',this)">home</button>
+      <button class="nav-link" onclick="go('beats',this)">beats</button>
+      <button class="nav-link" onclick="go('galeria',this)">galería</button>
+      <button class="nav-link" onclick="go('banda',this)">banda</button>
+      <button class="nav-link" onclick="go('foro',this)">foro</button>
+      <button class="nav-link" onclick="go('letras',this)">letras</button>
+      <button class="nav-link" onclick="go('about',this)">about</button>
+    </div>
     <button class="nav-auth-btn" id="btn-auth" onclick="go('auth')"><i class="fa-solid fa-user"></i> entrar</button>
   </div>
   <button class="nav-burger" onclick="toggleMobMenu()"><i class="fa-solid fa-bars"></i></button>
@@ -458,7 +458,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0b0c0a;font-family:
 </div>
 
 <div id="mini-player" style="display:none">
-  <div class="mp-icon" onclick="mpToggle()"><i class="fa-solid fa-music" id="mp-play-btn"></i></div>
+  <div class="mp-icon" onclick="mpToggle()" id="mp-icon-wrap"><i class="fa-solid fa-music"></i></div>
   <div class="mp-content">
     <div class="mp-info"><div class="mp-title" id="mp-title">—</div><div style="font-size:9px;color:var(--text-dim)">música de fondo</div></div>
     <div class="mp-controls">
