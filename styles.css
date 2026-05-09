@@ -1034,3 +1034,159 @@ button, a, [onclick] {
     cursor: auto !important;
   }
 }
+
+/* ── SOLICITUDES EXPANDIBLES ── */
+.solicitud-card-full {
+  background: var(--card);
+  border: 1px solid var(--card-b);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 6px;
+  transition: border-color 0.2s;
+}
+.solicitud-card-full:hover { border-color: var(--accent-dim); }
+
+.solicitud-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; cursor: pointer;
+  transition: background 0.15s;
+}
+.solicitud-card-header:hover { background: var(--card); }
+
+.solicitud-card-body {
+  padding: 0 16px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-top: 1px solid var(--card-b);
+  padding-top: 14px;
+}
+
+.solicitud-section { display: flex; flex-direction: column; gap: 5px; }
+.solicitud-section-label {
+  font-size: 9px; letter-spacing: 2px;
+  color: var(--accent); text-transform: lowercase;
+}
+.solicitud-section p {
+  font-size: 12px; color: var(--text-mid);
+  line-height: 1.65; font-weight: 300;
+}
+
+.solicitud-actions {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.solicitud-actions .btn-primary { color: #0c0d0b; }
+
+/* ── LETRAS GRID ── */
+.letras-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.letra-cover-card {
+  display: flex; flex-direction: column; gap: 10px;
+  cursor: pointer; transition: transform 0.2s;
+}
+.letra-cover-card:hover { transform: translateY(-3px); }
+.letra-cover-card:hover .letra-cover-img img,
+.letra-cover-card:hover .letra-cover-img .letra-cover-placeholder {
+  filter: brightness(1);
+}
+
+.letra-cover-img {
+  aspect-ratio: 1; border-radius: 10px; overflow: hidden;
+  background: var(--bg3); border: 1px solid var(--card-b);
+}
+.letra-cover-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(0.88); transition: filter 0.3s;
+}
+.letra-cover-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 32px;
+  filter: brightness(0.7); transition: filter 0.3s;
+}
+
+.letra-cover-info { padding: 0 2px; }
+.letra-cover-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 14px;
+  color: var(--text); letter-spacing: -0.3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.letra-cover-artist { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+/* ── LETRA DETALLE OVERLAY ── */
+.letra-back-btn {
+  background: none; border: none;
+  color: var(--text-dim); font-family: 'Geist Mono', monospace;
+  font-size: 11px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 32px; padding: 0; transition: color 0.2s;
+}
+.letra-back-btn:hover { color: var(--text); }
+
+.letra-detalle {
+  display: flex; gap: 48px; align-items: flex-start;
+}
+
+.letra-detalle-izq {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.letra-detalle-titulo {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(28px, 5vw, 44px);
+  letter-spacing: -1px; color: var(--text);
+  line-height: 1.1; font-weight: 400;
+}
+.letra-detalle-artista {
+  font-size: 12px; color: var(--text-dim); margin-bottom: 8px;
+}
+
+.letra-escuchar {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 100px;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent); font-family: 'Geist Mono', monospace;
+  font-size: 11px; text-decoration: none;
+  transition: all 0.2s; margin-bottom: 28px;
+  align-self: flex-start;
+}
+.letra-escuchar:hover { background: var(--accent-dim); }
+
+.letra-versos {
+  display: flex; flex-direction: column; gap: 0;
+}
+.verso {
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px; color: var(--text-mid);
+  line-height: 1.9; font-weight: 400;
+  letter-spacing: 0.2px;
+}
+.verso-espaciado { height: 20px; }
+
+.letra-detalle-der {
+  flex-shrink: 0; width: 220px;
+  position: sticky; top: 0;
+}
+.letra-detalle-cover {
+  width: 220px; height: 220px; border-radius: 16px;
+  object-fit: cover; border: 1px solid var(--card-b);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+}
+.letra-detalle-cover-placeholder {
+  width: 220px; height: 220px; border-radius: 16px;
+  background: var(--bg3); border: 1px solid var(--card-b);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 48px;
+}
+
+@media (max-width: 600px) {
+  .letra-detalle { flex-direction: column-reverse; gap: 24px; }
+  .letra-detalle-der { width: 100%; }
+  .letra-detalle-cover, .letra-detalle-cover-placeholder { width: 100%; height: auto; aspect-ratio: 1; }
+  .letras-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+}
