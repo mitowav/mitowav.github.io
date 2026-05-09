@@ -1143,12 +1143,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  window.doLogout = async function() {
+  window.doLogout = function() {
+    if (!confirm("¿Cerrar sesión?")) return;
     borrarSesionLocal();
-    currentUser=null; currentPerfil=null; tieneAccesoPrivado=false;
+    currentUser = null;
+    currentPerfil = null;
+    tieneAccesoPrivado = false;
     updateNavUser();
     const lockBtn = document.querySelector(".lock-btn");
-    if (lockBtn) { lockBtn.innerHTML=`<i class="fa-solid fa-lock"></i> PRIVADO`; lockBtn.onclick=()=>openLogin("privado"); lockBtn.style.cssText=""; }
+    if (lockBtn) {
+      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
+      lockBtn.onclick = () => openLogin("privado");
+      lockBtn.style.cssText = "";
+    }
     go("home");
   };
 
