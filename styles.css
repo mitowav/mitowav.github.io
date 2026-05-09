@@ -954,3 +954,83 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
     bottom: 0;
   }
 }
+
+/* ── LETRAS ── */
+.letra-card {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--card-b);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.letra-card:last-child { border-bottom: none; }
+.letra-card-title {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic; font-size: 22px;
+  letter-spacing: -0.5px; color: var(--text); font-weight: 400;
+}
+.letra-card-preview {
+  font-size: 13px; color: var(--text-dim);
+  line-height: 1.8; font-weight: 300;
+  white-space: pre-wrap;
+}
+
+/* ── LIKES ── */
+.feed-action.liked { color: var(--accent); }
+.feed-action.liked i { font-weight: 900; }
+.feed-action.like-btn { transition: color 0.2s, transform 0.15s; }
+.feed-action.like-btn:active { transform: scale(1.3); }
+
+/* ── NOTIF BADGE PULSE ── */
+#notif-badge {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
+}
+
+/* ── GALERÍA ADMIN ── */
+.galeria-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+.galeria-admin-card {
+  background: var(--card);
+  border: 1px solid var(--card-b);
+  border-radius: var(--r);
+  overflow: hidden;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.galeria-admin-thumb {
+  width: 100%; aspect-ratio: 1;
+  overflow: hidden; background: var(--bg3);
+}
+.galeria-admin-info {
+  padding: 10px;
+}
+
+/* ── PRIVADO: sin solapamiento en desktop ── */
+@media (min-width: 769px) {
+  /* El privado ocupa todo el espacio del app (64px offset ya aplicado) */
+  #privado .privado-layout {
+    width: 100%;
+    height: 100%;
+  }
+  /* El sidebar privado es estrecho y no interfiere con la side nav */
+  #privado .privado-sidebar {
+    width: 180px;
+  }
+}
+
+/* Quitar cursor none en inputs para que se vea bien al escribir */
+input, textarea, select {
+  cursor: text !important;
+}
+button, a, [onclick] {
+  cursor: none !important;
+}
+@media (hover: none) {
+  button, a, [onclick], input, textarea, select {
+    cursor: auto !important;
+  }
+}
