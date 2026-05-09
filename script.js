@@ -828,41 +828,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const bars = generateBars(beat, index);
     const inspsArr = beat.inspiraciones ? beat.inspiraciones.split(",").map(s=>s.trim()).filter(Boolean) : [];
 
+    const allTags = [
+      ...(beat.inspiraciones||"").split(",").map(s=>s.trim()).filter(Boolean).map(i=>`<span class="beat-tag">${esc(i)}</span>`),
+      beat.genre ? `<span class="beat-tag">${esc(beat.genre)}</span>` : "",
+      beat.tono  ? `<span class="beat-tag">${esc(beat.tono)}</span>`  : "",
+    ].filter(Boolean).join("");
+
     card.innerHTML = `
-      <span class="beat-row-num">${String(index+1).padStart(2,"0")}</span>
-      <div class="beat-row-cover">
-        ${beat.cover_url
-          ? `<img src="${beat.cover_url}" alt="">`
-          : `<div class="beat-row-cover-ph"><i class="fa-solid fa-music"></i></div>`}
+      <div class="beat-num-col">
+        <span class="beat-row-num">${String(index+1).padStart(2,"0")}</span>
+        <button class="play-btn-inline"><i class="fa-solid fa-play"></i></button>
       </div>
-      <div class="beat-row-info">
+      <div class="beat-cover-col">
+        ${beat.cover_url
+          ? `<img src="${beat.cover_url}" class="beat-row-cover-sm" alt="">`
+          : `<div class="beat-row-cover-ph-sm"><i class="fa-solid fa-music"></i></div>`}
+      </div>
+      <div class="beat-row-main">
         <div class="beat-row-title">${esc(beat.title)}</div>
         <div class="beat-row-genre">${esc(beat.genre||"")}</div>
-        <div class="beat-row-tags">
-          ${beat.bpm  ? `<span class="beat-tag bpm">${beat.bpm} bpm</span>` : ""}
-          ${beat.tono ? `<span class="beat-tag">${esc(beat.tono)}</span>` : ""}
-        </div>
-        ${inspsArr.length ? `<div class="beat-insps">${inspsArr.map(i=>`<span class="beat-insp">${esc(i)}</span>`).join("")}</div>` : ""}
       </div>
-      <div class="beat-row-player">
-        <button class="play-btn"><i class="fa-solid fa-play"></i></button>
-        <div class="player-right">
-          <canvas class="viz-canvas" id="viz-${beat.id||index}"></canvas>
-          <div class="player-meta"><span class="time-cur">0:00</span><span class="time-tot">—</span></div>
-        </div>
-      </div>
+      <div class="beat-row-time">—</div>
+      <div class="beat-row-bpm">${beat.bpm||"—"}</div>
+      <div class="beat-row-tags-col">${allTags}</div>
       <div class="beat-row-actions">
         ${beat.privado ? `<span class="beat-priv-tag"><i class="fa-solid fa-lock"></i></span>` : ""}
-        ${admin ? `<button class="delete-btn" title="borrar"><i class="fa-solid fa-trash"></i></button>` : ""}
+        ${admin ? `<button class="delete-btn"><i class="fa-solid fa-trash"></i></button>` : ""}
+      </div>
+      <div class="beat-viz-row" id="vizrow-${beat.id||index}" style="display:none">
+        <canvas class="viz-canvas" id="viz-${beat.id||index}"></canvas>
+        <div class="player-meta"><span class="time-cur">0:00</span> / <span class="time-tot">—</span></div>
       </div>`;
 
     card.addEventListener("click", e => {
-      if (e.target.closest(".beat-row-player,.delete-btn")) return;
+      if (e.target.closest(".beat-num-col,.beat-row-actions")) return;
       abrirBeatDetalle(beat);
     });
 
     const playBtn = card.querySelector(".play-btn-inline");
-    const canvas  = card.querySelector(".viz-canvas");
+    const canvas  = card.querySelector(".viz-canvas"); /* in viz-row */
     const timeCur = card.querySelector(".time-cur");
     const timeTot = card.querySelector(".time-tot");
     let audio = null, isPlaying = false;
@@ -978,7 +982,8 @@ document.addEventListener("DOMContentLoaded", () => {
         activeAudio.pause();
         if (activeCard) {
           activeCard.classList.remove("is-playing");
-          activeCard.querySelector(".play-btn").innerHTML = `<i class="fa-solid fa-play"></i>`;
+          const apb = activeCard.querySelector(".play-btn-inline");
+          if (apb) apb.innerHTML = `<i class="fa-solid fa-play"></i>`;
           activeCard._stopViz?.();
         }
       }
@@ -996,7 +1001,8 @@ document.addEventListener("DOMContentLoaded", () => {
         a.pause(); isPlaying = false;
         playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
         card.classList.remove("is-playing");
-        card.querySelectorAll(".beat-player-bar").forEach(el => el.style.display = "none");
+        const vr2 = document.getElementById("vizrow-" + (beat.id||index));
+        if (vr2) vr2.style.display = "none";
         cancelAnimationFrame(vizRaf);
         drawStatic(a.duration ? a.currentTime / a.duration : 0);
         activeAudio = null; activeCard = null; window.sfx?.pause();
@@ -1017,9 +1023,9 @@ document.addEventListener("DOMContentLoaded", () => {
         isPlaying = true;
         playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
         card.classList.add("is-playing");
-        // Show player bar
-        card.querySelectorAll(".beat-player-bar").forEach(el => el.style.display = "flex");
-        card.style.flexWrap = "wrap";
+        // Show viz row
+        const vr = document.getElementById("vizrow-" + (beat.id||index));
+        if (vr) vr.style.display = "flex";
         activeAudio = a; activeCard = card;
         cancelAnimationFrame(vizRaf);
         drawFreq();
