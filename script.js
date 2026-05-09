@@ -1465,6 +1465,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.filtrarCategoria = function(id) { foroCategoria = id; renderForo(); };
 
+
+  window.enviarComentarioFeed = async function(postId, ta, btn, msgEl) {
+    const texto = ta.value.trim();
+    if (!texto) return;
+    if (!currentUser) { msgEl.textContent = "inicia sesión primero"; return; }
+    btn.disabled = true;
+    btn.textContent = "enviando...";
+
+    const { error } = await db.from("comentarios").insert([{
+      post_id: parseInt(postId),
+      autor_id: currentUser.id,
+      contenido: texto
+    }]);
+
+    if (error) {
+      msgEl.textContent = "error: " + error.message;
+      msgEl.className = "auth-msg error";
+      btn.disabled = false;
+      btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> comentar";
+    } else {
+      window.sfx?.success();
+      // Notify post author
+      db.from("posts").select("autor_id").eq("id", postId).single().then(({ data }) => {
+        if (data?.autor_id && data.autor_id !== currentUser.id) {
+          db.from("notificaciones").insert([{
+            usuario_id: data.autor_id,
+            tipo: "comentario",
+            mensaje: (currentUser.display_name || currentUser.username) + " comentó en tu post"
+          }]);
+        }
+      });
+      // Reload
+      const cont = document.getElementById("feed-coms-" + postId);
+      if (cont) { cont.dataset.open = "0"; cont.style.display = "none"; }
+      await window.toggleComentarios(postId);
+    }
+  };
   window.toggleComentarios = async function(postId) {
     const cont = document.getElementById(`feed-coms-${postId}`);
     if (cont.style.display === "block") { cont.style.display = "none"; return; }
