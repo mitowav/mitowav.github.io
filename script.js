@@ -188,18 +188,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateNavPrivado() {
-    const lockBtn = document.getElementById("side-lock-btn");
-    if (!lockBtn) return;
+    const lockBtn  = document.getElementById("side-lock-btn");
+    const mobPriv  = document.getElementById("mob-priv-btn");
     if (tieneAccesoPrivado) {
-      lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i><span class="btn-label">privado</span>`;
-      lockBtn.onclick = () => go("privado");
-      lockBtn.style.color = "#6bffb8";
-      lockBtn.style.borderColor = "rgba(107,255,184,0.3)";
+      if (lockBtn) {
+        lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i><span class="btn-label">privado</span>`;
+        lockBtn.onclick = () => go("privado");
+        lockBtn.style.color = "#6bffb8";
+      }
+      if (mobPriv) {
+        mobPriv.innerHTML = `<i class="fa-solid fa-lock-open"></i><span>privado</span>`;
+        mobPriv.onclick = () => go("privado", mobPriv);
+        mobPriv.style.color = "var(--accent)";
+      }
     } else {
-      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i><span class="btn-label">privado</span>`;
-      lockBtn.onclick = () => openLogin("privado");
-      lockBtn.style.color = "";
-      lockBtn.style.borderColor = "";
+      if (lockBtn) {
+        lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i><span class="btn-label">privado</span>`;
+        lockBtn.onclick = () => openLogin("privado");
+        lockBtn.style.color = "";
+      }
+      if (mobPriv) {
+        mobPriv.innerHTML = `<i class="fa-solid fa-lock"></i><span>privado</span>`;
+        mobPriv.onclick = () => openLogin("privado");
+        mobPriv.style.color = "";
+      }
     }
   }
 
@@ -238,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (id==="foro")    renderForo();
     if (id==="perfil")  renderPerfil();
     if (id==="letras")  cargarLetras();
-    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); if(!ambientTracks.length) cargarAmbientTracks(); cargarNotificaciones(); }
+    if (id==="privado") { cargarBeats("admin-list", null); cargarSolicitudesAdmin(); cargarAccesos(); cargarNotificaciones(); }
   }
   window.go = go;
   window.toggleMenu = function() {}; // no-op, kept for compatibility
@@ -567,6 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ${beat.genre ? `<span class="beat-meta-tag">${esc(beat.genre)}</span>` : ""}
             ${beat.bpm   ? `<span class="beat-meta-tag bpm">${beat.bpm} bpm</span>` : ""}
             ${beat.tono  ? `<span class="beat-meta-tag">${esc(beat.tono)}</span>` : ""}
+            <span class="beat-meta-tag" id="detail-plays-${beat.id}"><i class="fa-solid fa-play" style="font-size:8px"></i> —</span>
           </div>
           ${inspsArr.length ? `
           <div class="beat-detail-insps" style="margin-top:10px">
@@ -689,6 +702,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     requestAnimationFrame(() => { canvas.width=canvas.offsetWidth; canvas.height=64; drawDetailStatic(0); });
     document.getElementById("beat-overlay").classList.add("visible");
+    // Carga reproducciones
+    db.from("reproducciones").select("id", { count: "exact" }).eq("beat_id", beat.id)
+      .then(({ count }) => {
+        const el = document.getElementById(`detail-plays-${beat.id}`);
+        if (el) el.innerHTML = `<i class="fa-solid fa-play" style="font-size:8px"></i> ${count || 0} plays`;
+      });
   }
 
   window.cerrarBeatOverlay = function(e) {
@@ -983,7 +1002,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       } else {
         stopOthers();
-        // Pausa música de fondo al reproducir un beat
         if (ambientPlaying) { ambientAudio.pause(); }
         initAudioCtx();
         if (audioCtx?.state === "suspended") audioCtx.resume();
@@ -995,6 +1013,8 @@ document.addEventListener("DOMContentLoaded", () => {
         cancelAnimationFrame(vizRaf);
         drawFreq();
         window.sfx?.play();
+        // Registra reproducción
+        db.from("reproducciones").insert([{ beat_id: beat.id }]).catch(()=>{});
       }
     });
 
@@ -1178,7 +1198,14 @@ document.addEventListener("DOMContentLoaded", () => {
       data.forEach(m=>{
         const ini=(m.display_name||m.username||"?")[0].toUpperCase();
         const card=document.createElement("div"); card.className="banda-card";
-        card.innerHTML=`${m.avatar_url?`<img src="${m.avatar_url}" class="banda-avatar" alt="">`: `<div class="banda-avatar-placeholder">${ini}</div>`}<div class="banda-name">${esc(m.display_name||m.username)}</div>${m.instrumento?`<div class="banda-rol">${esc(m.instrumento)}</div>`:""} ${m.bio?`<p class="banda-bio">${esc(m.bio)}</p>`:""}`;
+        card.style.cursor="pointer";
+        card.innerHTML=`
+          ${m.avatar_url?`<img src="${m.avatar_url}" class="banda-avatar" alt="">`: `<div class="banda-avatar-placeholder">${ini}</div>`}
+          <div class="banda-name">${esc(m.display_name||m.username)}</div>
+          ${m.instrumento?`<div class="banda-rol">${esc(m.instrumento)}</div>`:""}
+          ${m.bio?`<p class="banda-bio">${esc(m.bio)}</p>`:""}
+        `;
+        card.addEventListener("click", () => abrirPerfilMiembro(m));
         grid.appendChild(card);
       });
     } catch(err){grid.innerHTML=`<p class="loading-msg no-spin">⚠️ ${err.message==="TIMEOUT"?"Sin conexión":"Error al cargar"}</p>`;}
@@ -1264,17 +1291,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.cambiarEstadoSolicitud = async function(id, estado) {
     const respuesta = document.getElementById(`resp-${id}`)?.value.trim();
-    const msg = document.getElementById(`sol-msg-${id}`);
+    const msg       = document.getElementById(`sol-msg-${id}`);
     if (msg) { msg.textContent = "guardando..."; msg.className = "auth-msg"; }
+
+    const { data: solData } = await db.from("solicitudes").select("*,usuarios(id)").eq("id", id).single();
+
     const { error } = await db.from("solicitudes")
       .update({ estado, respuesta: respuesta || null })
       .eq("id", id);
+
     if (error) {
       if (msg) { msg.textContent = "error: " + error.message; msg.className = "auth-msg error"; }
     } else {
+      // Notifica al usuario que mandó la solicitud
+      if (solData?.user_id) {
+        const textos = {
+          aceptado:  "🎉 tu solicitud de banda ha sido aceptada",
+          rechazado: "tu solicitud de banda no ha sido aceptada esta vez",
+          pendiente: "tu solicitud de banda está siendo revisada"
+        };
+        const mensajeExtra = respuesta ? ` — "${respuesta}"` : "";
+        await db.from("notificaciones").insert([{
+          usuario_id: solData.user_id,
+          tipo:       estado === "aceptado" ? "solicitud_ok" : "solicitud",
+          mensaje:    (textos[estado] || "tu solicitud ha sido actualizada") + mensajeExtra
+        }]);
+      }
+
       if (msg) { msg.textContent = "✓ guardado"; msg.className = "auth-msg success"; }
-      // Actualiza el badge de estado
-      const card = document.getElementById(`solicitud-${id}`);
+      const card  = document.getElementById(`solicitud-${id}`);
       const badge = card?.querySelector(".solicitud-estado");
       if (badge) { badge.className = `solicitud-estado ${estado}`; badge.textContent = estado; }
       window.sfx?.success();
@@ -1478,7 +1523,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const categoriaId= document.getElementById("post-categoria").value;
     const imgFile    = document.getElementById("post-img-file")?.files[0];
     const msg        = document.getElementById("post-msg");
-    if (!contenido) { msg.textContent="Escribe algo"; msg.className="auth-msg error"; return; }
+    if (!contenido) { msg.textContent="escribe algo"; msg.className="auth-msg error"; return; }
     msg.textContent = "Publicando..."; msg.className = "auth-msg";
     try {
       let imagen_url = null;
@@ -1491,7 +1536,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imagen_url = ud.publicUrl;
       }
       const { error } = await db.from("posts").insert([{
-        titulo: titulo||null, contenido, autor_id: currentUser.id,
+        titulo: titulo||"sin título", contenido, autor_id: currentUser.id,
         categoria_id: categoriaId, imagen_url
       }]);
       if (error) throw error;
@@ -1533,9 +1578,15 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="perfil-edit-box">
           <h3>EDITAR PERFIL</h3>
-          <input type="text" id="edit-display" placeholder="Nombre visible" class="field" value="${esc(p.display_name||"")}">
-          <input type="text" id="edit-instrumento" placeholder="Instrumento / rol" class="field" value="${esc(p.instrumento||"")}">
-          <textarea id="edit-bio" placeholder="Bio" class="field textarea" rows="3">${esc(p.bio||"")}</textarea>
+          <input type="text" id="edit-display" placeholder="nombre visible" class="field" value="${esc(p.display_name||"")}">
+          <input type="text" id="edit-instrumento" placeholder="instrumento / rol" class="field" value="${esc(p.instrumento||"")}">
+          <textarea id="edit-bio" placeholder="bio" class="field textarea" rows="3">${esc(p.bio||"")}</textarea>
+          <div style="font-size:9px;letter-spacing:2px;color:var(--text-dim);margin-top:4px">redes sociales</div>
+          <input type="text" id="edit-instagram" placeholder="instagram (@usuario)" class="field" value="${esc(p.redes_instagram||"")}">
+          <input type="text" id="edit-spotify" placeholder="spotify (url completa)" class="field" value="${esc(p.redes_spotify||"")}">
+          <input type="text" id="edit-youtube" placeholder="youtube (url completa)" class="field" value="${esc(p.redes_youtube||"")}">
+          <input type="text" id="edit-tiktok" placeholder="tiktok (@usuario)" class="field" value="${esc(p.redes_tiktok||"")}">
+          <input type="text" id="edit-soundcloud" placeholder="soundcloud (url)" class="field" value="${esc(p.redes_soundcloud||"")}">
           <label class="file-label" onclick="abrirCrop('avatar')">
             <i class="fa-solid fa-image"></i>
             <span id="avatar-label">Cambiar foto de perfil (click para recortar)</span>
@@ -1592,7 +1643,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.guardarPerfil = async function() {
     const msg=document.getElementById("perfil-msg"); msg.textContent="Guardando..."; msg.className="auth-msg";
-    const updates={display_name:document.getElementById("edit-display").value.trim(),instrumento:document.getElementById("edit-instrumento").value.trim(),bio:document.getElementById("edit-bio").value.trim()};
+    const updates={
+      display_name: document.getElementById("edit-display").value.trim(),
+      instrumento:  document.getElementById("edit-instrumento").value.trim(),
+      bio:          document.getElementById("edit-bio").value.trim(),
+      redes_instagram:  document.getElementById("edit-instagram")?.value.trim()||null,
+      redes_spotify:    document.getElementById("edit-spotify")?.value.trim()||null,
+      redes_youtube:    document.getElementById("edit-youtube")?.value.trim()||null,
+      redes_tiktok:     document.getElementById("edit-tiktok")?.value.trim()||null,
+      redes_soundcloud: document.getElementById("edit-soundcloud")?.value.trim()||null,
+    };
     if(cropBlob){
       const fileName=`${currentUser.id}-avatar.jpg`;
       await db.storage.from("avatars").upload(fileName,cropBlob,{upsert:true,contentType:"image/jpeg"});
@@ -2111,9 +2171,179 @@ document.addEventListener("DOMContentLoaded", () => {
     if (card) { card.style.opacity = "0"; card.style.transform = "translateY(-8px)"; setTimeout(() => card.remove(), 300); }
     window.sfx?.delete();
   };
+
+  // ── REALTIME ─────────────────────────────────
+  function initRealtime() {
+    // Galería — actualiza automáticamente
+    db.channel("galeria-changes")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "galeria" }, () => {
+        if (currentPage === "galeria") cargarGaleria();
+      })
+      .subscribe();
+
+    // Beats — actualiza home y beats
+    db.channel("beats-changes")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "beats" }, () => {
+        if (currentPage === "beats") cargarBeats("beats-list", false);
+        if (currentPage === "home")  cargarBeats("home-beats", false, 3);
+      })
+      .subscribe();
+
+    // Posts — actualiza foro
+    db.channel("posts-changes")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "posts" }, () => {
+        if (currentPage === "foro") renderForo();
+      })
+      .subscribe();
+
+    // Notificaciones propias — badge en tiempo real
+    if (currentUser) {
+      db.channel(`notif-${currentUser.id}`)
+        .on("postgres_changes", {
+          event: "INSERT", schema: "public", table: "notificaciones",
+          filter: `usuario_id=eq.${currentUser.id}`
+        }, () => {
+          const badge = document.getElementById("notif-badge");
+          if (badge) badge.style.display = "block";
+        })
+        .subscribe();
+    }
+  }
+
+  // ── PERFIL MIEMBRO ────────────────────────────
+  window.abrirPerfilMiembro = function(m) {
+    const overlay  = document.getElementById("miembro-overlay");
+    const cont     = document.getElementById("miembro-content");
+    if (!overlay || !cont) return;
+    const ini = (m.display_name||m.username||"?")[0].toUpperCase();
+    const redes = [
+      m.redes_instagram && `<a href="https://instagram.com/${m.redes_instagram.replace('@','')}" target="_blank" class="miembro-red"><i class="fa-brands fa-instagram"></i> @${esc(m.redes_instagram.replace('@',''))}</a>`,
+      m.redes_spotify   && `<a href="${m.redes_spotify}" target="_blank" class="miembro-red"><i class="fa-brands fa-spotify"></i> spotify</a>`,
+      m.redes_youtube   && `<a href="${m.redes_youtube}" target="_blank" class="miembro-red"><i class="fa-brands fa-youtube"></i> youtube</a>`,
+      m.redes_tiktok    && `<a href="https://tiktok.com/@${m.redes_tiktok.replace('@','')}" target="_blank" class="miembro-red"><i class="fa-brands fa-tiktok"></i> @${esc(m.redes_tiktok.replace('@',''))}</a>`,
+      m.redes_soundcloud && `<a href="${m.redes_soundcloud}" target="_blank" class="miembro-red"><i class="fa-brands fa-soundcloud"></i> soundcloud</a>`,
+    ].filter(Boolean).join("");
+
+    cont.innerHTML = `
+      <button onclick="cerrarMiembro()" class="letra-back-btn" style="margin-bottom:24px">
+        <i class="fa-solid fa-arrow-left"></i> volver
+      </button>
+      <div class="miembro-detalle">
+        <div class="miembro-avatar-wrap">
+          ${m.avatar_url
+            ? `<img src="${m.avatar_url}" class="miembro-avatar-big" alt="">`
+            : `<div class="miembro-avatar-big-placeholder">${ini}</div>`}
+        </div>
+        <div class="miembro-info">
+          <div class="miembro-nombre">${esc(m.display_name||m.username)}</div>
+          ${m.instrumento ? `<div class="miembro-rol">${esc(m.instrumento)}</div>` : ""}
+          ${m.bio ? `<p class="miembro-bio">${esc(m.bio)}</p>` : ""}
+          ${redes ? `<div class="miembro-redes">${redes}</div>` : ""}
+          ${currentUser && m.id !== currentUser.id ? `
+            <button class="btn-primary" style="margin-top:16px" onclick="abrirDM('${m.id}','${esc(m.display_name||m.username)}')">
+              <i class="fa-solid fa-paper-plane"></i> enviar mensaje
+            </button>` : ""}
+        </div>
+      </div>`;
+
+    overlay.classList.add("visible");
+  };
+
+  window.cerrarMiembro = function() {
+    document.getElementById("miembro-overlay")?.classList.remove("visible");
+  };
+
+  // ── DMs ──────────────────────────────────────
+  let dmParaId   = null;
+  let dmParaNombre = "";
+
+  window.abrirDM = async function(paraId, paraNombre) {
+    dmParaId     = paraId;
+    dmParaNombre = paraNombre;
+    const overlay = document.getElementById("dm-overlay");
+    const title   = document.getElementById("dm-title");
+    const cont    = document.getElementById("dm-messages");
+    if (!overlay) return;
+    if (title) title.textContent = paraNombre;
+    overlay.classList.add("visible");
+    await cargarDMs(paraId);
+  };
+
+  async function cargarDMs(paraId) {
+    const cont = document.getElementById("dm-messages");
+    if (!cont || !currentUser) return;
+    cont.innerHTML = `<p class="loading-msg" style="font-size:10px">cargando</p>`;
+    const { data } = await db.from("mensajes")
+      .select("*")
+      .or(`and(de_id.eq.${currentUser.id},para_id.eq.${paraId}),and(de_id.eq.${paraId},para_id.eq.${currentUser.id})`)
+      .order("created_at");
+
+    if (!data?.length) {
+      cont.innerHTML = `<p style="text-align:center;font-size:11px;color:var(--text-dim);padding:20px 0">sin mensajes aún. ¡sé el primero!</p>`;
+      return;
+    }
+    cont.innerHTML = data.map(m => {
+      const mio = m.de_id === currentUser.id;
+      return `<div class="dm-msg ${mio ? "dm-mio" : "dm-suyo"}">
+        <div class="dm-bubble">${esc(m.contenido)}</div>
+        <div class="dm-time">${formatFecha(m.created_at)}</div>
+      </div>`;
+    }).join("");
+    cont.scrollTop = cont.scrollHeight;
+
+    // Marca como leídos
+    db.from("mensajes").update({ leido: true })
+      .eq("para_id", currentUser.id).eq("de_id", paraId).catch(()=>{});
+  }
+
+  window.enviarDM = async function() {
+    const input = document.getElementById("dm-input");
+    const texto = input?.value.trim();
+    if (!texto || !dmParaId || !currentUser) return;
+    input.value = "";
+    await db.from("mensajes").insert([{
+      de_id:    currentUser.id,
+      para_id:  dmParaId,
+      contenido: texto
+    }]);
+    // Notifica al destinatario
+    await db.from("notificaciones").insert([{
+      usuario_id: dmParaId,
+      tipo:       "mensaje",
+      mensaje:    `nuevo mensaje de ${esc(currentUser.display_name||currentUser.username)}`
+    }]);
+    await cargarDMs(dmParaId);
+    window.sfx?.success();
+  };
+
+  window.cerrarDM = function(e) {
+    if (!e || e.target === document.getElementById("dm-overlay")) {
+      document.getElementById("dm-overlay")?.classList.remove("visible");
+    }
+  };
+
+  // DMs en tiempo real
+  function initDMRealtime() {
+    if (!currentUser) return;
+    db.channel(`dm-${currentUser.id}`)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "mensajes",
+        filter: `para_id=eq.${currentUser.id}`
+      }, (payload) => {
+        // Si el DM overlay está abierto con ese remitente, recarga
+        if (document.getElementById("dm-overlay")?.classList.contains("visible") &&
+            payload.new.de_id === dmParaId) {
+          cargarDMs(dmParaId);
+        }
+        // Badge de notif
+        const badge = document.getElementById("notif-badge");
+        if (badge) badge.style.display = "block";
+      })
+      .subscribe();
+  }
   // ── INIT ─────────────────────────────────────
   go("home");
-  // Carga ambient tracks en background
-  setTimeout(() => { if(!ambientTracks.length) cargarAmbientTracks(); }, 1000);
+  setTimeout(() => { if(!ambientTracks.length) cargarAmbientTracks(); }, 800);
+  setTimeout(() => { initRealtime(); initDMRealtime(); }, 1500);
 
 });
