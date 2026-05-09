@@ -50,7 +50,36 @@ document.addEventListener("DOMContentLoaded", () => {
     if (fondo)  localStorage.setItem("mitø-fondo", fondo);
   }
 
-  // Carga tema guardado localmente al inicio
+  // ── SESIÓN LOCAL ─────────────────────────────
+  const SESS_KEY = "mito_sesion";
+
+  function guardarSesionLocal(usuario) {
+    try {
+      localStorage.setItem(SESS_KEY, JSON.stringify({ ...usuario, _ts: Date.now() }));
+      // También guarda tema en localStorage para carga inmediata
+      if (usuario.tema)         localStorage.setItem("mitø-tema", usuario.tema);
+      if (usuario.color_acento) localStorage.setItem("mitø-acento", usuario.color_acento);
+      if (usuario.color_fondo)  localStorage.setItem("mitø-fondo", usuario.color_fondo);
+    } catch(e) {}
+  }
+
+  function leerSesionLocal() {
+    try {
+      const raw = localStorage.getItem(SESS_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (Date.now() - data._ts > 30 * 24 * 60 * 60 * 1000) {
+        localStorage.removeItem(SESS_KEY); return null;
+      }
+      return data;
+    } catch(e) { return null; }
+  }
+
+  function borrarSesionLocal() {
+    localStorage.removeItem(SESS_KEY);
+  }
+
+  // Carga tema inmediatamente desde localStorage (antes de cargar usuario)
   aplicarTema(
     localStorage.getItem("mitø-tema") || "oscuro",
     localStorage.getItem("mitø-acento"),
@@ -61,26 +90,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const claro = document.body.classList.contains("tema-claro");
     const nuevoTema = claro ? "oscuro" : "claro";
     aplicarTema(nuevoTema, null, null);
-    if (currentUser) if(currentUser) db.from("usuarios").update({tema:nuevoTema}).eq("id",currentUser.id).then(()=>{if(currentUser){currentUser.tema=nuevoTema;guardarSesionLocal(currentUser);}});
+    if (currentUser) {
+      currentUser.tema = nuevoTema;
+      guardarSesionLocal(currentUser);
+      db.from("usuarios").update({ tema: nuevoTema }).eq("id", currentUser.id).catch(()=>{});
+    }
   };
 
-
-
-  // ── AUTH STATE ────────────────────────────────
-  // Recupera sesión guardada en localStorage
+  // ── INIT SESIÓN ───────────────────────────────
   async function initSession() {
+    const saved = leerSesionLocal();
+    if (!saved) { updateNavUser(); return; }
+
+    // Aplica tema guardado en sesión
+    if (saved.color_acento) document.documentElement.style.setProperty("--accent", saved.color_acento);
+    if (saved.color_fondo)  document.documentElement.style.setProperty("--bg", saved.color_fondo);
+
+    // Verifica que el usuario sigue en BD
     try {
-      const { data: { session } } = await db.auth.getSession();
-      currentUser = session?.user || null;
-      if (currentUser) {
-        const { data } = await db.from("perfiles").select("*").eq("id", currentUser.id).single();
-        currentPerfil = data;
-        if (data?.tema || data?.color_acento || data?.color_fondo)
-          aplicarTema(data.tema||"oscuro", data.color_acento, data.color_fondo);
-        await comprobarAccesoPrivado();
+      const { data } = await db.from("usuarios").select("*").eq("id", saved.id).single();
+      if (data) {
+        currentUser = data; currentPerfil = data;
+        guardarSesionLocal(data); // refresca timestamp
+        if (data.color_acento) document.documentElement.style.setProperty("--accent", data.color_acento);
+        if (data.color_fondo)  document.documentElement.style.setProperty("--bg", data.color_fondo);
+        tieneAccesoPrivado = data.rol === "banda" || data.rol === "admin";
+      } else {
+        borrarSesionLocal();
       }
-    } catch(e) { console.warn("Error recuperando sesión:", e); }
+    } catch(e) {
+      // Sin conexión — usa datos guardados igualmente
+      currentUser = saved; currentPerfil = saved;
+      tieneAccesoPrivado = saved.rol === "banda" || saved.rol === "admin";
+    }
     updateNavUser();
+    updateNavPrivado();
   }
   initSession();
 
@@ -1156,18 +1200,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.doLogout = function() {
-    if (!confirm("¿Cerrar sesión?")) return;
     borrarSesionLocal();
     currentUser = null;
     currentPerfil = null;
     tieneAccesoPrivado = false;
     updateNavUser();
-    const lockBtn = document.querySelector(".lock-btn");
-    if (lockBtn) {
-      lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i> PRIVADO`;
-      lockBtn.onclick = () => openLogin("privado");
-      lockBtn.style.cssText = "";
-    }
+    updateNavPrivado();
     go("home");
   };
 
