@@ -717,7 +717,7 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
 }
 
 /* ══════════════════════════════════════════════
-   ZONA PRIVADA — LAYOUT CON SIDEBAR
+   ZONA PRIVADA — LAYOUT
    ══════════════════════════════════════════════ */
 
 .privado-layout {
@@ -726,6 +726,7 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
   overflow: hidden;
 }
 
+/* Desktop: sidebar izquierda dentro del panel */
 .privado-sidebar {
   width: 200px;
   flex-shrink: 0;
@@ -779,20 +780,56 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
   color: var(--text); margin-bottom: 24px;
 }
 
-/* ── MOBILE PRIVADO ── */
+/* ── MÓVIL: sin sidebar, solo pills arriba ── */
 @media (max-width: 768px) {
-  .privado-layout { flex-direction: column; }
-  .privado-sidebar {
-    width: 100%; flex-direction: row; flex-wrap: wrap;
-    padding: 12px; gap: 4px; border-right: none;
-    border-bottom: 1px solid var(--card-b);
+  /* Oculta side nav global en privado para dar más espacio */
+  #privado.page.active ~ * .side-nav,
+  body:has(#privado.active) .side-nav { display: none; }
+
+  .privado-layout {
+    flex-direction: column;
+    height: 100%;
   }
-  .privado-logo { display: none; }
-  .privado-nav { flex-direction: row; flex-wrap: wrap; gap: 4px; }
-  .privado-nav-btn { padding: 6px 10px; font-size: 10px; }
+
+  .privado-sidebar {
+    width: 100%;
+    flex-direction: column;
+    padding: 12px 12px 8px;
+    border-right: none;
+    border-bottom: 1px solid var(--card-b);
+    height: auto;
+    flex-shrink: 0;
+  }
+
+  .privado-logo {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .privado-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .privado-nav-btn {
+    padding: 6px 10px;
+    font-size: 10px;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
   .privado-nav-btn i { display: none; }
-  .privado-sidebar .btn-secondary { display: none; }
-  .privado-content { padding: 20px 16px; }
+
+  .privado-sidebar .btn-secondary {
+    display: none;
+  }
+
+  .privado-content {
+    padding: 16px;
+    flex: 1;
+    overflow-y: auto;
+  }
 }
 
 /* ── BEAT DETAIL REDISEÑADO ── */
@@ -892,4 +929,23 @@ body.cursor-hover #mito-cursor-ring { width: 44px; height: 44px; }
   width: 10px; height: 10px;
   border-radius: 50%; border: none;
   background: var(--accent); cursor: pointer;
+}
+
+/* ── PRIVADO EN MÓVIL: ocupa toda la pantalla ── */
+@media (max-width: 768px) {
+  /* Cuando privado está activo, el app sube hasta arriba */
+  #app:has(#privado.active) {
+    bottom: 0; /* quita el espacio del bottom nav */
+  }
+
+  /* La bottom nav se oculta en privado */
+  body:has(#privado.active) .mobile-bottom-nav {
+    display: none;
+  }
+
+  /* El panel privado ocupa todo */
+  #privado.active {
+    top: 0;
+    bottom: 0;
+  }
 }
