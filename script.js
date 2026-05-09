@@ -861,7 +861,7 @@ document.addEventListener("DOMContentLoaded", () => {
       abrirBeatDetalle(beat);
     });
 
-    const playBtn = card.querySelector(".play-btn");
+    const playBtn = card.querySelector(".play-btn-inline");
     const canvas  = card.querySelector(".viz-canvas");
     const timeCur = card.querySelector(".time-cur");
     const timeTot = card.querySelector(".time-tot");
@@ -954,6 +954,9 @@ document.addEventListener("DOMContentLoaded", () => {
       audio.crossOrigin = "anonymous";
       audio.addEventListener("loadedmetadata", () => {
         timeTot.textContent = fmt(audio.duration);
+        // Also update the time column
+        const timeCol = card.querySelector(".beat-row-time");
+        if (timeCol) timeCol.textContent = fmt(audio.duration);
       });
       audio.addEventListener("timeupdate", () => {
         if (audio.duration) drawStatic(audio.currentTime / audio.duration);
@@ -993,6 +996,7 @@ document.addEventListener("DOMContentLoaded", () => {
         a.pause(); isPlaying = false;
         playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
         card.classList.remove("is-playing");
+        card.querySelectorAll(".beat-player-bar").forEach(el => el.style.display = "none");
         cancelAnimationFrame(vizRaf);
         drawStatic(a.duration ? a.currentTime / a.duration : 0);
         activeAudio = null; activeCard = null; window.sfx?.pause();
@@ -1013,11 +1017,13 @@ document.addEventListener("DOMContentLoaded", () => {
         isPlaying = true;
         playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
         card.classList.add("is-playing");
+        // Show player bar
+        card.querySelectorAll(".beat-player-bar").forEach(el => el.style.display = "flex");
+        card.style.flexWrap = "wrap";
         activeAudio = a; activeCard = card;
         cancelAnimationFrame(vizRaf);
         drawFreq();
         window.sfx?.play();
-        // Registra reproducción
         db.from("reproducciones").insert([{ beat_id: beat.id }]).catch(()=>{});
       }
     });
@@ -1064,9 +1070,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderBeats(cont, data, admin) {
-    cont.innerHTML="";
-    if (!data.length) { cont.innerHTML=`<p class="loading-msg no-spin">No hay beats que coincidan con los filtros.</p>`; return; }
-    data.forEach((beat,i)=>cont.appendChild(crearCard(beat,i,admin)));
+    cont.innerHTML = "";
+    if (!data.length) { cont.innerHTML = `<p class="loading-msg no-spin">no hay beats que coincidan.</p>`; return; }
+    // Header row
+    const hdr = document.createElement("div");
+    hdr.className = "beats-header";
+    hdr.innerHTML = `<span>#</span><span></span><span>título</span><span>tiempo</span><span>bpm</span><span>tags</span><span></span>`;
+    cont.appendChild(hdr);
+    data.forEach((beat,i) => cont.appendChild(crearCard(beat,i,admin)));
   }
 
   window.filtrarBeats = function() {
