@@ -1490,29 +1490,110 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   window.toggleComentarios = async function(postId) {
-    const cont = document.getElementById(`feed-coms-${postId}`);
-    if (cont.style.display === "block") { cont.style.display = "none"; return; }
-    cont.style.display = "block";
-    cont.innerHTML = `<p class="loading-msg" style="padding:8px 0;font-size:10px">Cargando...</p>`;
-    const { data: coms } = await db.from("comentarios")
-      .select("*, usuarios(display_name, username)")
-      .eq("post_id", postId).order("created_at");
+    const cont = document.getElementById("feed-coms-" + postId);
+    if (!cont) return;
 
-    const comsHtml = (coms||[]).map(c => {
-      const ca = c.usuarios?.display_name||c.usuarios?.username||"Anónimo";
-      return `<div class="comentario-card"><div class="comentario-autor">${esc(ca)} · ${formatFecha(c.created_at)}</div><div class="comentario-texto">${esc(c.contenido)}</div></div>`;
-    }).join("") || `<p style="font-size:11px;color:var(--text-dim);padding:8px 0;letter-spacing:1px">Aún no hay comentarios.</p>`;
+    // Toggle open/close
+    if (cont.classList.contains("open")) {
+      cont.classList.remove("open");
+      cont.innerHTML = "";
+      return;
+    }
+    cont.classList.add("open");
 
-    const comentarHtml = currentUser
-      ? `<div class="comentar-form" style="margin-top:8px">
-           <textarea id="com-${postId}" placeholder="Comenta..." class="field textarea" rows="2"></textarea>
-           <button class="btn-secondary" style="margin-top:6px" onclick="enviarComentario(${postId})">Comentar</button>
-           <p class="auth-msg" id="com-msg-${postId}"></p>
-         </div>`
-      : `<p style="font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:8px"><a onclick="go('auth')" style="color:var(--accent);cursor:pointer">Inicia sesión</a> para comentar</p>`;
+    // Show loading
+    const loading = document.createElement("p");
+    loading.className = "com-empty";
+    loading.textContent = "cargando...";
+    cont.appendChild(loading);
 
-    cont.innerHTML = comsHtml + comentarHtml;
+    try {
+      const { data: coms } = await db.from("comentarios")
+        .select("*, usuarios(display_name, username)")
+        .eq("post_id", postId)
+        .order("created_at");
+
+      cont.innerHTML = "";
+
+      // Render comments list
+      const list = document.createElement("div");
+      list.className = "coms-list";
+
+      if (coms && coms.length > 0) {
+        coms.forEach(c => {
+          const ca = (c.usuarios && (c.usuarios.display_name || c.usuarios.username)) || "anónimo";
+          const card = document.createElement("div");
+          card.className = "com-card";
+          const autor = document.createElement("div");
+          autor.className = "com-autor";
+          autor.textContent = ca + " · " + formatFecha(c.created_at);
+          const texto = document.createElement("div");
+          texto.className = "com-texto";
+          texto.textContent = c.contenido;
+          card.appendChild(autor);
+          card.appendChild(texto);
+          list.appendChild(card);
+        });
+      } else {
+        const empty = document.createElement("p");
+        empty.className = "com-empty";
+        empty.textContent = "aún no hay comentarios.";
+        list.appendChild(empty);
+      }
+      cont.appendChild(list);
+
+      // Comment form if logged in
+      if (currentUser) {
+        const form = document.createElement("div");
+        form.className = "com-form";
+
+        const ta = document.createElement("textarea");
+        ta.className = "field";
+        ta.rows = 2;
+        ta.placeholder = "tu comentario...";
+        ta.style.resize = "vertical";
+        ta.style.minHeight = "64px";
+        ta.style.fontFamily = "'Geist Mono', monospace";
+
+        const btn = document.createElement("button");
+        btn.className = "btn-primary";
+        btn.style.fontSize = "11px";
+        btn.innerHTML = "<i class='fa-solid fa-paper-plane'></i> comentar";
+
+        const msgEl = document.createElement("p");
+        msgEl.className = "auth-msg";
+
+        // THE BUTTON CLICK
+        btn.addEventListener("click", function() {
+          window.enviarComentarioFeed(postId, ta, btn, msgEl);
+        });
+
+        ta.addEventListener("keydown", function(e) {
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) btn.click();
+        });
+
+        form.appendChild(ta);
+        form.appendChild(btn);
+        form.appendChild(msgEl);
+        cont.appendChild(form);
+      } else {
+        const loginP = document.createElement("p");
+        loginP.style.cssText = "font-size:11px;color:var(--text-dim);margin-top:8px";
+        const span = document.createElement("span");
+        span.textContent = "inicia sesión";
+        span.style.cssText = "color:var(--accent);cursor:pointer";
+        span.onclick = () => go("auth");
+        loginP.appendChild(span);
+        loginP.appendChild(document.createTextNode(" para comentar"));
+        cont.appendChild(loginP);
+      }
+
+    } catch(e) {
+      cont.innerHTML = "<p class='com-empty'>error al cargar comentarios</p>";
+    }
   };
+
+  // toggleComentarios restaurado
 
   window.enviarComentario = async function(postId) {
     const el  = document.getElementById(`com-${postId}`);
@@ -1523,7 +1604,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (msg) { msg.textContent="Enviando..."; msg.className="auth-msg"; }
     const { error } = await db.from("comentarios").insert([{ post_id: postId, autor_id: currentUser.id, contenido: texto }]);
     if (error) { if(msg){msg.textContent="Error: "+error.message;msg.className="auth-msg error";} }
-    else { window.sfx?.success(); await toggleComentarios(postId); toggleComentarios(postId); }
+    else { window.sfx?.success(); const c=document.getElementById('feed-coms-'+postId); if(c){c.classList.remove('open');c.innerHTML='';} await window.toggleComentarios(postId); }
   };
 
   window.abrirImgFeed = function(url) {
