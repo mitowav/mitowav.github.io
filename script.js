@@ -41,17 +41,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── ZONA PRIVADA PANELS ──────────────────────
   window.switchPrivado = function(id, btn) {
-    document.querySelectorAll(".privado-panel").forEach(p => p.classList.remove("active"));
-    document.querySelectorAll(".privado-nav-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".p-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".p-nav-btn").forEach(b => b.classList.remove("active"));
     const panel = document.getElementById("panel-" + id);
     if (panel) panel.classList.add("active");
     if (btn) btn.classList.add("active");
-    // Load data for specific panels
-    if (id === "accesos")         cargarAccesos();
-    if (id === "solicitudes-priv") cargarSolicitudesAdmin();
-    if (id === "todos-beats")      cargarBeats("admin-list", null);
-    if (id === "letras-priv")      cargarLetrasAdmin();
-    if (id === "galeria-admin")    cargarGaleriaAdmin();
+    if (id === "accesos")       cargarAccesos();
+    if (id === "solicitudes")   cargarSolicitudesAdmin();
+    if (id === "todos-beats")   cargarBeats("admin-list", null);
+    if (id === "letras-priv")   cargarLetrasAdmin();
+    if (id === "galeria-edit")  cargarGaleriaAdmin();
   };
   // ── HELPERS ──────────────────────────────────
   function esc(s) { return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
@@ -186,15 +185,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // onAuthStateChange ya no se usa
 
   function updateNavUser() {
-    const sideBtn = document.getElementById("side-auth-btn");
-    const mobBtn  = document.getElementById("mob-auth-btn");
+    const btn    = document.getElementById("btn-auth");
+    const mobBtn = document.getElementById("mob-auth-btn");
     if (currentUser) {
       const name = esc(currentUser.display_name || currentUser.username || "perfil");
-      if (sideBtn) { sideBtn.innerHTML = `<i class="fa-solid fa-user"></i><span class="btn-label">${name}</span>`; sideBtn.onclick = () => go("perfil"); sideBtn.className = "side-auth-btn"; }
-      if (mobBtn)  { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>yo</span>`; mobBtn.onclick = () => go("perfil", mobBtn); }
+      if (btn) { btn.innerHTML = `<i class="fa-solid fa-user"></i> ${name}`; btn.className = "nav-auth-btn logged"; btn.onclick = () => go("perfil"); }
+      if (mobBtn) { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>${name}</span>`; mobBtn.onclick = () => go("perfil", mobBtn); }
     } else {
-      if (sideBtn) { sideBtn.innerHTML = `<i class="fa-solid fa-user"></i><span class="btn-label">entrar</span>`; sideBtn.onclick = () => go("auth"); }
-      if (mobBtn)  { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>yo</span>`; mobBtn.onclick = () => go("auth", mobBtn); }
+      if (btn) { btn.innerHTML = `<i class="fa-solid fa-user"></i> entrar`; btn.className = "nav-auth-btn"; btn.onclick = () => go("auth"); }
+      if (mobBtn) { mobBtn.innerHTML = `<i class="fa-solid fa-user"></i><span>yo</span>`; mobBtn.onclick = () => go("auth", mobBtn); }
     }
   }
 
@@ -205,30 +204,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateNavPrivado() {
-    const lockBtn  = document.getElementById("side-lock-btn");
-    const mobPriv  = document.getElementById("mob-priv-btn");
+    const lockBtn = document.getElementById("nav-lock-btn");
+    const mobLock = document.getElementById("mob-lock-btn");
     if (tieneAccesoPrivado) {
-      if (lockBtn) {
-        lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i><span class="btn-label">privado</span>`;
-        lockBtn.onclick = () => go("privado");
-        lockBtn.style.color = "#6bffb8";
-      }
-      if (mobPriv) {
-        mobPriv.innerHTML = `<i class="fa-solid fa-lock-open"></i><span>privado</span>`;
-        mobPriv.onclick = () => go("privado", mobPriv);
-        mobPriv.style.color = "var(--accent)";
-      }
+      if (lockBtn) { lockBtn.innerHTML = `<i class="fa-solid fa-lock-open"></i>`; lockBtn.onclick = () => go("privado"); lockBtn.style.color = "#6bffb8"; lockBtn.style.borderColor = "rgba(107,255,184,0.4)"; }
+      if (mobLock) { mobLock.innerHTML = `<i class="fa-solid fa-lock-open"></i> privado`; mobLock.onclick = () => { go("privado"); toggleMobMenu(); }; }
     } else {
-      if (lockBtn) {
-        lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i><span class="btn-label">privado</span>`;
-        lockBtn.onclick = () => openLogin("privado");
-        lockBtn.style.color = "";
-      }
-      if (mobPriv) {
-        mobPriv.innerHTML = `<i class="fa-solid fa-lock"></i><span>privado</span>`;
-        mobPriv.onclick = () => openLogin("privado");
-        mobPriv.style.color = "";
-      }
+      if (lockBtn) { lockBtn.innerHTML = `<i class="fa-solid fa-lock"></i>`; lockBtn.onclick = () => openLogin("privado"); lockBtn.style.color = ""; lockBtn.style.borderColor = ""; }
+      if (mobLock) { mobLock.innerHTML = `<i class="fa-solid fa-lock"></i> privado`; mobLock.onclick = () => openLogin("privado"); }
     }
   }
 
@@ -841,36 +824,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function crearCard(beat, index, admin) {
     const card = document.createElement("div");
-    card.className = "beat-card";
+    card.className = "beat-row";
     const bars = generateBars(beat, index);
     const inspsArr = beat.inspiraciones ? beat.inspiraciones.split(",").map(s=>s.trim()).filter(Boolean) : [];
 
     card.innerHTML = `
-      <span class="beat-num">${String(index+1).padStart(2,"0")}</span>
-      ${beat.cover_url
-        ? `<img src="${beat.cover_url}" class="beat-cover" alt="">`
-        : `<div class="beat-cover-placeholder"><i class="fa-solid fa-music"></i></div>`}
-      <div class="beat-info">
-        <h3>${esc(beat.title)}</h3>
-        <div class="beat-info-genre">${esc(beat.genre)}</div>
-        <div class="beat-meta-tags">
-          ${beat.bpm  ? `<span class="beat-meta-tag bpm">${beat.bpm} bpm</span>` : ""}
-          ${beat.tono ? `<span class="beat-meta-tag">${esc(beat.tono)}</span>` : ""}
-        </div>
-        ${inspsArr.length ? `<div class="beat-insps">${inspsArr.map(i=>`<span class="beat-insp-tag">${esc(i)}</span>`).join("")}</div>` : ""}
+      <span class="beat-row-num">${String(index+1).padStart(2,"0")}</span>
+      <div class="beat-row-cover">
+        ${beat.cover_url
+          ? `<img src="${beat.cover_url}" alt="">`
+          : `<div class="beat-row-cover-ph"><i class="fa-solid fa-music"></i></div>`}
       </div>
-      ${beat.privado ? `<span class="beat-priv-tag"><i class="fa-solid fa-lock"></i></span>` : ""}
-      <div class="custom-player">
+      <div class="beat-row-info">
+        <div class="beat-row-title">${esc(beat.title)}</div>
+        <div class="beat-row-genre">${esc(beat.genre||"")}</div>
+        <div class="beat-row-tags">
+          ${beat.bpm  ? `<span class="beat-tag bpm">${beat.bpm} bpm</span>` : ""}
+          ${beat.tono ? `<span class="beat-tag">${esc(beat.tono)}</span>` : ""}
+        </div>
+        ${inspsArr.length ? `<div class="beat-insps">${inspsArr.map(i=>`<span class="beat-insp">${esc(i)}</span>`).join("")}</div>` : ""}
+      </div>
+      <div class="beat-row-player">
         <button class="play-btn"><i class="fa-solid fa-play"></i></button>
         <div class="player-right">
           <canvas class="viz-canvas" id="viz-${beat.id||index}"></canvas>
           <div class="player-meta"><span class="time-cur">0:00</span><span class="time-tot">—</span></div>
         </div>
       </div>
-      ${admin ? `<button class="delete-btn" title="borrar"><i class="fa-solid fa-trash"></i></button>` : ""}`;
+      <div class="beat-row-actions">
+        ${beat.privado ? `<span class="beat-priv-tag"><i class="fa-solid fa-lock"></i></span>` : ""}
+        ${admin ? `<button class="delete-btn" title="borrar"><i class="fa-solid fa-trash"></i></button>` : ""}
+      </div>`;
 
     card.addEventListener("click", e => {
-      if (e.target.closest(".custom-player,.delete-btn")) return;
+      if (e.target.closest(".beat-row-player,.delete-btn")) return;
       abrirBeatDetalle(beat);
     });
 
@@ -1217,7 +1204,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const card=document.createElement("div"); card.className="banda-card";
         card.style.cursor="pointer";
         card.innerHTML=`
-          ${m.avatar_url?`<img src="${m.avatar_url}" class="banda-avatar" alt="">`: `<div class="banda-avatar-placeholder">${ini}</div>`}
+          ${m.avatar_url?`<img src="${m.avatar_url}" class="banda-avatar" alt="">`: `<div class="banda-avatar-ph">${ini}</div>`}
           <div class="banda-name">${esc(m.display_name||m.username)}</div>
           ${m.instrumento?`<div class="banda-rol">${esc(m.instrumento)}</div>`:""}
           ${m.bio?`<p class="banda-bio">${esc(m.bio)}</p>`:""}
@@ -1404,7 +1391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       cont.innerHTML = `
         <div class="feed-header">
-          <h2>foro</h2>
+          <h2 class="feed-title">foro</h2>
           ${newBtn}
         </div>
         <div class="cat-pills">${catsHtml}</div>
@@ -1440,25 +1427,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return `
       <div class="feed-card" id="feed-card-${p.id}">
-        <div class="feed-card-left">${avatar}</div>
-        <div class="feed-card-body">
-          <div class="feed-card-meta">
+        <div>${avatar}</div>
+        <div class="feed-body">
+          <div class="feed-meta">
             <span class="feed-autor">${esc(autor)}</span>
             <span class="feed-fecha">${formatFecha(p.created_at)}</span>
-            ${p.titulo ? `<span class="feed-titulo">${esc(p.titulo)}</span>` : ""}
+            ${p.titulo && p.titulo !== "sin título" ? `<span class="feed-titulo-post">${esc(p.titulo)}</span>` : ""}
           </div>
-          <div class="feed-card-text">${esc(p.contenido)}</div>
+          <div class="feed-text">${esc(p.contenido)}</div>
           ${imgHtml}
-          <div class="feed-card-actions">
+          <div class="feed-actions">
             <button class="feed-action like-btn" id="like-post-${p.id}" onclick="toggleLike('post',${p.id},this)">
               <i class="fa-regular fa-heart"></i> <span class="like-count">0</span>
             </button>
             <button class="feed-action" onclick="toggleComentarios(${p.id})">
               <i class="fa-regular fa-comment"></i> ${numComs}
             </button>
-            ${currentUser?.id === p.autor_id || currentUser?.rol === "admin" ? `<button class="feed-action" onclick="eliminarPost(${p.id},this)" style="margin-left:auto;color:var(--text-dim)"><i class="fa-solid fa-trash" style="font-size:10px"></i></button>` : ""}
+            ${currentUser?.id === p.autor_id || currentUser?.rol === "admin" ? `<button class="feed-action" onclick="eliminarPost(${p.id},this)" style="margin-left:auto"><i class="fa-solid fa-trash" style="font-size:10px"></i></button>` : ""}
           </div>
-          <div class="feed-comentarios" id="feed-coms-${p.id}" style="display:none"></div>
+          <div class="feed-coms" id="feed-coms-${p.id}"></div>
         </div>
       </div>`;
   }
@@ -1498,7 +1485,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       // Reload
       const cont = document.getElementById("feed-coms-" + postId);
-      if (cont) { cont.dataset.open = "0"; cont.style.display = "none"; }
+      if (cont) { cont.classList.remove("open"); }
       await window.toggleComentarios(postId);
     }
   };
@@ -1621,16 +1608,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const p=currentPerfil; const ini=(p.display_name||p.username||"?")[0].toUpperCase();
     const presetsHtml=COLORES_PRESET.map((c,i)=>`<div class="color-preset" style="background:${c.acento}" title="${c.label}" onclick="aplicarPreset(${i})"></div>`).join("");
     cont.innerHTML=`
-      <div class="perfil-wrap">
-        <div class="perfil-header">
-          ${p.avatar_url?`<img src="${p.avatar_url}" class="perfil-avatar-big" alt="">`:`<div class="perfil-avatar-placeholder">${ini}</div>`}
+      <div style="max-width:580px">
+        <div class="perf-header">
+          ${p.avatar_url?`<img src="${p.avatar_url}" class="perf-avatar" alt="">`:`<div class="perf-avatar-ph">${ini}</div>`}
           <div class="perfil-info">
-            <div class="perfil-name">${esc(p.display_name||p.username)}</div>
-            <div class="perfil-rol">${esc(p.rol)}${p.instrumento?" · "+esc(p.instrumento):""}</div>
+            <div class="perf-name">${esc(p.display_name||p.username)}</div>
+            <div class="perf-rol">${esc(p.rol)}${p.instrumento?" · "+esc(p.instrumento):""}</div>
             ${p.bio?`<p style="font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.6">${esc(p.bio)}</p>`:""}
           </div>
         </div>
-        <div class="perfil-edit-box">
+        <div class="card">
           <h3>EDITAR PERFIL</h3>
           <input type="text" id="edit-display" placeholder="nombre visible" class="field" value="${esc(p.display_name||"")}">
           <input type="text" id="edit-instrumento" placeholder="instrumento / rol" class="field" value="${esc(p.instrumento||"")}">
@@ -1648,7 +1635,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="btn-primary full" onclick="guardarPerfil()">Guardar cambios</button>
           <p class="auth-msg" id="perfil-msg"></p>
         </div>
-        <div class="color-picker-section">
+        <div class="card" style="margin-top:0">
           <h3>PERSONALIZAR COLORES</h3>
           <p style="font-size:10px;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px">Presets</p>
           <div class="color-presets">${presetsHtml}</div>
@@ -2280,14 +2267,14 @@ document.addEventListener("DOMContentLoaded", () => {
     ].filter(Boolean).join("");
 
     cont.innerHTML = `
-      <button onclick="cerrarMiembro()" class="letra-back-btn" style="margin-bottom:24px">
+      <button onclick="cerrarMiembro()" class="back-btn" style="margin-bottom:24px">
         <i class="fa-solid fa-arrow-left"></i> volver
       </button>
-      <div class="miembro-detalle">
-        <div class="miembro-avatar-wrap">
+      <div class="miembro-layout">
+        <div>
           ${m.avatar_url
-            ? `<img src="${m.avatar_url}" class="miembro-avatar-big" alt="">`
-            : `<div class="miembro-avatar-big-placeholder">${ini}</div>`}
+            ? `<img src="${m.avatar_url}" class="miembro-av-big" alt="">`
+            : `<div class="miembro-av-ph">${ini}</div>`}
         </div>
         <div class="miembro-info">
           <div class="miembro-nombre">${esc(m.display_name||m.username)}</div>
