@@ -797,8 +797,6 @@ window.cerrarMiembro = function() {
 };
 
 // ── DMs ──────────────────────────────────────
-let dmParaId   = null;
-let dmParaNombre = "";
 
 window.abrirDM = async function(paraId, paraNombre) {
   dmParaId     = paraId;
@@ -887,8 +885,6 @@ function initDMRealtime() {
 }
 
 // ── DMs ──────────────────────────────────────
-let dmParaId   = null;
-let dmParaNombre = "";
 
 window.abrirDM = async function(paraId, paraNombre) {
   dmParaId     = paraId;
