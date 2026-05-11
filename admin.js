@@ -545,7 +545,7 @@ const COLORES_PRESET = [
 async function renderPerfil() {
   const cont=document.getElementById("perfil-content");
   if(!currentUser){cont.innerHTML=`<div class="solicitud-login"><p>Inicia sesión para ver tu perfil</p><br><button class="btn-primary" onclick="go('auth')">Entrar</button></div>`;return;}
-  const p=currentPerfil; const ini=(p.display_name||p.username||"?")[0].toUpperCase();
+  const p=currentPerfil || currentUser; const ini=(p.display_name||p.username||"?")[0].toUpperCase();
   const presetsHtml=COLORES_PRESET.map((c,i)=>`<div class="color-preset" style="background:${c.acento}" title="${c.label}" onclick="aplicarPreset(${i})"></div>`).join("");
   cont.innerHTML=`
     <div style="max-width:580px">
