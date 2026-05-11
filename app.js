@@ -410,50 +410,36 @@ window.cargarLanzamientos = async function() {
   grid.innerHTML = `<p class="loading-msg">cargando discografía</p>`;
  
   try {
-    // iTunes Search API — gratis, sin API key, soporta CORS
-    const url = `https://itunes.apple.com/search?term=mit%C3%B8&entity=album&attribute=artistTerm&media=music&limit=50&country=ES`;
+    // Busca por Artist ID exacto de Apple Music
+    const ARTIST_ID = "1871334573";
+    const url = `https://itunes.apple.com/lookup?id=${ARTIST_ID}&entity=album&limit=50&country=ES`;
     const res  = await fetch(url);
     const json = await res.json();
  
-    // Filtra solo resultados del artista mitø y elimina duplicados por título
-    const seen = new Set();
-    const albums = (json.results || [])
-      .filter(r => {
-        const artist = (r.artistName || "").toLowerCase();
-        const ok = artist.includes("mit") || artist.includes("ø");
-        const key = r.collectionName?.toLowerCase().trim();
-        if (!ok || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort((a, b) => {
-        // Más recientes primero
-        const ya = new Date(a.releaseDate || 0).getFullYear();
-        const yb = new Date(b.releaseDate || 0).getFullYear();
-        return yb - ya;
-      });
+    // El primer resultado es el artista, el resto son sus álbumes/singles
+    const releases = (json.results || [])
+      .filter(r => r.wrapperType === "collection" || r.collectionType)
+      .sort((a, b) => new Date(b.releaseDate||0) - new Date(a.releaseDate||0));
  
-    if (!albums.length) {
-      // Fallback a Supabase si iTunes no devuelve nada
-      await cargarLanzamientosSupabase();
+    if (!releases.length) {
+      grid.innerHTML = `<p class="loading-msg no-spin" style="grid-column:1/-1">aún no hay lanzamientos.</p>`;
       return;
     }
  
     grid.innerHTML = "";
-    albums.forEach(album => {
-      const year     = album.releaseDate ? new Date(album.releaseDate).getFullYear() : "";
-      const tipo     = album.collectionType === "Album" ? "Álbum" : album.collectionType === "EP" ? "EP" : "Single";
-      // Portada en alta resolución (iTunes devuelve 100x100, pedimos 600x600)
-      const cover    = (album.artworkUrl100 || "").replace("100x100", "600x600");
-      const titulo   = album.collectionName || album.trackName || "—";
-      const link     = album.collectionViewUrl || album.trackViewUrl || "#";
+    releases.forEach(album => {
+      const year  = album.releaseDate ? new Date(album.releaseDate).getFullYear() : "";
+      const tipo  = album.collectionType === "Album" ? "Álbum" : "Single";
+      const cover = (album.artworkUrl100 || "").replace("100x100bb", "600x600bb");
+      const titulo = album.collectionName || "—";
+      const link  = album.collectionViewUrl || "#";
  
       const card = document.createElement("div");
       card.className = "lanz-card";
       card.innerHTML = `
         <div class="lanz-cover">
           ${cover
-            ? `<img src="${cover}" alt="${esc(titulo)}" loading="lazy">`
+            ? `<img src="${esc(cover)}" alt="${esc(titulo)}" loading="lazy">`
             : `<div class="lanz-cover-ph"><i class="fa-solid fa-record-vinyl"></i></div>`}
           <a href="${esc(link)}" target="_blank" class="lanz-play-btn" onclick="event.stopPropagation()">
             <i class="fa-brands fa-apple"></i>
@@ -473,49 +459,10 @@ window.cargarLanzamientos = async function() {
  
   } catch(e) {
     console.warn("iTunes API error:", e);
-    // Si falla iTunes, usa Supabase manual
-    await cargarLanzamientosSupabase();
+    grid.innerHTML = `<p class="loading-msg no-spin">error al cargar — <button class="link-btn" onclick="cargarLanzamientos()">reintentar</button></p>`;
   }
 };
  
-// Fallback: carga los lanzamientos manuales de Supabase
-async function cargarLanzamientosSupabase() {
-  const grid = document.getElementById("lanz-grid");
-  if (!grid || !db) return;
-  try {
-    const { data } = await db.from("lanzamientos").select("*").order("created_at", { ascending: false });
-    if (!data?.length) {
-      grid.innerHTML = `<p class="loading-msg no-spin" style="grid-column:1/-1">aún no hay lanzamientos.</p>`;
-      return;
-    }
-    grid.innerHTML = "";
-    data.forEach(l => {
-      const card = document.createElement("div");
-      card.className = "lanz-card";
-      card.innerHTML = `
-        <div class="lanz-cover">
-          ${l.cover_url
-            ? `<img src="${l.cover_url}" alt="${esc(l.titulo)}" loading="lazy">`
-            : `<div class="lanz-cover-ph"><i class="fa-solid fa-record-vinyl"></i></div>`}
-          ${l.spotify_url ? `<a href="${esc(l.spotify_url)}" target="_blank" class="lanz-play-btn"><i class="fa-brands fa-spotify"></i></a>` : ""}
-        </div>
-        <div class="lanz-info">
-          <div class="lanz-titulo">${esc(l.titulo)}</div>
-          <div class="lanz-meta">
-            <span class="lanz-tipo">${esc(l.tipo||"Single")}</span>
-            ${l.fecha ? `<span class="lanz-fecha">${esc(l.fecha)}</span>` : ""}
-          </div>
-        </div>`;
-      if (l.spotify_url) {
-        card.style.cursor = "pointer";
-        card.addEventListener("click", () => window.open(l.spotify_url, "_blank"));
-      }
-      grid.appendChild(card);
-    });
-  } catch(e) {
-    grid.innerHTML = `<p class="loading-msg no-spin">error al cargar</p>`;
-  }
-}
 
 window.subirLanzamiento = async function() {
   const titulo  = document.getElementById("lanz-titulo")?.value.trim();
