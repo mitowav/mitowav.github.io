@@ -29,12 +29,75 @@ async function cargarBanda() {
 }
 
 async function renderSolicitudForm() {
-  const cont=document.getElementById("solicitud-content");
-  if(!currentUser){cont.innerHTML=`<div class="solicitud-login"><p>Inicia sesión para enviar una solicitud</p><br><button class="btn-primary" onclick="go('auth')">Entrar</button></div>`;return;}
-  const{data:solData}=await db.from("solicitudes").select("*").eq("user_id",currentUser.id).limit(1); const data=solData?.[0]||null;
-  if(data){cont.innerHTML=`<div class="solicitud-enviada"><div style="font-size:32px;margin-bottom:10px">✅</div><p>Tu solicitud está <strong>${data.estado}</strong>.<br>Te avisaremos pronto.</p></div>`;return;}
-  cont.innerHTML=`<div class="solicitud-form"><input type="text" id="sol-nombre" placeholder="Tu nombre" class="field" value="${esc(currentUser?.display_name||currentUser?.username||"")}"><input type="text" id="sol-instrumento" placeholder="Instrumento / rol" class="field"><input type="text" id="sol-redes" placeholder="Tu Instagram u otras redes" class="field"><textarea id="sol-experiencia" placeholder="¿Qué experiencia tienes?" class="field textarea" rows="3"></textarea><textarea id="sol-mensaje" placeholder="¿Por qué quieres unirte?" class="field textarea" rows="3"></textarea><button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud</button><p class="auth-msg" id="sol-msg"></p></div>`;
+  const cont = document.getElementById("solicitud-content");
+  if (!currentUser) {
+    cont.innerHTML = `<div class="solicitud-login">
+      <p>Inicia sesión para enviar una solicitud</p><br>
+      <button class="btn-primary" onclick="go('auth')">Entrar</button>
+    </div>`;
+    return;
+  }
+  const { data: solData } = await db.from("solicitudes")
+    .select("*").eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false }).limit(1);
+  const data = solData?.[0] || null;
+  if (data) {
+    if (data.estado === "aceptado") {
+      cont.innerHTML = `<div class="solicitud-enviada">
+        <div style="font-size:36px;margin-bottom:12px">🎉</div>
+        <p style="font-size:15px;color:var(--text);margin-bottom:6px">
+          ¡Has sido <strong style="color:#6bffb8">aceptado</strong> en la banda!
+        </p>
+        ${data.respuesta ? `<p style="font-size:12px;color:var(--text-dim);font-style:italic;line-height:1.6">"${esc(data.respuesta)}"</p>` : ""}
+      </div>`;
+    } else if (data.estado === "rechazado") {
+      const intentos = parseInt(getStorage("mito-sol-intentos") || "1");
+      if (intentos >= 3) {
+        cont.innerHTML = `<div class="solicitud-enviada">
+          <div style="font-size:32px;margin-bottom:12px">🚫</div>
+          <p style="font-size:14px;color:var(--text);margin-bottom:8px">Has agotado tus intentos.</p>
+          <p style="font-size:12px;color:var(--text-dim);line-height:1.7">Si crees que ha habido un error, escríbenos directamente.</p>
+          ${data.respuesta ? `<p style="font-size:12px;color:var(--text-dim);margin-top:12px;font-style:italic">"${esc(data.respuesta)}"</p>` : ""}
+        </div>`;
+      } else {
+        cont.innerHTML = `<div class="solicitud-enviada">
+          <div style="font-size:32px;margin-bottom:12px">😕</div>
+          <p style="font-size:14px;color:var(--text);margin-bottom:6px">Esta vez no pudo ser.</p>
+          ${data.respuesta
+            ? `<p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;font-style:italic">"${esc(data.respuesta)}"</p>`
+            : `<p style="font-size:12px;color:var(--text-dim);margin-bottom:16px">Intento ${intentos} de 3 — puedes volver a intentarlo.</p>`}
+          <button class="btn-primary" onclick="reintentarSolicitud()">
+            <i class="fa-solid fa-rotate-right"></i> volver a intentarlo
+          </button>
+        </div>`;
+      }
+    } else {
+      cont.innerHTML = `<div class="solicitud-enviada">
+        <div style="font-size:32px;margin-bottom:12px">⏳</div>
+        <p style="font-size:14px;color:var(--text);margin-bottom:6px">Solicitud enviada.</p>
+        <p style="font-size:12px;color:var(--text-dim)">Estamos revisándola. Te avisaremos pronto.</p>
+      </div>`;
+    }
+    return;
+  }
+  cont.innerHTML = `<div class="solicitud-form">
+    <input type="text" id="sol-nombre" placeholder="Tu nombre" class="field" value="${esc(currentUser?.display_name||currentUser?.username||"")}">
+    <input type="text" id="sol-instrumento" placeholder="Instrumento / rol" class="field">
+    <input type="text" id="sol-redes" placeholder="Tu Instagram u otras redes" class="field">
+    <textarea id="sol-experiencia" placeholder="¿Qué experiencia tienes?" class="field textarea" rows="3"></textarea>
+    <textarea id="sol-mensaje" placeholder="¿Por qué quieres unirte?" class="field textarea" rows="3"></textarea>
+    <button class="btn-primary" onclick="enviarSolicitud()">Enviar solicitud</button>
+    <p class="auth-msg" id="sol-msg"></p>
+  </div>`;
 }
+
+window.reintentarSolicitud = async function() {
+  if (!currentUser) return;
+  await db.from("solicitudes").delete().eq("user_id", currentUser.id);
+  const intentos = parseInt(getStorage("mito-sol-intentos") || "1");
+  setStorage("mito-sol-intentos", String(intentos + 1));
+  renderSolicitudForm();
+};
 
 window.enviarSolicitud = async function() {
   const nombre=document.getElementById("sol-nombre").value.trim();
@@ -110,17 +173,13 @@ window.cambiarEstadoSolicitud = async function(id, estado) {
   const respuesta = document.getElementById(`resp-${id}`)?.value.trim();
   const msg       = document.getElementById(`sol-msg-${id}`);
   if (msg) { msg.textContent = "guardando..."; msg.className = "auth-msg"; }
-
   const { data: solData } = await db.from("solicitudes").select("*,usuarios(id)").eq("id", id).single();
-
   const { error } = await db.from("solicitudes")
     .update({ estado, respuesta: respuesta || null })
     .eq("id", id);
-
   if (error) {
     if (msg) { msg.textContent = "error: " + error.message; msg.className = "auth-msg error"; }
   } else {
-    // Notifica al usuario que mandó la solicitud
     if (solData?.user_id) {
       const textos = {
         aceptado:  "🎉 tu solicitud de banda ha sido aceptada",
@@ -134,7 +193,6 @@ window.cambiarEstadoSolicitud = async function(id, estado) {
         mensaje:    (textos[estado] || "tu solicitud ha sido actualizada") + mensajeExtra
       }]);
     }
-
     if (msg) { msg.textContent = "✓ guardado"; msg.className = "auth-msg success"; }
     const card  = document.getElementById(`solicitud-${id}`);
     const badge = card?.querySelector(".solicitud-estado");
