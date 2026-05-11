@@ -431,8 +431,8 @@ window.cargarLanzamientos = async function() {
       const cover  = (album.artworkUrl100 || "").replace("100x100bb", "600x600bb");
       const titulo = album.collectionName || "—";
       const appleLink    = album.collectionViewUrl || "#";
-      const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(titulo + " mitø")}`;
-      const youtubeSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(titulo + " mitø")}`;
+      const spotifySearch = `https://open.spotify.com/artist/4X30sxD8cwQIG0ahzSiaJV`;
+      const youtubeSearch = `https://www.youtube.com/@mit%C3%B8wav`;
  
       const card = document.createElement("div");
       card.className = "lanz-card";
