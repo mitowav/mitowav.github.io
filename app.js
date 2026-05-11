@@ -60,15 +60,27 @@ window.withTimeout = function(p, ms) {
 };
 
 // ── STORAGE (con fallback para Brave) ─────────────────────────
+window.setCookie = function(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = name + "=" + encodeURIComponent(value) + ";expires=" + d.toUTCString() + ";path=/;SameSite=Strict";
+};
+window.getCookie = function(name) {
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? decodeURIComponent(match[2]) : null;
+};
 window.setStorage = function(key, val) {
   try { localStorage.setItem(key, val); } catch(e) {
     try { sessionStorage.setItem(key, val); } catch(e2) {}
   }
+  try { setCookie("ls_" + key, val, 30); } catch(e) {}
 };
 window.getStorage = function(key) {
-  try { return localStorage.getItem(key) || sessionStorage.getItem(key); } catch(e) {
-    try { return sessionStorage.getItem(key); } catch(e2) { return null; }
-  }
+  try {
+    const val = localStorage.getItem(key) || sessionStorage.getItem(key);
+    if (val !== null && val !== undefined) return val;
+  } catch(e) {}
+  return getCookie("ls_" + key) || null;
 };
 
 // ── TEMA ──────────────────────────────────────────────────────
@@ -260,8 +272,23 @@ window.initRealtime = function() {
   ).subscribe();
 
   db.channel("posts-rt").on("postgres_changes",
-    { event:"INSERT", schema:"public", table:"posts" },
+    { event:"*", schema:"public", table:"posts" },
     () => { if (currentPage === "foro") renderForo(); }
+  ).subscribe();
+
+  db.channel("coms-rt").on("postgres_changes",
+    { event:"INSERT", schema:"public", table:"comentarios" },
+    (payload) => {
+      if (currentPage !== "foro") return;
+      const postId = payload.new?.post_id;
+      if (!postId) return;
+      const cont = document.getElementById("feed-coms-" + postId);
+      if (cont?.classList.contains("open")) {
+        cont.classList.remove("open");
+        cont.innerHTML = "";
+        window.toggleComentarios(postId);
+      }
+    }
   ).subscribe();
 
   if (currentUser) {
@@ -293,15 +320,10 @@ window.initPresencia = function() {
 
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async function() {
-  // Sesión
   await initSession();
-  // Primera página
-  cargarBeats("home-beats", false, 3);   // ← esta línea cambiada
+  cargarBeats("home-beats", false, 3);
   const homeBtn = document.querySelector('.nav-link[onclick*="home"]');
   if (homeBtn) homeBtn.classList.add("active");
-  // Ambient tracks
   setTimeout(() => { if (!ambientTracks.length) cargarAmbientTracks(); }, 800);
-  // Realtime + presencia
   setTimeout(() => { initRealtime(); initDMRealtime(); initPresencia(); }, 1500);
 });
-
