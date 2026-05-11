@@ -410,13 +410,11 @@ window.cargarLanzamientos = async function() {
   grid.innerHTML = `<p class="loading-msg">cargando discografía</p>`;
  
   try {
-    // Busca por Artist ID exacto de Apple Music
     const ARTIST_ID = "1871334573";
     const url = `https://itunes.apple.com/lookup?id=${ARTIST_ID}&entity=album&limit=50&country=ES`;
     const res  = await fetch(url);
     const json = await res.json();
  
-    // El primer resultado es el artista, el resto son sus álbumes/singles
     const releases = (json.results || [])
       .filter(r => r.wrapperType === "collection" || r.collectionType)
       .sort((a, b) => new Date(b.releaseDate||0) - new Date(a.releaseDate||0));
@@ -428,11 +426,13 @@ window.cargarLanzamientos = async function() {
  
     grid.innerHTML = "";
     releases.forEach(album => {
-      const year  = album.releaseDate ? new Date(album.releaseDate).getFullYear() : "";
-      const tipo  = album.collectionType === "Album" ? "Álbum" : "Single";
-      const cover = (album.artworkUrl100 || "").replace("100x100bb", "600x600bb");
+      const year   = album.releaseDate ? new Date(album.releaseDate).getFullYear() : "";
+      const tipo   = album.collectionType === "Album" ? "Álbum" : "Single";
+      const cover  = (album.artworkUrl100 || "").replace("100x100bb", "600x600bb");
       const titulo = album.collectionName || "—";
-      const link  = album.collectionViewUrl || "#";
+      const appleLink    = album.collectionViewUrl || "#";
+      const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(titulo + " mitø")}`;
+      const youtubeSearch = `https://www.youtube.com/results?search_query=${encodeURIComponent(titulo + " mitø")}`;
  
       const card = document.createElement("div");
       card.className = "lanz-card";
@@ -441,9 +441,9 @@ window.cargarLanzamientos = async function() {
           ${cover
             ? `<img src="${esc(cover)}" alt="${esc(titulo)}" loading="lazy">`
             : `<div class="lanz-cover-ph"><i class="fa-solid fa-record-vinyl"></i></div>`}
-          <a href="${esc(link)}" target="_blank" class="lanz-play-btn" onclick="event.stopPropagation()">
-            <i class="fa-brands fa-apple"></i>
-          </a>
+          <div class="lanz-hover-overlay">
+            <i class="fa-solid fa-play lanz-play-icon"></i>
+          </div>
         </div>
         <div class="lanz-info">
           <div class="lanz-titulo">${esc(titulo)}</div>
@@ -452,71 +452,86 @@ window.cargarLanzamientos = async function() {
             ${year ? `<span class="lanz-fecha">${year}</span>` : ""}
           </div>
         </div>`;
+ 
       card.style.cursor = "pointer";
-      card.addEventListener("click", () => window.open(link, "_blank"));
+      card.addEventListener("click", () => {
+        abrirLanzamientoModal(titulo, cover, appleLink, spotifySearch, youtubeSearch);
+      });
       grid.appendChild(card);
     });
  
   } catch(e) {
-    console.warn("iTunes API error:", e);
+    console.warn("iTunes error:", e);
     grid.innerHTML = `<p class="loading-msg no-spin">error al cargar — <button class="link-btn" onclick="cargarLanzamientos()">reintentar</button></p>`;
   }
 };
  
-
-window.subirLanzamiento = async function() {
-  const titulo  = document.getElementById("lanz-titulo")?.value.trim();
-  const tipo    = document.getElementById("lanz-tipo")?.value || "Single";
-  const fecha   = document.getElementById("lanz-fecha")?.value.trim();
-  const spotify = document.getElementById("lanz-spotify")?.value.trim();
-  const msg     = document.getElementById("lanz-msg");
-  if (!titulo) { msg.textContent="pon un título"; msg.className="auth-msg error"; return; }
-  msg.textContent="publicando..."; msg.className="auth-msg";
-  try {
-    let cover_url = null;
-    if (window._lanzCoverBlob) {
-      const fn = `lanz-${Date.now()}.jpg`;
-      const { error: upErr } = await db.storage.from("covers").upload(fn, window._lanzCoverBlob, { contentType:"image/jpeg" });
-      if (!upErr) {
-        const { data: ud } = db.storage.from("covers").getPublicUrl(fn);
-        cover_url = ud.publicUrl;
-        window._lanzCoverBlob = null;
-      }
-    }
-    const { error } = await db.from("lanzamientos").insert([{ titulo, tipo, fecha: fecha||null, spotify_url: spotify||null, cover_url }]);
-    if (error) throw error;
-    msg.textContent="¡publicado!"; msg.className="auth-msg success";
-    document.getElementById("lanz-titulo").value="";
-    document.getElementById("lanz-spotify").value="";
-    document.getElementById("lanz-fecha").value="";
-    document.getElementById("lanz-cover-label").textContent="portada 1:1 — click para recortar";
-    window.sfx?.success();
-    cargarLanzamientosAdmin();
-  } catch(e) {
-    msg.textContent="error: "+e.message; msg.className="auth-msg error";
-  }
-};
-
-window.cargarLanzamientosAdmin = async function() {
-  const cont = document.getElementById("lanzamientos-admin-list");
-  if (!cont) return;
-  const { data } = await db.from("lanzamientos").select("*").order("created_at", { ascending: false });
-  if (!data?.length) { cont.innerHTML=`<p class="loading-msg no-spin">sin lanzamientos aún.</p>`; return; }
-  cont.innerHTML = "";
-  data.forEach(l => {
-    const row = document.createElement("div");
-    row.className = "solicitud-card";
-    row.innerHTML = `
-      <div class="solicitud-card-info" style="display:flex;align-items:center;gap:10px">
-        ${l.cover_url ? `<img src="${l.cover_url}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ""}
+window.abrirLanzamientoModal = function(titulo, cover, appleLink, spotifyLink, youtubeLink) {
+  // Elimina modal anterior si existe
+  document.getElementById("lanz-modal")?.remove();
+ 
+  const modal = document.createElement("div");
+  modal.id = "lanz-modal";
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:8500;
+    background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
+    display:flex;justify-content:center;align-items:center;padding:20px;
+    animation:fadeIn 0.2s ease;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:var(--bg2);border:1px solid var(--border);border-radius:24px;
+      padding:28px;max-width:340px;width:100%;display:flex;flex-direction:column;
+      gap:20px;position:relative;
+    ">
+      <button onclick="document.getElementById('lanz-modal').remove()" style="
+        position:absolute;top:14px;right:16px;background:none;border:none;
+        color:var(--text-dim);font-size:16px;cursor:pointer;
+      ">✕</button>
+ 
+      <div style="display:flex;gap:16px;align-items:center">
+        ${cover ? `<img src="${esc(cover)}" style="width:72px;height:72px;border-radius:10px;object-fit:cover;flex-shrink:0">` : ""}
         <div>
-          <h4>${esc(l.titulo)}</h4>
-          <p>${esc(l.tipo||"Single")}${l.fecha?" · "+esc(l.fecha):""}${l.spotify_url?` · <a href="${esc(l.spotify_url)}" target="_blank" style="color:var(--accent);text-decoration:none">spotify</a>`:""}</p>
+          <div style="font-family:'Instrument Serif',serif;font-style:italic;font-size:18px;color:var(--text);line-height:1.2">${esc(titulo)}</div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:4px;font-family:'JetBrains Mono',monospace">mitø</div>
         </div>
       </div>
-      <button class="delete-btn" style="opacity:1" onclick="borrarLanzamiento(${l.id},this)"><i class="fa-solid fa-trash"></i></button>`;
-    cont.appendChild(row);
+ 
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="${esc(spotifyLink)}" target="_blank" style="
+          display:flex;align-items:center;gap:12px;padding:13px 18px;
+          background:#1DB954;color:#fff;border-radius:12px;
+          text-decoration:none;font-size:13px;font-weight:600;transition:opacity 0.2s;
+        " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          <i class="fa-brands fa-spotify" style="font-size:18px"></i>
+          escuchar en Spotify
+        </a>
+        <a href="${esc(youtubeLink)}" target="_blank" style="
+          display:flex;align-items:center;gap:12px;padding:13px 18px;
+          background:#FF0000;color:#fff;border-radius:12px;
+          text-decoration:none;font-size:13px;font-weight:600;transition:opacity 0.2s;
+        " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          <i class="fa-brands fa-youtube" style="font-size:18px"></i>
+          buscar en YouTube
+        </a>
+        <a href="${esc(appleLink)}" target="_blank" style="
+          display:flex;align-items:center;gap:12px;padding:13px 18px;
+          background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:12px;
+          text-decoration:none;font-size:13px;font-weight:500;transition:all 0.2s;
+        " onmouseover="this.style.background='var(--surface-h)'" onmouseout="this.style.background='var(--surface)'">
+          <i class="fa-brands fa-apple" style="font-size:18px"></i>
+          Apple Music
+        </a>
+      </div>
+    </div>`;
+ 
+  // Cierra al click fuera
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
   });
+ 
+  document.body.appendChild(modal);
+  window.sfx?.click();
 };
 
 window.borrarLanzamiento = async function(id, btn) {
