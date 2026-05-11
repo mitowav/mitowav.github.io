@@ -4,50 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>mitø</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='85' font-family='serif' font-style='italic'%3E%C3%B8%3C/text%3E%3C/svg%3E">
 <style>
-/* CRITICAL CSS — carga inmediata */
+/* CRITICAL CSS */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#0b0c0a;font-family:'Geist Mono',monospace;color:#e8eadc;-webkit-font-smoothing:antialiased}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0b09;color:#f0f1ec;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .page{position:absolute;inset:0;opacity:0;pointer-events:none;overflow-y:auto;overflow-x:hidden}
 .page.active{opacity:1;pointer-events:all}
-#app{position:fixed;top:64px;left:0;right:0;bottom:0;z-index:10}
-.top-nav{position:fixed;top:0;left:0;right:0;height:64px;z-index:500;display:flex;align-items:center;padding:0 40px;background:rgba(11,12,10,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.07)}
-@media(max-width:768px){#app{top:56px;bottom:60px}.top-nav{height:56px;padding:0 16px}.mob-nav{display:flex!important}}
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:rgba(11,12,10,0.95);border-top:1px solid rgba(255,255,255,0.07);height:60px;align-items:center;justify-content:space-around}
+#app{position:fixed;top:68px;left:0;right:0;bottom:0;z-index:10}
+.top-nav{position:fixed;top:0;left:0;right:0;height:68px;z-index:500;display:flex;align-items:center;padding:0 32px;background:rgba(10,11,9,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.07)}
+.nav-logo{font-family:'Instrument Serif',serif;font-style:italic;font-size:26px;letter-spacing:-0.02em;cursor:pointer;color:#f0f1ec;user-select:none;flex-shrink:0}
+.nav-logo .o{color:var(--accent,#c8f0a0)}
+.mob-nav{display:none}
+button{outline:none!important}
+button:focus{outline:none!important;box-shadow:none!important}
+@media(max-width:900px){.mob-nav{display:flex!important}#app{bottom:calc(64px + env(safe-area-inset-bottom))}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="base.css?v=1778374501">
-<link rel="stylesheet" href="layout.css?v=1778374501">
-<link rel="stylesheet" href="beats.css?v=1778374501">
-<link rel="stylesheet" href="sections.css?v=1778374501">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="layout.css">
+<link rel="stylesheet" href="beats.css">
+<link rel="stylesheet" href="sections.css">
 <link rel="stylesheet" href="admin.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-/* CRITICAL — instant styles, no flash */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { 
-  width: 100%; height: 100%; overflow: hidden;
-  background: #0a0b09; color: #f0f1ec;
-  font-family: 'Inter', system-ui, sans-serif;
-}
-button { outline: none !important; -webkit-tap-highlight-color: transparent; }
-button:focus { outline: none !important; }
-.page { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow-y: auto; }
-.page.active { opacity: 1; pointer-events: all; }
-#app { position: fixed; top: 68px; left: 0; right: 0; bottom: 0; }
-.top-nav {
-  position: fixed; top: 0; left: 0; right: 0; height: 68px; z-index: 500;
-  display: flex; align-items: center; padding: 0 32px;
-  background: rgba(10,11,9,0.9);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-}
-.nav-logo { font-style: italic; font-size: 26px; color: #f0f1ec; flex-shrink: 0; }
-.nav-logo .o { color: #c8f0a0; }
-.mob-nav { display: none; }
-@media(max-width:900px){ .mob-nav{display:flex!important} #app{bottom:72px} }
-</style>
 </head>
 <body>
 
@@ -64,7 +45,6 @@ button:focus { outline: none !important; }
       <span class="online-pulse"></span>
       <span id="online-count" style="font-size:10px;color:var(--text-dim)">0</span>
     </div>
-    <button class="nav-icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-circle-half-stroke"></i></button>
     <button class="nav-icon-btn" id="notif-btn" onclick="toggleNotificaciones()" style="position:relative">
       <i class="fa-solid fa-bell"></i>
       <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--accent)"></span>
@@ -73,6 +53,7 @@ button:focus { outline: none !important; }
     <div class="nav-links-right">
       <button class="nav-link" onclick="go('home',this)">home</button>
       <button class="nav-link" onclick="go('beats',this)">beats</button>
+      <button class="nav-link" onclick="go('lanzamientos',this)">lanzamientos</button>
       <button class="nav-link" onclick="go('galeria',this)">galería</button>
       <button class="nav-link" onclick="go('banda',this)">banda</button>
       <button class="nav-link" onclick="go('foro',this)">foro</button>
@@ -88,17 +69,18 @@ button:focus { outline: none !important; }
 <nav class="mob-nav">
   <button class="mob-btn" onclick="go('home',this)"><i class="fa-solid fa-house"></i><span>home</span></button>
   <button class="mob-btn" onclick="go('beats',this)"><i class="fa-solid fa-music"></i><span>beats</span></button>
-  <button class="mob-btn" onclick="go('galeria',this)"><i class="fa-solid fa-images"></i><span>galería</span></button>
+  <button class="mob-btn" onclick="go('lanzamientos',this)"><i class="fa-solid fa-record-vinyl"></i><span>música</span></button>
   <button class="mob-btn" onclick="go('foro',this)"><i class="fa-solid fa-comments"></i><span>foro</span></button>
   <button class="mob-btn" onclick="go('letras',this)"><i class="fa-solid fa-microphone"></i><span>letras</span></button>
   <button class="mob-btn" id="mob-auth-btn" onclick="go('auth',this)"><i class="fa-solid fa-user"></i><span>yo</span></button>
 </nav>
 
 <!-- MOB DROPDOWN -->
-<div id="mob-menu" style="display:none;position:fixed;top:56px;left:0;right:0;background:var(--bg2);border-bottom:1px solid var(--card-b);z-index:499;padding:8px 0">
-  <button class="mob-menu-btn" onclick="go('banda',null,true)">banda</button>
-  <button class="mob-menu-btn" onclick="go('about',null,true)">about</button>
-  <button class="mob-menu-btn" onclick="go('soporte',null,true)">soporte</button>
+<div id="mob-menu" style="display:none;position:fixed;top:56px;left:0;right:0;background:var(--bg2);border-bottom:1px solid var(--border);z-index:499;padding:8px 0">
+  <button class="mob-menu-btn" onclick="go('galeria',null,true)"><i class="fa-solid fa-images"></i> galería</button>
+  <button class="mob-menu-btn" onclick="go('banda',null,true)"><i class="fa-solid fa-users"></i> banda</button>
+  <button class="mob-menu-btn" onclick="go('about',null,true)"><i class="fa-solid fa-circle-info"></i> about</button>
+  <button class="mob-menu-btn" onclick="go('soporte',null,true)"><i class="fa-solid fa-envelope"></i> soporte</button>
   <button class="mob-menu-btn" id="mob-lock-btn" onclick="openLogin('privado');toggleMobMenu()"><i class="fa-solid fa-lock"></i> privado</button>
 </div>
 
@@ -110,7 +92,6 @@ button:focus { outline: none !important; }
     <div class="hero-img-wrap">
       <img src="./hero.jpg" id="hero-img" class="hero-img" alt="" onerror="this.style.display='none'">
       <div class="hero-overlay"></div>
-      <div class="hero-overlay2"></div>
     </div>
     <div class="hero-content">
       <p class="hero-tag">artista independiente · toledo</p>
@@ -144,7 +125,6 @@ button:focus { outline: none !important; }
       <h2 class="section-title">beats</h2>
       <button class="reload-btn" onclick="cargarBeats('beats-list',false)"><i class="fa-solid fa-rotate-right"></i></button>
     </div>
-    <!-- FILTROS -->
     <div class="filters-bar">
       <div class="filter-search-wrap">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -179,6 +159,21 @@ button:focus { outline: none !important; }
       <p id="filter-results" style="font-size:10px;color:var(--accent);min-height:14px;margin-top:4px"></p>
     </div>
     <div id="beats-list" class="beats-list"></div>
+  </div>
+</section>
+
+<!-- LANZAMIENTOS -->
+<section id="lanzamientos" class="page">
+  <div class="page-wrap">
+    <div class="section-row" style="margin-bottom:32px">
+      <h2 class="section-title">lanzamientos</h2>
+      <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV" target="_blank" class="btn-secondary" style="font-size:11px;text-decoration:none">
+        <i class="fa-brands fa-spotify"></i> spotify
+      </a>
+    </div>
+    <div id="lanz-grid" class="lanz-grid">
+      <p class="loading-msg">cargando</p>
+    </div>
   </div>
 </section>
 
@@ -231,7 +226,12 @@ button:focus { outline: none !important; }
     <div class="about-text-col">
       <p class="hero-tag">sobre mí</p>
       <h2 class="about-title">mit<span class="o">ø</span></h2>
-      <p class="about-bio">Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>Hago música personal que normalmente trata de tener un significado profundo detrás. Priorizo hablar de cosas personales y no inventadas, buscando expresarme y sentirme conectado con la gente que me escuche.</p>
+      <p class="about-bio">
+        Soy <strong>mitø</strong>, productor y artista independiente de Toledo.<br><br>
+        Empecé haciendo música porque necesitaba un sitio donde procesar lo que no sabía cómo decir en voz alta. Lo que salió fue algo entre el trap, el lo-fi y el sonido experimental — difícil de etiquetar, pero completamente mío.<br><br>
+        Cada beat tiene una historia detrás. Priorizo la honestidad sobre la perfección técnica: prefiero que algo te llegue a que suene impecable. La música que hago es personal, directa y sin filtros.<br><br>
+        Si estás aquí, probablemente ya lo entiendes.
+      </p>
       <div class="social-row">
         <a href="https://open.spotify.com/intl-es/artist/4X30sxD8cwQIG0ahzSiaJV" target="_blank"><i class="fa-brands fa-spotify"></i></a>
         <a href="https://www.instagram.com/mit0.wav" target="_blank"><i class="fa-brands fa-instagram"></i></a>
@@ -306,6 +306,7 @@ button:focus { outline: none !important; }
       <div class="privado-logo"><i class="fa-solid fa-lock-open"></i> zona privada</div>
       <nav class="privado-nav">
         <button class="p-nav-btn active" onclick="switchPrivado('beats',this)"><i class="fa-solid fa-music"></i> beats</button>
+        <button class="p-nav-btn" onclick="switchPrivado('lanzamientos-priv',this)"><i class="fa-solid fa-record-vinyl"></i> lanzamientos</button>
         <button class="p-nav-btn" onclick="switchPrivado('galeria-priv',this)"><i class="fa-solid fa-images"></i> subir foto</button>
         <button class="p-nav-btn" onclick="switchPrivado('galeria-edit',this)"><i class="fa-solid fa-pen-to-square"></i> editar galería</button>
         <button class="p-nav-btn" onclick="switchPrivado('ambient',this)"><i class="fa-solid fa-headphones"></i> música fondo</button>
@@ -336,6 +337,28 @@ button:focus { outline: none !important; }
           </div>
           <button class="btn-primary" onclick="subirBeat()">subir beat 🔥</button>
         </div>
+      </div>
+
+      <div class="p-panel" id="panel-lanzamientos-priv">
+        <h2 class="p-title">lanzamientos</h2>
+        <div class="upload-form" style="margin-bottom:24px">
+          <div class="field-row">
+            <input type="text" id="lanz-titulo" placeholder="título" class="field">
+            <select id="lanz-tipo" class="field" style="max-width:120px">
+              <option value="Single">Single</option>
+              <option value="EP">EP</option>
+              <option value="Album">Álbum</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <input type="text" id="lanz-fecha" placeholder="año (ej: 2024)" class="field" style="max-width:120px">
+            <input type="url" id="lanz-spotify" placeholder="enlace de Spotify" class="field">
+          </div>
+          <label class="file-label" onclick="abrirCrop('lanz-cover')"><i class="fa-solid fa-image"></i><span id="lanz-cover-label">portada 1:1 — click para recortar</span></label>
+          <button class="btn-primary" onclick="subirLanzamiento()"><i class="fa-solid fa-paper-plane"></i> publicar</button>
+          <p class="auth-msg" id="lanz-msg"></p>
+        </div>
+        <div id="lanzamientos-admin-list" class="lanz-admin-list"></div>
       </div>
 
       <div class="p-panel" id="panel-galeria-priv">
@@ -452,7 +475,7 @@ button:focus { outline: none !important; }
     <div class="upload-form">
       <select id="post-categoria" class="field"></select>
       <input type="text" id="post-titulo" placeholder="título del post" class="field">
-      <textarea id="post-contenido" placeholder="¿qué quieres compartir?" class="field" rows="4" style="resize:vertical;min-height:100px;font-family:'Geist Mono',monospace"></textarea>
+      <textarea id="post-contenido" placeholder="¿qué quieres compartir?" class="field" rows="4" style="resize:vertical;min-height:100px;font-family:'JetBrains Mono',monospace"></textarea>
       <div id="post-img-preview"></div>
       <label class="file-label"><i class="fa-solid fa-image"></i><span>añadir imagen (opcional)</span><input type="file" id="post-img-file" accept="image/*" onchange="previewPostImg(this)"></label>
       <button class="btn-primary" onclick="crearPost()"><i class="fa-solid fa-paper-plane"></i> publicar</button>
@@ -477,10 +500,10 @@ button:focus { outline: none !important; }
   <div id="letra-content" style="max-width:640px;margin:0 auto;padding:48px 28px 80px"></div>
 </div>
 
-<div id="notif-panel" style="display:none;position:fixed;top:72px;right:16px;width:300px;max-height:400px;overflow-y:auto;background:var(--bg2);border:1px solid var(--card-b);border-radius:16px;z-index:600;box-shadow:0 8px 40px rgba(0,0,0,0.4)">
-  <div style="padding:14px 16px;border-bottom:1px solid var(--card-b);display:flex;align-items:center;justify-content:space-between">
+<div id="notif-panel" style="display:none;position:fixed;top:72px;right:16px;width:300px;max-height:400px;overflow-y:auto;background:var(--bg2);border:1px solid var(--border);border-radius:16px;z-index:600;box-shadow:0 8px 40px rgba(0,0,0,0.4)">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
     <span style="font-family:'Instrument Serif',serif;font-style:italic;font-size:16px">notificaciones</span>
-    <button onclick="marcarTodasLeidas()" style="background:none;border:none;color:var(--text-dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">marcar leídas</button>
+    <button onclick="marcarTodasLeidas()" style="background:none;border:none;color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">marcar leídas</button>
   </div>
   <div id="notif-list"></div>
 </div>
@@ -501,12 +524,11 @@ button:focus { outline: none !important; }
   </div>
 </div>
 
-
-<script src="app.js?v=1778374501"></script>
-<script src="auth.js?v=1778374501"></script>
-<script src="beats.js?v=1778374501"></script>
-<script src="foro.js?v=1778374501"></script>
-<script src="admin.js?v=1778374501"></script>
-<script src="sounds.js?v=1778374501"></script>
+<script src="app.js"></script>
+<script src="auth.js"></script>
+<script src="beats.js"></script>
+<script src="foro.js"></script>
+<script src="admin.js"></script>
+<script src="sounds.js"></script>
 </body>
 </html>
