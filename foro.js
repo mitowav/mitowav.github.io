@@ -198,6 +198,21 @@ window.toggleComentarios = async function(postId) {
         body.appendChild(meta);
         body.appendChild(texto);
         body.appendChild(replyBtn);
+if (currentUser && (currentUser.id === c.autor_id || currentUser.rol === "admin")) {
+  const delBtn = document.createElement("button");
+  delBtn.className = "com-delete-btn";
+  delBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+  delBtn.addEventListener("click", async function(e) {
+    e.stopPropagation();
+    if (!confirm("¿borrar comentario?")) return;
+    await db.from("comentarios").delete().eq("id", c.id);
+    row.style.opacity = "0";
+    row.style.transition = "opacity 0.2s";
+    setTimeout(() => { row.remove(); actualizarContadorComentarios(postId); }, 200);
+    window.sfx?.delete();
+  });
+  body.appendChild(delBtn);
+}
         row.appendChild(avEl);
         row.appendChild(body);
         cont.appendChild(row);
