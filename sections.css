@@ -294,3 +294,14 @@
 @media (max-width: 900px) {
   .lanz-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
 }
+
+/* Hover overlay lanzamientos */
+.lanz-hover-overlay {
+  position:absolute;inset:0;background:rgba(0,0,0,0.45);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.2s;border-radius:var(--r);
+}
+.lanz-card:hover .lanz-hover-overlay { opacity:1; }
+.lanz-play-icon { color:#fff;font-size:28px; }
+
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
