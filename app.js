@@ -129,13 +129,14 @@ window.toggleTheme = function() {
 };
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
-const PAGE_ORDER = ["home","beats","galeria","banda","foro","letras","about","soporte","auth","perfil","privado"];
+const PAGE_ORDER = ["home","beats","lanzamientos","galeria","banda","foro","letras","about","soporte","auth","perfil","privado"];
 
 window.go = function(id, btnEl, closeMenu) {
   if (id === currentPage && id !== "privado") return;
   const oldIdx = PAGE_ORDER.indexOf(currentPage);
   const newIdx = PAGE_ORDER.indexOf(id);
   const dir    = newIdx >= oldIdx ? "slide-r" : "slide-l";
+
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const target = document.getElementById(id);
   if (target) {
@@ -144,17 +145,21 @@ window.go = function(id, btnEl, closeMenu) {
     void target.offsetWidth;
     target.classList.add("active");
   }
+
   document.querySelectorAll(".nav-link, .mob-btn, .p-nav-btn").forEach(b => b.classList.remove("active"));
   if (btnEl) btnEl.classList.add("active");
   if (closeMenu) { const m = document.getElementById("mob-menu"); if (m) m.style.display = "none"; }
+
   currentPage = id;
-  if (id === "home")    { cargarBeats("home-beats", false, 3); }
-  if (id === "beats")   { cargarBeats("beats-list", false); }
-  if (id === "galeria") { cargarGaleria(); }
-  if (id === "banda")   { cargarBanda(); renderSolicitudForm(); }
-  if (id === "foro")    { renderForo(); }
-  if (id === "letras")  { cargarLetras(); }
-  if (id === "perfil")  { renderPerfil(); }
+
+  if (id === "home")          { cargarBeats("home-beats", false, 3); }
+  if (id === "beats")         { cargarBeats("beats-list", false); }
+  if (id === "lanzamientos")  { cargarLanzamientos(); }
+  if (id === "galeria")       { cargarGaleria(); }
+  if (id === "banda")         { cargarBanda(); renderSolicitudForm(); }
+  if (id === "foro")          { renderForo(); }
+  if (id === "letras")        { cargarLetras(); }
+  if (id === "perfil")        { renderPerfil(); }
   if (id === "privado") {
     cargarBeats("admin-list", null);
     cargarSolicitudesAdmin();
@@ -209,11 +214,21 @@ window.switchPrivado = function(id, btn) {
   const panel = document.getElementById("panel-" + id);
   if (panel) panel.classList.add("active");
   if (btn) btn.classList.add("active");
-  if (id === "accesos")      cargarAccesos();
-  if (id === "solicitudes")  cargarSolicitudesAdmin();
-  if (id === "todos-beats")  cargarBeats("admin-list", null);
-  if (id === "letras-priv")  cargarLetrasAdmin();
-  if (id === "galeria-edit") cargarGaleriaAdmin();
+  if (id === "accesos")           cargarAccesos();
+  if (id === "solicitudes")       cargarSolicitudesAdmin();
+  if (id === "todos-beats")       cargarBeats("admin-list", null);
+  if (id === "letras-priv")       cargarLetrasAdmin();
+  if (id === "galeria-edit")      cargarGaleriaAdmin();
+  if (id === "lanzamientos-priv") cargarLanzamientosAdmin();
+};
+
+// ── GALERIA TIPO ──────────────────────────────────────────────
+window.setGaleriaTipo = function(tipo) {
+  galeriaTipo = tipo;
+  document.getElementById("galeria-tipo-foto")?.classList.toggle("active", tipo === "foto");
+  document.getElementById("galeria-tipo-video")?.classList.toggle("active", tipo === "video");
+  document.getElementById("galeria-foto-input").style.display  = tipo === "foto"  ? "" : "none";
+  document.getElementById("galeria-video-input").style.display = tipo === "video" ? "" : "none";
 };
 
 // ── PARALLAX ──────────────────────────────────────────────────
@@ -229,9 +244,7 @@ function tickParallax() {
   const onHome = document.getElementById("home")?.classList.contains("active");
   if (onHome) {
     const img = document.getElementById("hero-img");
-    if (img) {
-      img.style.transform = `scale(1.06) translate(${(mouseX-0.5)*-22}px,${(mouseY-0.5)*-14}px)`;
-    }
+    if (img) img.style.transform = `scale(1.06) translate(${(mouseX-0.5)*-22}px,${(mouseY-0.5)*-14}px)`;
   } else {
     const bg = document.querySelector(".bg-gradient");
     if (bg) {
@@ -260,21 +273,32 @@ window.initRealtime = function() {
     }
   ).subscribe();
 
-  // Posts: muestra indicador en vez de rerenderizar (para no cerrar comentarios abiertos)
   db.channel("posts-rt").on("postgres_changes",
     { event:"*", schema:"public", table:"posts" },
     () => { if (currentPage === "foro") mostrarIndicadorNuevoPost(); }
   ).subscribe();
 
-  // Comentarios: recarga solo la sección abierta
   db.channel("coms-rt").on("postgres_changes",
-    { event:"INSERT", schema:"public", table:"comentarios" },
+    { event:"*", schema:"public", table:"comentarios" },
     (payload) => {
       if (currentPage !== "foro") return;
-      const postId = payload.new?.post_id;
+      const postId = payload.new?.post_id || payload.old?.post_id;
       if (!postId) return;
+      // Actualizar contador en el feed card
+      actualizarContadorComentarios(postId);
+      // Si la sección está abierta, recargar comentarios
       const cont = document.getElementById("feed-coms-" + postId);
       if (cont?.classList.contains("open")) recargarComentarios(postId, cont);
+    }
+  ).subscribe();
+
+  // Reproducciones en tiempo real
+  db.channel("plays-rt").on("postgres_changes",
+    { event:"INSERT", schema:"public", table:"reproducciones" },
+    (payload) => {
+      const beatId = payload.new?.beat_id;
+      if (!beatId) return;
+      actualizarPlays(beatId);
     }
   ).subscribe();
 
@@ -308,7 +332,6 @@ window.initPresencia = function() {
 
 // ── HELPERS FORO ──────────────────────────────────────────────
 
-// Botón flotante "hay posts nuevos" — sin cerrar secciones abiertas
 window.mostrarIndicadorNuevoPost = function() {
   if (document.getElementById("new-posts-bar")) return;
   const bar = document.createElement("div");
@@ -327,7 +350,6 @@ window.mostrarIndicadorNuevoPost = function() {
   setTimeout(() => bar?.remove(), 8000);
 };
 
-// Recarga solo los comentarios de un post, sin cerrar otras secciones
 async function recargarComentarios(postId, cont) {
   if (!cont) return;
   cont.classList.remove("open");
@@ -335,19 +357,160 @@ async function recargarComentarios(postId, cont) {
   await window.toggleComentarios(parseInt(postId));
 }
 
-// Animación del contador de likes (tipo YouTube)
+// Actualiza el contador de comentarios en el feed card sin recargar todo
+async function actualizarContadorComentarios(postId) {
+  try {
+    const { count } = await db.from("comentarios")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", postId);
+    const btn = document.querySelector(`#feed-card-${postId} .feed-action[onclick*="toggleComentarios"]`);
+    if (!btn) return;
+    const oldN = parseInt(btn.textContent.match(/\d+/)?.[0] || "0");
+    const newN = count || 0;
+    if (oldN !== newN) {
+      btn.innerHTML = `<i class="fa-regular fa-comment"></i> <span class="com-count-num">${newN}</span>`;
+      const numEl = btn.querySelector(".com-count-num");
+      if (numEl) animarNumero(numEl);
+    }
+  } catch(e) {}
+}
+
+// Actualiza el contador de plays de un beat visible
+async function actualizarPlays(beatId) {
+  try {
+    // En el detalle overlay si está abierto
+    const detailEl = document.getElementById(`detail-plays-${beatId}`);
+    if (detailEl) {
+      const { count } = await db.from("reproducciones")
+        .select("id", { count: "exact", head: true }).eq("beat_id", beatId);
+      detailEl.innerHTML = `<i class="fa-solid fa-play" style="font-size:8px"></i> ${count || 0} plays`;
+    }
+  } catch(e) {}
+}
+
+// Animación tipo YouTube al cambiar número
+window.animarNumero = function(el) {
+  if (!el) return;
+  el.classList.remove("num-pop");
+  void el.offsetWidth;
+  el.classList.add("num-pop");
+};
+
 window.animarLike = function(el) {
+  if (!el) return;
   el.classList.remove("like-pop");
   void el.offsetWidth;
   el.classList.add("like-pop");
 };
 
-// ── POLLING (fallback si realtime falla) ──────────────────────
+// ── LANZAMIENTOS ──────────────────────────────────────────────
+window.cargarLanzamientos = async function() {
+  const grid = document.getElementById("lanz-grid");
+  if (!grid || !db) return;
+  grid.innerHTML = `<p class="loading-msg">cargando</p>`;
+  try {
+    const { data, error } = await db.from("lanzamientos").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    if (!data?.length) {
+      grid.innerHTML = `<p class="loading-msg no-spin" style="grid-column:1/-1">aún no hay lanzamientos.</p>`;
+      return;
+    }
+    grid.innerHTML = "";
+    data.forEach(l => {
+      const card = document.createElement("div");
+      card.className = "lanz-card";
+      card.innerHTML = `
+        <div class="lanz-cover">
+          ${l.cover_url
+            ? `<img src="${l.cover_url}" alt="${esc(l.titulo)}" loading="lazy">`
+            : `<div class="lanz-cover-ph"><i class="fa-solid fa-record-vinyl"></i></div>`}
+          ${l.spotify_url ? `<a href="${esc(l.spotify_url)}" target="_blank" class="lanz-play-btn"><i class="fa-brands fa-spotify"></i></a>` : ""}
+        </div>
+        <div class="lanz-info">
+          <div class="lanz-titulo">${esc(l.titulo)}</div>
+          <div class="lanz-meta">
+            <span class="lanz-tipo">${esc(l.tipo||"Single")}</span>
+            ${l.fecha ? `<span class="lanz-fecha">${esc(l.fecha)}</span>` : ""}
+          </div>
+        </div>`;
+      if (l.spotify_url) {
+        card.style.cursor = "pointer";
+        card.addEventListener("click", () => window.open(l.spotify_url, "_blank"));
+      }
+      grid.appendChild(card);
+    });
+  } catch(e) {
+    grid.innerHTML = `<p class="loading-msg no-spin">error al cargar</p>`;
+  }
+};
+
+window.subirLanzamiento = async function() {
+  const titulo  = document.getElementById("lanz-titulo")?.value.trim();
+  const tipo    = document.getElementById("lanz-tipo")?.value || "Single";
+  const fecha   = document.getElementById("lanz-fecha")?.value.trim();
+  const spotify = document.getElementById("lanz-spotify")?.value.trim();
+  const msg     = document.getElementById("lanz-msg");
+  if (!titulo) { msg.textContent="pon un título"; msg.className="auth-msg error"; return; }
+  msg.textContent="publicando..."; msg.className="auth-msg";
+  try {
+    let cover_url = null;
+    if (window._lanzCoverBlob) {
+      const fn = `lanz-${Date.now()}.jpg`;
+      const { error: upErr } = await db.storage.from("covers").upload(fn, window._lanzCoverBlob, { contentType:"image/jpeg" });
+      if (!upErr) {
+        const { data: ud } = db.storage.from("covers").getPublicUrl(fn);
+        cover_url = ud.publicUrl;
+        window._lanzCoverBlob = null;
+      }
+    }
+    const { error } = await db.from("lanzamientos").insert([{ titulo, tipo, fecha: fecha||null, spotify_url: spotify||null, cover_url }]);
+    if (error) throw error;
+    msg.textContent="¡publicado!"; msg.className="auth-msg success";
+    document.getElementById("lanz-titulo").value="";
+    document.getElementById("lanz-spotify").value="";
+    document.getElementById("lanz-fecha").value="";
+    document.getElementById("lanz-cover-label").textContent="portada 1:1 — click para recortar";
+    window.sfx?.success();
+    cargarLanzamientosAdmin();
+  } catch(e) {
+    msg.textContent="error: "+e.message; msg.className="auth-msg error";
+  }
+};
+
+window.cargarLanzamientosAdmin = async function() {
+  const cont = document.getElementById("lanzamientos-admin-list");
+  if (!cont) return;
+  const { data } = await db.from("lanzamientos").select("*").order("created_at", { ascending: false });
+  if (!data?.length) { cont.innerHTML=`<p class="loading-msg no-spin">sin lanzamientos aún.</p>`; return; }
+  cont.innerHTML = "";
+  data.forEach(l => {
+    const row = document.createElement("div");
+    row.className = "solicitud-card";
+    row.innerHTML = `
+      <div class="solicitud-card-info" style="display:flex;align-items:center;gap:10px">
+        ${l.cover_url ? `<img src="${l.cover_url}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;flex-shrink:0">` : ""}
+        <div>
+          <h4>${esc(l.titulo)}</h4>
+          <p>${esc(l.tipo||"Single")}${l.fecha?" · "+esc(l.fecha):""}${l.spotify_url?` · <a href="${esc(l.spotify_url)}" target="_blank" style="color:var(--accent);text-decoration:none">spotify</a>`:""}</p>
+        </div>
+      </div>
+      <button class="delete-btn" style="opacity:1" onclick="borrarLanzamiento(${l.id},this)"><i class="fa-solid fa-trash"></i></button>`;
+    cont.appendChild(row);
+  });
+};
+
+window.borrarLanzamiento = async function(id, btn) {
+  if (!confirm("¿borrar este lanzamiento?")) return;
+  btn.disabled = true;
+  await db.from("lanzamientos").delete().eq("id", id);
+  btn.closest(".solicitud-card").remove();
+};
+
+// ── POLLING ───────────────────────────────────────────────────
 var _foroLatestId  = 0;
 var _notifLatestId = 0;
 
 function initPolling() {
-
   // Nuevos posts cada 5s
   setInterval(async () => {
     if (currentPage !== "foro" || !db) return;
@@ -359,7 +522,7 @@ function initPolling() {
     } catch(e) {}
   }, 5000);
 
-  // Comentarios en secciones abiertas cada 5s
+  // Comentarios abiertos cada 5s
   setInterval(async () => {
     if (currentPage !== "foro" || !db) return;
     try {
@@ -374,13 +537,14 @@ function initPolling() {
         if (stored === 0) { cont.dataset.latestComId = latestId; continue; }
         if (latestId > stored) {
           cont.dataset.latestComId = latestId;
+          actualizarContadorComentarios(parseInt(postId));
           await recargarComentarios(postId, cont);
         }
       }
     } catch(e) {}
   }, 5000);
 
-  // Likes con animación cada 8s
+  // Likes cada 8s
   setInterval(async () => {
     if (currentPage !== "foro" || !db) return;
     try {
