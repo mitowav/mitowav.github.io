@@ -21,6 +21,7 @@ var beatPrivado       = false;
 var beatsFull         = [];
 var inspsList         = [];
 var insps             = [];   // ← fix: inspiraciones no funcionaban
+var esPrivado         = false; // ← fix: bug al subir beats públicos
 var galeriaTipo       = "foto";
 var coverBlob         = null;
 var galeriaBlob       = null;
