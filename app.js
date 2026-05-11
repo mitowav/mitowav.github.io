@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   // Sesión
   await initSession();
   // Primera página
-  go("home");
+  cargarBeats("home-beats", false, 3);   // ← esta línea cambiada
   const homeBtn = document.querySelector('.nav-link[onclick*="home"]');
   if (homeBtn) homeBtn.classList.add("active");
   // Ambient tracks
