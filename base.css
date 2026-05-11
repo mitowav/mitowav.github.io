@@ -5,22 +5,22 @@
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  --accent:      #c8f0a0;
-  --accent-h:    #d4f5b0;
-  --accent-dim:  rgba(200,240,160,0.15);
-  --bg:          #0a0b09;
-  --bg2:         #111210;
-  --bg3:         #1a1b18;
-  --surface:     rgba(255,255,255,0.025);
-  --surface-h:   rgba(255,255,255,0.05);
-  --border:      rgba(255,255,255,0.07);
+  --accent:        #c8f0a0;
+  --accent-h:      #d4f5b0;
+  --accent-dim:    rgba(200,240,160,0.15);
+  --bg:            #0a0b09;
+  --bg2:           #111210;
+  --bg3:           #1a1b18;
+  --surface:       rgba(255,255,255,0.025);
+  --surface-h:     rgba(255,255,255,0.05);
+  --border:        rgba(255,255,255,0.07);
   --border-strong: rgba(255,255,255,0.12);
-  --text:        #f0f1ec;
-  --text-mid:    rgba(240,241,236,0.7);
-  --text-dim:    rgba(240,241,236,0.42);
-  --shadow-sm:   0 2px 8px rgba(0,0,0,0.3);
-  --shadow-md:   0 8px 32px rgba(0,0,0,0.4);
-  --shadow-lg:   0 20px 60px rgba(0,0,0,0.5);
+  --text:          #f0f1ec;
+  --text-mid:      rgba(240,241,236,0.7);
+  --text-dim:      rgba(240,241,236,0.42);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md:     0 8px 32px rgba(0,0,0,0.4);
+  --shadow-lg:     0 20px 60px rgba(0,0,0,0.5);
   --r-sm:  8px;
   --r:     12px;
   --r-lg:  18px;
@@ -29,130 +29,13 @@
   --cursor-color: var(--accent);
 }
 
-/* ── MODO CLARO ─────────────────────────────────────────────── */
-body.tema-claro {
-  --bg:          #f2f1ed;
-  --bg2:         #eae9e4;
-  --bg3:         #e0dfd9;
-  --surface:     rgba(0,0,0,0.04);
-  --surface-h:   rgba(0,0,0,0.07);
-  --border:      rgba(0,0,0,0.09);
-  --border-strong: rgba(0,0,0,0.16);
-  --text:        #0e0f0d;
-  --text-mid:    rgba(14,15,13,0.62);
-  --text-dim:    rgba(14,15,13,0.38);
-  --shadow-sm:   0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md:   0 4px 20px rgba(0,0,0,0.09), 0 8px 32px rgba(0,0,0,0.06);
-  --shadow-lg:   0 12px 48px rgba(0,0,0,0.12), 0 24px 64px rgba(0,0,0,0.08);
-}
-
-/* Hero */
-body.tema-claro .hero-img { filter: brightness(0.48) saturate(0.65); }
-body.tema-claro .hero-content .hero-tag { color: var(--accent); }
-
-/* Campos */
-body.tema-claro .field {
-  background: #fff;
-  border-color: rgba(0,0,0,0.11);
-  color: var(--text);
-}
-body.tema-claro .field:focus { border-color: var(--accent); }
-
-/* Nav */
-body.tema-claro .top-nav {
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  border-bottom-color: rgba(0,0,0,0.09);
-}
-body.tema-claro .mob-nav {
-  background: color-mix(in srgb, var(--bg) 96%, transparent);
-  border-top-color: rgba(0,0,0,0.09);
-}
-body.tema-claro #mob-menu {
-  background: var(--bg2);
-  border-bottom-color: var(--border);
-}
-
-/* Beats */
-body.tema-claro .beats-list { background: rgba(0,0,0,0.025); }
-body.tema-claro .beats-header { background: rgba(0,0,0,0.03); }
-body.tema-claro .beat-row:hover { background: rgba(0,0,0,0.04); }
-body.tema-claro .beat-row.is-playing { background: color-mix(in srgb, var(--accent) 8%, transparent); }
-
-/* Cards */
-body.tema-claro .card {
-  background: rgba(255,255,255,0.7);
-  border-color: rgba(0,0,0,0.08);
-}
-body.tema-claro .auth-card {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(20px);
-  border-color: rgba(0,0,0,0.08);
-}
-body.tema-claro #login-box {
-  background: rgba(255,255,255,0.9);
-  border-color: rgba(0,0,0,0.1);
-}
-
-/* Zona privada */
-body.tema-claro .privado-sidebar {
-  background: var(--bg2);
-  border-right-color: var(--border);
-}
-body.tema-claro .p-nav-btn:hover { background: rgba(0,0,0,0.05); }
-
-/* Galería */
-body.tema-claro .galeria-item { background: var(--bg3); }
-
-/* Foro */
-body.tema-claro .feed-card { border-bottom-color: var(--border); }
-body.tema-claro .com-input { background: var(--bg3); }
-
-/* Mini player */
-body.tema-claro #mini-player {
-  background: color-mix(in srgb, var(--bg2) 95%, transparent);
-  border-color: var(--border);
-}
-
-/* Filtros */
-body.tema-claro .filters-bar {
-  background: rgba(255,255,255,0.6);
-  border-color: rgba(0,0,0,0.08);
-}
-body.tema-claro .filter-field {
-  background: #fff;
-  border-color: rgba(0,0,0,0.1);
-  color: var(--text);
-}
-
-/* About */
-body.tema-claro .about-img { filter: brightness(0.9) saturate(0.85); }
-
-/* Soporte */
-body.tema-claro .soporte-opt {
-  background: rgba(255,255,255,0.6);
-  border-color: var(--border);
-}
-body.tema-claro .soporte-opt:hover {
-  background: var(--accent-dim);
-  border-color: var(--accent-dim);
-}
-
-/* Fondo bg-gradient */
-body.tema-claro .bg-gradient {
-  background:
-    radial-gradient(60% 50% at 80% 0%, color-mix(in srgb,var(--accent) 8%,transparent) 0%,transparent 70%),
-    radial-gradient(40% 30% at 0% 100%, color-mix(in srgb,var(--accent) 5%,transparent) 0%,transparent 60%);
-}
-
 /* ── RESET ───────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   width: 100%; height: 100%; overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg); color: var(--text);
   font-family: "Inter", system-ui, sans-serif;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
+  font-weight: 400; -webkit-font-smoothing: antialiased;
   letter-spacing: -0.005em;
 }
 button, input, textarea, select { font-family: inherit; }
@@ -180,8 +63,7 @@ button:focus { outline: none !important; box-shadow: none !important; }
   background: var(--cursor-color);
   transform: translate(-50%,-50%);
   transition: width 0.18s, height 0.18s;
-  opacity: 0;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+  opacity: 0; box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
 }
 #mito-cursor-ring {
   position: fixed; pointer-events: none; z-index: 99998;
@@ -198,9 +80,8 @@ body.cursor-hover #mito-cursor-ring { width: 46px; height: 46px; }
 
 /* ── ONLINE ──────────────────────────────────────────────────── */
 .online-pulse {
-  display: inline-block; width: 6px; height: 6px;
-  border-radius: 50%; background: #6bffb8;
-  margin-right: 5px; vertical-align: middle;
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: #6bffb8; margin-right: 5px; vertical-align: middle;
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
