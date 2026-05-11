@@ -209,3 +209,88 @@
   animation: likePop 0.4s cubic-bezier(.2,.8,.2,1);
   display: inline-block;
 }
+
+/* ── LANZAMIENTOS GRID ─────────────────────────────────────── */
+.lanz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 24px;
+}
+.lanz-card {
+  display: flex; flex-direction: column; gap: 12px;
+  cursor: default; transition: transform 0.25s;
+}
+.lanz-card:hover { transform: translateY(-4px); }
+.lanz-cover {
+  position: relative; aspect-ratio: 1;
+  border-radius: var(--r); overflow: hidden;
+  background: var(--bg3);
+}
+.lanz-cover img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.3s, filter 0.3s; filter: brightness(0.9);
+}
+.lanz-card:hover .lanz-cover img { transform: scale(1.04); filter: brightness(1); }
+.lanz-cover-ph {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 44px;
+}
+.lanz-play-btn {
+  position: absolute; bottom: 10px; right: 10px;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: #1DB954; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; text-decoration: none;
+  opacity: 0; transform: translateY(6px);
+  transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.lanz-card:hover .lanz-play-btn { opacity: 1; transform: translateY(0); }
+.lanz-titulo {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: 16px; color: var(--text); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.lanz-meta { display: flex; gap: 8px; align-items: center; }
+.lanz-tipo {
+  font-family: "JetBrains Mono", monospace; font-size: 10px;
+  color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.lanz-fecha { font-size: 11px; color: var(--text-dim); }
+.lanz-admin-list { display: flex; flex-direction: column; gap: 8px; }
+ 
+/* ── ANIMACIONES ───────────────────────────────────────────── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+ 
+@keyframes numPop {
+  0%   { transform: scale(1) translateY(0); }
+  40%  { transform: scale(1.5) translateY(-3px); color: var(--accent); }
+  70%  { transform: scale(0.9) translateY(1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+.num-pop { animation: numPop 0.4s cubic-bezier(.2,.8,.2,1); display: inline-block; }
+ 
+@keyframes likePop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.6); color: var(--accent); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+.like-pop { animation: likePop 0.4s cubic-bezier(.2,.8,.2,1); display: inline-block; }
+ 
+/* ── BORRAR COMENTARIO ─────────────────────────────────────── */
+.com-delete-btn {
+  background: none; border: none; color: var(--text-dim);
+  font-size: 10px; cursor: pointer; padding: 0; margin-left: auto;
+  transition: color 0.15s; opacity: 0;
+}
+.com-row:hover .com-delete-btn { opacity: 0.5; }
+.com-delete-btn:hover { color: #ff6b6b; opacity: 1 !important; }
+ 
+/* ── MOBILE LANZAMIENTOS ───────────────────────────────────── */
+@media (max-width: 900px) {
+  .lanz-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; }
+}
