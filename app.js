@@ -20,8 +20,8 @@ var ambientPlaying    = false;
 var beatPrivado       = false;
 var beatsFull         = [];
 var inspsList         = [];
-var insps             = [];   // ← fix: inspiraciones no funcionaban
-var esPrivado         = false; // ← fix: bug al subir beats públicos
+var insps             = [];
+var esPrivado         = false;
 var galeriaTipo       = "foto";
 var coverBlob         = null;
 var galeriaBlob       = null;
@@ -85,7 +85,6 @@ window.getStorage = function(key) {
 };
 
 // ── TEMA ──────────────────────────────────────────────────────
-// Aplica colores INMEDIATAMENTE al cargar la página
 (function() {
   const tema   = getStorage("mitø-tema") || "oscuro";
   const acento = getStorage("mitø-acento");
@@ -95,7 +94,6 @@ window.getStorage = function(key) {
     document.documentElement.style.setProperty("--accent", acento);
     document.documentElement.style.setProperty("--cursor-color", acento);
   }
-  // ← fix: en modo claro no aplicamos el fondo oscuro personalizado
   if (fondo && tema !== "claro") {
     document.documentElement.style.setProperty("--bg", fondo);
   }
@@ -108,12 +106,10 @@ window.aplicarTema = function(tema, acento, fondo) {
     document.documentElement.style.setProperty("--cursor-color", acento);
     setStorage("mitø-acento", acento);
   }
-  // ← fix: en modo claro no aplicamos el fondo oscuro personalizado
   if (fondo && tema !== "claro") {
     document.documentElement.style.setProperty("--bg", fondo);
     setStorage("mitø-fondo", fondo);
   } else if (tema === "claro") {
-    // Restaurar el fondo claro por defecto
     document.documentElement.style.removeProperty("--bg");
   }
   setStorage("mitø-tema", tema || "oscuro");
@@ -137,11 +133,9 @@ const PAGE_ORDER = ["home","beats","galeria","banda","foro","letras","about","so
 
 window.go = function(id, btnEl, closeMenu) {
   if (id === currentPage && id !== "privado") return;
-
   const oldIdx = PAGE_ORDER.indexOf(currentPage);
   const newIdx = PAGE_ORDER.indexOf(id);
   const dir    = newIdx >= oldIdx ? "slide-r" : "slide-l";
-
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const target = document.getElementById(id);
   if (target) {
@@ -150,13 +144,10 @@ window.go = function(id, btnEl, closeMenu) {
     void target.offsetWidth;
     target.classList.add("active");
   }
-
   document.querySelectorAll(".nav-link, .mob-btn, .p-nav-btn").forEach(b => b.classList.remove("active"));
   if (btnEl) btnEl.classList.add("active");
   if (closeMenu) { const m = document.getElementById("mob-menu"); if (m) m.style.display = "none"; }
-
   currentPage = id;
-
   if (id === "home")    { cargarBeats("home-beats", false, 3); }
   if (id === "beats")   { cargarBeats("beats-list", false); }
   if (id === "galeria") { cargarGaleria(); }
@@ -227,7 +218,6 @@ window.switchPrivado = function(id, btn) {
 
 // ── PARALLAX ──────────────────────────────────────────────────
 let mouseX = 0.5, mouseY = 0.5, targetX = 0.5, targetY = 0.5;
-
 document.addEventListener("mousemove", (e) => {
   targetX = e.clientX / window.innerWidth;
   targetY = e.clientY / window.innerHeight;
@@ -236,25 +226,19 @@ document.addEventListener("mousemove", (e) => {
 function tickParallax() {
   mouseX += (targetX - mouseX) * 0.035;
   mouseY += (targetY - mouseY) * 0.035;
-
   const onHome = document.getElementById("home")?.classList.contains("active");
   if (onHome) {
     const img = document.getElementById("hero-img");
     if (img) {
-      const dx = (mouseX - 0.5) * -22;
-      const dy = (mouseY - 0.5) * -14;
-      img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
+      img.style.transform = `scale(1.06) translate(${(mouseX-0.5)*-22}px,${(mouseY-0.5)*-14}px)`;
     }
   } else {
     const bg = document.querySelector(".bg-gradient");
     if (bg) {
-      const bx  = (50 + (mouseX - 0.5) * 12).toFixed(2);
-      const by  = (20 + (mouseY - 0.5) * 8).toFixed(2);
-      const bx2 = (100 - bx).toFixed(2);
-      const by2 = (100 - by).toFixed(2);
+      const bx=(50+(mouseX-0.5)*12).toFixed(2), by=(20+(mouseY-0.5)*8).toFixed(2);
       bg.style.background = `
-        radial-gradient(ellipse 55% 40% at ${bx}% ${by}%, color-mix(in srgb,var(--accent) 6%,transparent) 0%,transparent 65%),
-        radial-gradient(ellipse 35% 25% at ${bx2}% ${by2}%, color-mix(in srgb,var(--accent) 3%,transparent) 0%,transparent 55%)`;
+        radial-gradient(ellipse 55% 40% at ${bx}% ${by}%,color-mix(in srgb,var(--accent) 6%,transparent) 0%,transparent 65%),
+        radial-gradient(ellipse 35% 25% at ${100-bx}% ${100-by}%,color-mix(in srgb,var(--accent) 3%,transparent) 0%,transparent 55%)`;
     }
   }
   requestAnimationFrame(tickParallax);
@@ -276,11 +260,13 @@ window.initRealtime = function() {
     }
   ).subscribe();
 
+  // Posts: muestra indicador en vez de rerenderizar (para no cerrar comentarios abiertos)
   db.channel("posts-rt").on("postgres_changes",
     { event:"*", schema:"public", table:"posts" },
-    () => { if (currentPage === "foro") renderForo(); }
+    () => { if (currentPage === "foro") mostrarIndicadorNuevoPost(); }
   ).subscribe();
 
+  // Comentarios: recarga solo la sección abierta
   db.channel("coms-rt").on("postgres_changes",
     { event:"INSERT", schema:"public", table:"comentarios" },
     (payload) => {
@@ -288,11 +274,7 @@ window.initRealtime = function() {
       const postId = payload.new?.post_id;
       if (!postId) return;
       const cont = document.getElementById("feed-coms-" + postId);
-      if (cont?.classList.contains("open")) {
-        cont.classList.remove("open");
-        cont.innerHTML = "";
-        window.toggleComentarios(postId);
-      }
+      if (cont?.classList.contains("open")) recargarComentarios(postId, cont);
     }
   ).subscribe();
 
@@ -324,42 +306,120 @@ window.initPresencia = function() {
     });
 };
 
-// ── POLLING FORO (fallback si realtime no funciona) ───────────
+// ── HELPERS FORO ──────────────────────────────────────────────
+
+// Botón flotante "hay posts nuevos" — sin cerrar secciones abiertas
+window.mostrarIndicadorNuevoPost = function() {
+  if (document.getElementById("new-posts-bar")) return;
+  const bar = document.createElement("div");
+  bar.id = "new-posts-bar";
+  bar.innerHTML = `<i class="fa-solid fa-arrow-up"></i> hay posts nuevos`;
+  bar.style.cssText = `
+    position:fixed;top:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);
+    z-index:400;background:var(--accent);color:#0a0b09;
+    padding:9px 22px;border-radius:100px;font-size:12px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;
+    box-shadow:0 4px 20px color-mix(in srgb,var(--accent) 35%,transparent);
+    animation:slideDown 0.3s ease;
+  `;
+  bar.onclick = () => { bar.remove(); renderForo(); };
+  document.body.appendChild(bar);
+  setTimeout(() => bar?.remove(), 8000);
+};
+
+// Recarga solo los comentarios de un post, sin cerrar otras secciones
+async function recargarComentarios(postId, cont) {
+  if (!cont) return;
+  cont.classList.remove("open");
+  cont.innerHTML = "";
+  await window.toggleComentarios(parseInt(postId));
+}
+
+// Animación del contador de likes (tipo YouTube)
+window.animarLike = function(el) {
+  el.classList.remove("like-pop");
+  void el.offsetWidth;
+  el.classList.add("like-pop");
+};
+
+// ── POLLING (fallback si realtime falla) ──────────────────────
 var _foroLatestId  = 0;
 var _notifLatestId = 0;
 
 function initPolling() {
-  // Foro: comprueba cada 5s si hay posts nuevos
+
+  // Nuevos posts cada 5s
   setInterval(async () => {
     if (currentPage !== "foro" || !db) return;
     try {
-      const { data } = await db.from("posts").select("id").order("id", { ascending: false }).limit(1);
-      const latestId = data?.[0]?.id || 0;
-      if (_foroLatestId === 0) { _foroLatestId = latestId; return; } // primera vez, solo guarda
-      if (latestId > _foroLatestId) {
-        _foroLatestId = latestId;
-        renderForo();
+      const { data } = await db.from("posts").select("id").order("id",{ascending:false}).limit(1);
+      const id = data?.[0]?.id || 0;
+      if (_foroLatestId === 0) { _foroLatestId = id; return; }
+      if (id > _foroLatestId)  { _foroLatestId = id; mostrarIndicadorNuevoPost(); }
+    } catch(e) {}
+  }, 5000);
+
+  // Comentarios en secciones abiertas cada 5s
+  setInterval(async () => {
+    if (currentPage !== "foro" || !db) return;
+    try {
+      const openSections = document.querySelectorAll(".feed-coms.open");
+      for (const cont of openSections) {
+        const postId = cont.id.replace("feed-coms-","");
+        const { data } = await db.from("comentarios")
+          .select("id").eq("post_id", parseInt(postId))
+          .order("id",{ascending:false}).limit(1);
+        const latestId = data?.[0]?.id || 0;
+        const stored   = parseInt(cont.dataset.latestComId || "0");
+        if (stored === 0) { cont.dataset.latestComId = latestId; continue; }
+        if (latestId > stored) {
+          cont.dataset.latestComId = latestId;
+          await recargarComentarios(postId, cont);
+        }
       }
     } catch(e) {}
   }, 5000);
 
-  // Notificaciones: comprueba cada 10s si hay nuevas
+  // Likes con animación cada 8s
+  setInterval(async () => {
+    if (currentPage !== "foro" || !db) return;
+    try {
+      const btns = document.querySelectorAll(".like-btn[id^='like-post-']");
+      if (!btns.length) return;
+      const ids = Array.from(btns).map(b => parseInt(b.id.replace("like-post-","")));
+      const { data } = await db.from("likes").select("post_id").in("post_id", ids);
+      if (!data) return;
+      ids.forEach(id => {
+        const btn = document.getElementById(`like-post-${id}`);
+        const cnt = btn?.querySelector(".like-count");
+        if (!cnt) return;
+        const count    = data.filter(l => l.post_id === id).length;
+        const oldCount = parseInt(cnt.textContent || "0");
+        if (count !== oldCount) {
+          cnt.textContent = count;
+          if (count > oldCount) animarLike(cnt);
+        }
+      });
+    } catch(e) {}
+  }, 8000);
+
+  // Notificaciones cada 8s
   if (currentUser) {
     setInterval(async () => {
       if (!db || !currentUser) return;
       try {
         const { data } = await db.from("notificaciones")
           .select("id").eq("usuario_id", currentUser.id)
-          .order("id", { ascending: false }).limit(1);
-        const latestId = data?.[0]?.id || 0;
-        if (_notifLatestId === 0) { _notifLatestId = latestId; return; }
-        if (latestId > _notifLatestId) {
-          _notifLatestId = latestId;
+          .order("id",{ascending:false}).limit(1);
+        const id = data?.[0]?.id || 0;
+        if (_notifLatestId === 0) { _notifLatestId = id; return; }
+        if (id > _notifLatestId) {
+          _notifLatestId = id;
           const badge = document.getElementById("notif-badge");
           if (badge) badge.style.display = "block";
         }
       } catch(e) {}
-    }, 10000);
+    }, 8000);
   }
 }
 
