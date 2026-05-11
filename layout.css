@@ -184,7 +184,7 @@
 .file-label:hover { border-color: var(--accent-dim); color: var(--accent); }
 .file-label input { display: none; }
 .file-label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.upload-form { display: flex; flex-direction: column; gap: 12px; }
+.upload-form { display: flex; flex-direction: column; gap: 16px; }
 .vis-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .vis-btn {
   padding: 8px 16px; background: none; border: 1px solid var(--border);
