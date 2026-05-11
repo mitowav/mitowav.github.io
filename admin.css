@@ -1,0 +1,259 @@
+/* ================================================================
+   mitø · admin.css — zona privada, solicitudes, DMs, letras, perfil
+   ================================================================ */
+
+/* ── ZONA PRIVADA ─────────────────────────────────────────────── */
+.privado-wrap {
+  display: flex; height: 100%;
+}
+.privado-sidebar {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  padding: 24px 14px; display: flex; flex-direction: column; gap: 2px;
+  overflow-y: auto;
+}
+.privado-logo {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: 16px; color: var(--accent);
+  padding: 0 8px 16px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.privado-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.privado-content {
+  flex: 1; overflow-y: auto; padding: 40px 48px 100px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.privado-content::-webkit-scrollbar { width: 4px; }
+.privado-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+.p-nav-btn {
+  width: 100%; background: none; border: none; outline: none;
+  color: var(--text-dim); font-family: inherit; font-size: 12px; font-weight: 500;
+  padding: 9px 12px; border-radius: 8px; text-align: left; cursor: pointer;
+  transition: all 0.15s; display: flex; align-items: center; gap: 8px; letter-spacing: -0.01em;
+}
+.p-nav-btn:hover { background: var(--surface); color: var(--text); }
+.p-nav-btn.active { background: var(--accent-dim); color: var(--accent); }
+.p-panel { display: none; }
+.p-panel.active { display: block; }
+.p-title {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: 30px; font-weight: 400; color: var(--text);
+  margin-bottom: 24px; letter-spacing: -0.03em; line-height: 1;
+}
+
+/* ── SOLICITUDES ──────────────────────────────────────────────── */
+.solicitud-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  transition: border-color 0.2s;
+}
+.solicitud-card:hover { border-color: var(--border-strong); }
+.solicitud-card-info { flex: 1; min-width: 0; }
+.solicitud-card-info h4 { font-size: 14px; font-weight: 500; color: var(--text); }
+.solicitud-card-info p { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+.solicitud-card-full {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; margin-bottom: 8px; transition: border-color 0.2s;
+}
+.solicitud-card-full:hover { border-color: var(--accent-dim); }
+.solicitud-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; cursor: pointer; gap: 12px; transition: background 0.15s;
+}
+.solicitud-card-header:hover { background: var(--surface-h); }
+.solicitud-card-body {
+  padding: 16px 20px 20px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.solicitud-section { display: flex; flex-direction: column; gap: 5px; }
+.solicitud-section-label {
+  font-family: "JetBrains Mono", monospace; font-size: 10px;
+  letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase;
+}
+.solicitud-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.solicitud-estado {
+  font-family: "JetBrains Mono", monospace; font-size: 10px;
+  padding: 4px 12px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.solicitud-estado.pendiente { background: var(--accent-dim); color: var(--accent); }
+.solicitud-estado.aceptado  { background: rgba(107,255,184,0.12); color: #6bffb8; }
+.solicitud-estado.rechazado { background: rgba(255,80,80,0.1);   color: #ff6b6b; }
+
+/* ── GALERÍA ADMIN ────────────────────────────────────────────── */
+.galeria-admin-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px;
+}
+.galeria-admin-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; transition: border-color 0.2s, opacity 0.3s, transform 0.3s;
+}
+.galeria-admin-card:hover { border-color: var(--border-strong); }
+.galeria-admin-thumb { aspect-ratio: 1; overflow: hidden; background: var(--bg3); }
+.galeria-admin-thumb img,
+.galeria-admin-thumb video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.galeria-admin-card:hover .galeria-admin-thumb img,
+.galeria-admin-card:hover .galeria-admin-thumb video { transform: scale(1.04); }
+.galeria-admin-info { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+
+/* ── PERFIL EXTRA ─────────────────────────────────────────────── */
+.perfil-info { flex: 1; min-width: 0; }
+.perfil-logout {
+  width: 100%; padding: 12px;
+  background: rgba(255,80,80,0.04); border: 1px solid rgba(255,80,80,0.12);
+  border-radius: 10px; color: rgba(255,100,100,0.65); font-family: inherit;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.perfil-logout:hover { background: rgba(255,80,80,0.08); color: #ff6b6b; border-color: rgba(255,80,80,0.25); }
+.color-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.color-row label { font-size: 10px; color: var(--text-dim); }
+
+/* ── PERFIL MIEMBRO OVERLAY ───────────────────────────────────── */
+.miembro-layout { display: flex; gap: 32px; align-items: flex-start; flex-wrap: wrap; }
+.miembro-av-big {
+  width: 110px; height: 110px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--accent-dim); flex-shrink: 0;
+}
+.miembro-av-ph {
+  width: 110px; height: 110px; border-radius: 50%;
+  background: var(--accent-dim); display: flex; align-items: center;
+  justify-content: center; color: var(--accent);
+  font-family: "Instrument Serif", serif; font-style: italic; font-size: 40px; flex-shrink: 0;
+}
+.miembro-info { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 12px; }
+.miembro-nombre {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: clamp(28px, 4vw, 40px); letter-spacing: -0.03em;
+  color: var(--text); font-weight: 400; line-height: 1;
+}
+.miembro-rol {
+  font-family: "JetBrains Mono", monospace; font-size: 11px;
+  color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.miembro-bio { font-size: 14px; color: var(--text-mid); line-height: 1.7; font-weight: 300; }
+.miembro-redes { display: flex; flex-wrap: wrap; gap: 8px; }
+.miembro-red {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border);
+  color: var(--text-mid); text-decoration: none; font-size: 12px; font-weight: 500; transition: all 0.2s;
+}
+.miembro-red:hover { border-color: var(--accent-dim); color: var(--accent); background: var(--accent-dim); }
+
+/* ── DMs ──────────────────────────────────────────────────────── */
+.dm-box {
+  width: 100%; max-width: 480px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-xl);
+  display: flex; flex-direction: column; height: min(80vh, 600px); overflow: hidden;
+}
+.dm-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0;
+}
+.dm-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.dm-msg { display: flex; flex-direction: column; gap: 4px; max-width: 75%; }
+.dm-mio  { align-self: flex-end;  align-items: flex-end; }
+.dm-suyo { align-self: flex-start; align-items: flex-start; }
+.dm-bubble {
+  padding: 10px 14px; font-size: 13px; line-height: 1.5; word-break: break-word;
+}
+.dm-mio  .dm-bubble {
+  background: var(--accent); color: #0a0b09;
+  border-radius: 18px 18px 4px 18px; font-weight: 500;
+}
+.dm-suyo .dm-bubble {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  border-radius: 18px 18px 18px 4px;
+}
+.dm-time { font-size: 9px; color: var(--text-dim); }
+.dm-input-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--border); align-items: center; flex-shrink: 0;
+}
+.dm-input-row .field { flex: 1; }
+
+/* ── LETRAS GRID ──────────────────────────────────────────────── */
+.letras-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 20px; }
+.letra-cover-card { cursor: pointer; transition: transform 0.25s; }
+.letra-cover-card:hover { transform: translateY(-4px); }
+.letra-cover-img {
+  aspect-ratio: 1; border-radius: var(--r); overflow: hidden; background: var(--bg3); margin-bottom: 10px;
+}
+.letra-cover-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 0.3s, filter 0.3s; filter: brightness(0.9);
+}
+.letra-cover-card:hover .letra-cover-img img { transform: scale(1.04); filter: brightness(1); }
+.letra-cover-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center;
+  justify-content: center; color: var(--text-dim); font-size: 38px;
+}
+.letra-cover-title {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: 16px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.letra-cover-artist { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+/* ── LETRA DETALLE ────────────────────────────────────────────── */
+.letra-back-btn {
+  display: flex; align-items: center; gap: 8px; background: none; border: none;
+  color: var(--text-mid); font-size: 12px; cursor: pointer; padding: 0;
+  transition: color 0.2s; margin-bottom: 32px; font-weight: 500;
+}
+.letra-back-btn:hover { color: var(--text); }
+.letra-detalle { display: flex; gap: 60px; align-items: flex-start; }
+.letra-detalle-izq { flex: 1; min-width: 0; }
+.letra-detalle-der { flex-shrink: 0; width: 220px; position: sticky; top: 0; }
+.letra-detalle-titulo {
+  font-family: "Instrument Serif", serif; font-style: italic;
+  font-size: clamp(30px, 5vw, 50px); letter-spacing: -0.03em;
+  color: var(--text); line-height: 1.05; margin-bottom: 6px; font-weight: 400;
+}
+.letra-detalle-artista {
+  font-family: "JetBrains Mono", monospace; font-size: 12px;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 16px;
+}
+.letra-escuchar {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 18px; border-radius: 100px; border: 1px solid var(--accent-dim);
+  color: var(--accent); font-size: 12px; text-decoration: none;
+  transition: all 0.2s; margin-bottom: 32px; font-weight: 500;
+}
+.letra-escuchar:hover { background: var(--accent-dim); }
+.letra-versos { display: flex; flex-direction: column; }
+.verso { font-family: "Instrument Serif", serif; font-size: 18px; color: var(--text-mid); line-height: 2.1; }
+.verso-espaciado { height: 28px; }
+.letra-detalle-cover {
+  width: 220px; height: 220px; border-radius: 16px; object-fit: cover; box-shadow: var(--shadow-lg);
+}
+.letra-detalle-cover-placeholder {
+  width: 220px; height: 220px; border-radius: 16px; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 52px;
+}
+
+/* ── ONLINE DOT ───────────────────────────────────────────────── */
+#online-dot { display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); }
+
+/* ── MOBILE ───────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .privado-wrap { flex-direction: column; }
+  .privado-sidebar {
+    width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border);
+    flex-direction: row; flex-wrap: wrap; padding: 10px 12px; gap: 4px; overflow-x: auto;
+  }
+  .privado-logo { display: none; }
+  .privado-nav { flex-direction: row; flex-wrap: wrap; }
+  .privado-content { padding: 20px 16px 100px; }
+  .p-nav-btn { padding: 7px 10px; font-size: 10px; white-space: nowrap; }
+  .miembro-layout { flex-direction: column; }
+  .letra-detalle { flex-direction: column-reverse; gap: 20px; }
+  .letra-detalle-der { width: 140px; position: static; }
+  .letra-detalle-cover, .letra-detalle-cover-placeholder { width: 140px; height: 140px; }
+}
