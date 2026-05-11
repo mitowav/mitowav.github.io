@@ -230,7 +230,7 @@
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(20px); border-top: 1px solid var(--border);
   height: calc(64px + env(safe-area-inset-bottom));
-  padding: 8px 6px; align-items: center; justify-content: space-around;
+  padding: 8px 6px env(safe-area-inset-bottom); align-items: center; justify-content: space-around;
 }
 .mob-btn {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -241,3 +241,38 @@
 .mob-btn i { font-size: 18px; }
 .mob-btn.active { color: var(--accent); }
 
+/* ── MOBILE ───────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  /* Mostrar nav inferior */
+  .mob-nav { display: flex !important; }
+
+  /* App deja espacio para nav inferior */
+  #app { bottom: calc(64px + env(safe-area-inset-bottom)); }
+
+  /* Ocultar links del nav superior (están en el inferior) */
+  .nav-links-right { display: none; }
+
+  /* Ocultar botón auth en nav superior (está en inferior como "yo") */
+  .nav-auth-btn { display: none; }
+
+  /* Mostrar hamburguesa para banda/about/soporte */
+  .nav-burger { display: flex !important; }
+
+  /* Nav superior más compacto */
+  .top-nav { padding: 0 14px; height: 56px; }
+  :root { --nav-h: 56px; }
+
+  /* Hero más compacto en móvil */
+  .hero { padding: 40px 24px 60px; min-height: calc(100vh - 56px - 64px); }
+  .hero-title { font-size: clamp(64px, 20vw, 120px); }
+  .hero-sub { font-size: 14px; }
+
+  /* Secciones con menos padding */
+  .page-wrap { padding: 28px 20px 80px; }
+  .home-section, .home-beats-section { padding: 32px 20px 80px; }
+
+  /* About en móvil */
+  .about-layout { flex-direction: column; padding: 40px 24px 80px; gap: 32px; }
+  .about-img { max-width: 100%; aspect-ratio: 4/3; }
+  .about-title { font-size: clamp(56px, 18vw, 100px); }
+}
