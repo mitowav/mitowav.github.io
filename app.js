@@ -2,11 +2,10 @@
    mitø · app.js — núcleo: navegación, tema, helpers, init, realtime
    ================================================================ */
 
-
 const SUPABASE_URL = "https://dchmegrnghagvjpqvlbg.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjaG1lZ3JuZ2hhZ3ZqcHF2bGJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwMTI2MDksImV4cCI6MjA5MzU4ODYwOX0.CeiSFDLEBBqGXfBE_mKcXzjlutkjeh0DkQyGgbl82PU";
 
-// ── GLOBALS (compartidas con todos los archivos) ──────────────
+// ── GLOBALS ───────────────────────────────────────────────────
 var db                = null;
 var currentUser       = null;
 var tieneAccesoPrivado = false;
@@ -21,6 +20,7 @@ var ambientPlaying    = false;
 var beatPrivado       = false;
 var beatsFull         = [];
 var inspsList         = [];
+var insps             = [];   // ← fix: inspiraciones no funcionaban
 var galeriaTipo       = "foto";
 var coverBlob         = null;
 var galeriaBlob       = null;
@@ -94,7 +94,10 @@ window.getStorage = function(key) {
     document.documentElement.style.setProperty("--accent", acento);
     document.documentElement.style.setProperty("--cursor-color", acento);
   }
-  if (fondo) document.documentElement.style.setProperty("--bg", fondo);
+  // ← fix: en modo claro no aplicamos el fondo oscuro personalizado
+  if (fondo && tema !== "claro") {
+    document.documentElement.style.setProperty("--bg", fondo);
+  }
 })();
 
 window.aplicarTema = function(tema, acento, fondo) {
@@ -104,18 +107,22 @@ window.aplicarTema = function(tema, acento, fondo) {
     document.documentElement.style.setProperty("--cursor-color", acento);
     setStorage("mitø-acento", acento);
   }
-  if (fondo) {
+  // ← fix: en modo claro no aplicamos el fondo oscuro personalizado
+  if (fondo && tema !== "claro") {
     document.documentElement.style.setProperty("--bg", fondo);
     setStorage("mitø-fondo", fondo);
+  } else if (tema === "claro") {
+    // Restaurar el fondo claro por defecto
+    document.documentElement.style.removeProperty("--bg");
   }
   setStorage("mitø-tema", tema || "oscuro");
 };
 
 window.toggleTheme = function() {
-  const claro    = document.body.classList.contains("tema-claro");
+  const claro     = document.body.classList.contains("tema-claro");
   const nuevoTema = claro ? "oscuro" : "claro";
-  const acento   = currentUser?.color_acento || getStorage("mitø-acento");
-  const fondo    = currentUser?.color_fondo  || getStorage("mitø-fondo");
+  const acento    = currentUser?.color_acento || getStorage("mitø-acento");
+  const fondo     = currentUser?.color_fondo  || getStorage("mitø-fondo");
   aplicarTema(nuevoTema, acento, fondo);
   if (currentUser) {
     currentUser.tema = nuevoTema;
@@ -134,24 +141,21 @@ window.go = function(id, btnEl, closeMenu) {
   const newIdx = PAGE_ORDER.indexOf(id);
   const dir    = newIdx >= oldIdx ? "slide-r" : "slide-l";
 
-  // Quitar active de TODAS las páginas
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   const target = document.getElementById(id);
   if (target) {
     target.classList.remove("slide-r","slide-l","slide-u");
     target.classList.add(dir);
-    void target.offsetWidth; // reflow
+    void target.offsetWidth;
     target.classList.add("active");
   }
 
-  // Quitar active de TODOS los nav buttons
   document.querySelectorAll(".nav-link, .mob-btn, .p-nav-btn").forEach(b => b.classList.remove("active"));
   if (btnEl) btnEl.classList.add("active");
   if (closeMenu) { const m = document.getElementById("mob-menu"); if (m) m.style.display = "none"; }
 
   currentPage = id;
 
-  // Cargar contenido de la sección
   if (id === "home")    { cargarBeats("home-beats", false, 3); }
   if (id === "beats")   { cargarBeats("beats-list", false); }
   if (id === "galeria") { cargarGaleria(); }
@@ -298,6 +302,7 @@ window.initRealtime = function() {
       () => {
         const badge = document.getElementById("notif-badge");
         if (badge) badge.style.display = "block";
+        cargarNotificaciones();
       }
     ).subscribe();
   }
@@ -318,6 +323,45 @@ window.initPresencia = function() {
     });
 };
 
+// ── POLLING FORO (fallback si realtime no funciona) ───────────
+var _foroLatestId  = 0;
+var _notifLatestId = 0;
+
+function initPolling() {
+  // Foro: comprueba cada 5s si hay posts nuevos
+  setInterval(async () => {
+    if (currentPage !== "foro" || !db) return;
+    try {
+      const { data } = await db.from("posts").select("id").order("id", { ascending: false }).limit(1);
+      const latestId = data?.[0]?.id || 0;
+      if (_foroLatestId === 0) { _foroLatestId = latestId; return; } // primera vez, solo guarda
+      if (latestId > _foroLatestId) {
+        _foroLatestId = latestId;
+        renderForo();
+      }
+    } catch(e) {}
+  }, 5000);
+
+  // Notificaciones: comprueba cada 10s si hay nuevas
+  if (currentUser) {
+    setInterval(async () => {
+      if (!db || !currentUser) return;
+      try {
+        const { data } = await db.from("notificaciones")
+          .select("id").eq("usuario_id", currentUser.id)
+          .order("id", { ascending: false }).limit(1);
+        const latestId = data?.[0]?.id || 0;
+        if (_notifLatestId === 0) { _notifLatestId = latestId; return; }
+        if (latestId > _notifLatestId) {
+          _notifLatestId = latestId;
+          const badge = document.getElementById("notif-badge");
+          if (badge) badge.style.display = "block";
+        }
+      } catch(e) {}
+    }, 10000);
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", async function() {
   await initSession();
@@ -325,5 +369,5 @@ document.addEventListener("DOMContentLoaded", async function() {
   const homeBtn = document.querySelector('.nav-link[onclick*="home"]');
   if (homeBtn) homeBtn.classList.add("active");
   setTimeout(() => { if (!ambientTracks.length) cargarAmbientTracks(); }, 800);
-  setTimeout(() => { initRealtime(); initDMRealtime(); initPresencia(); }, 1500);
+  setTimeout(() => { initRealtime(); initDMRealtime(); initPresencia(); initPolling(); }, 1500);
 });
